@@ -13,10 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import okhttp3.*
-import okio.BufferedSink
-import okio.BufferedSource
-import okio.buffer
-import okio.sink
+
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -301,18 +298,18 @@ class BrowserDownloadManager(private val context: Context) {
                     // Append to existing file
                     RandomAccessFile(file, "rw").use { raf ->
                         raf.seek(downloadedBytes)
-                        val source: BufferedSource = body.source()
-                        val sink = okio.buffer(raf.channel.sink())
-                        val buffer = okio.Buffer()
+                        val source = body.byteStream()
+                        val bos = java.io.BufferedOutputStream(java.io.FileOutputStream(raf.fd))
+                        val byteArray = ByteArray(8192)
                         var lastUpdateTime = 0L
 
                         while (true) {
                             if (pauseFlags[entity.id] == true || !isActive) break
 
-                            val bytesRead = source.read(buffer, 8192)
+                            val bytesRead = source.read(byteArray)
                             if (bytesRead == -1L) break
 
-                            sink.write(buffer, bytesRead)
+                            bos.write(byteArray, 0, bytesRead)
                             downloadedBytes += bytesRead
 
                             // Update progress (throttled to every 500ms)
@@ -329,25 +326,26 @@ class BrowserDownloadManager(private val context: Context) {
                                 lastUpdateTime = now
                             }
                         }
-                        sink.flush()
-                        sink.close()
+                        bos.flush()
+                        bos.close()
                         source.close()
                     }
                 } else {
                     // Write from beginning
                     file.parentFile?.mkdirs()
-                    val sink: BufferedSink = file.sink().buffer()
-                    val source: BufferedSource = body.source()
-                    val buffer = okio.Buffer()
+                    val fos = java.io.FileOutputStream(file)
+                    val bos = java.io.BufferedOutputStream(fos)
+                    val source = body.byteStream()
+                    val byteArray = ByteArray(8192)
                     var lastUpdateTime = 0L
 
                     while (true) {
                         if (pauseFlags[entity.id] == true || !isActive) break
 
-                        val bytesRead = source.read(buffer, 8192)
+                        val bytesRead = source.read(byteArray)
                         if (bytesRead == -1L) break
 
-                        sink.write(buffer, bytesRead)
+                        bos.write(byteArray, 0, bytesRead)
                         downloadedBytes += bytesRead
 
                         // Update progress (throttled)
@@ -364,8 +362,8 @@ class BrowserDownloadManager(private val context: Context) {
                             lastUpdateTime = now
                         }
                     }
-                    sink.flush()
-                    sink.close()
+                    bos.flush()
+                    bos.close()
                     source.close()
                 }
 
@@ -442,6 +440,6 @@ class BrowserDownloadManager(private val context: Context) {
 
     fun destroy() {
         scope.cancel()
-        httpClient.dispatcher.executorService.shutdown()
+        httpClient.dispatcher().executorService().shutdown()
     }
 }

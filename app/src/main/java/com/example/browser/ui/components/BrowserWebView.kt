@@ -305,7 +305,7 @@ private fun extractDownloadFileName(url: String, contentDisposition: String?): S
     // Try Content-Disposition first
     if (!contentDisposition.isNullOrBlank()) {
         val patterns = listOf(
-            Regex("filename\*=UTF-8''(.+)", RegexOption.IGNORE_CASE),
+            Regex("filename\\*=UTF-8''(.+)", RegexOption.IGNORE_CASE),
             Regex("filename=\"([^\"]+)\"", RegexOption.IGNORE_CASE),
             Regex("filename=([^;\\s]+)", RegexOption.IGNORE_CASE)
         )
