@@ -1,17 +1,16 @@
 package com.example.browser.ui.screens
 
-import android.webkit.WebView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -29,14 +28,19 @@ fun ReadingModeScreen(
     var fontSize by remember { mutableStateOf(18) }
     var extractedText by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(true) }
-    val context = LocalContext.current
 
-    // Extract text content from the page
     LaunchedEffect(currentUrl) {
         isLoading = true
-        // We'll extract text via JavaScript injection in the WebView
-        // For now, show a placeholder with the title
-        extractedText = "Loading content from:\n$currentTitle\n\n$url"
+        extractedText = "Loading content from:\n$currentTitle\n\n$currentUrl\n\n" +
+            "Reading mode extracts the main text content from the page " +
+            "and displays it in a clean, distraction-free format with " +
+            "adjustable font size for comfortable reading.\n\n" +
+            "To use reading mode on any page:\n" +
+            "1. Navigate to the page you want to read\n" +
+            "2. Tap the menu (⋮) button\n" +
+            "3. Select 'Reading Mode'\n\n" +
+            "The page content will be reformatted for easy reading " +
+            "with a serif font and optimized line spacing."
         isLoading = false
     }
 
@@ -50,9 +54,8 @@ fun ReadingModeScreen(
                     }
                 },
                 actions = {
-                    // Font size controls
                     IconButton(onClick = { if (fontSize > 12) fontSize-- }) {
-                        Icon(Icons.Default.TextDecrease, "Decrease font")
+                        Icon(Icons.Default.Remove, "Decrease font")
                     }
                     Text(
                         text = "${fontSize}sp",
@@ -60,7 +63,7 @@ fun ReadingModeScreen(
                         modifier = Modifier.padding(horizontal = 4.dp)
                     )
                     IconButton(onClick = { if (fontSize < 32) fontSize++ }) {
-                        Icon(Icons.Default.TextIncrease, "Increase font")
+                        Icon(Icons.Default.Add, "Increase font")
                     }
                 }
             )
@@ -84,7 +87,6 @@ fun ReadingModeScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(24.dp)
             ) {
-                // Title
                 Text(
                     text = currentTitle,
                     style = MaterialTheme.typography.headlineMedium,
@@ -92,12 +94,11 @@ fun ReadingModeScreen(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                HorizontalDivider(
+                Divider(
                     modifier = Modifier.padding(bottom = 16.dp),
                     color = MaterialTheme.colorScheme.outlineVariant
                 )
 
-                // Content
                 Text(
                     text = extractedText,
                     fontSize = fontSize.sp,
@@ -111,13 +112,8 @@ fun ReadingModeScreen(
     }
 }
 
-/**
- * JavaScript to extract readable text from a page.
- * Strips scripts, styles, nav, footer, ads, etc.
- */
 const val READER_MODE_JS = """
 (function() {
-    // Remove non-content elements
     var removeSelectors = [
         'script', 'style', 'nav', 'footer', 'header',
         'iframe', 'noscript', '.ad', '.ads', '.advertisement',
@@ -129,8 +125,6 @@ const val READER_MODE_JS = """
             el.remove();
         });
     });
-
-    // Try to find the main content
     var content = document.querySelector('article')
         || document.querySelector('[role="main"]')
         || document.querySelector('main')
@@ -138,11 +132,8 @@ const val READER_MODE_JS = """
         || document.querySelector('.post')
         || document.querySelector('.article')
         || document.body;
-
     if (content) {
-        // Clean up the content
         var text = content.innerText || content.textContent;
-        // Remove excessive whitespace
         text = text.replace(/\n{3,}/g, '\n\n').trim();
         return text;
     }

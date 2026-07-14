@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavigationBar(
     viewModel: BrowserViewModel,
@@ -69,7 +70,7 @@ fun NavigationBar(
                 )
             } else if (currentUrl.startsWith("http://")) {
                 Icon(
-                    imageVector = Icons.Default.LockOpen,
+                    imageVector = Icons.Default.Lock,
                     contentDescription = "Not secure",
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(18.dp).padding(end = 4.dp)
@@ -222,18 +223,18 @@ fun NavigationBar(
                         onClick = { expanded = false; viewModel.toggleHistory() },
                         leadingIcon = { Icon(Icons.Default.History, null) }
                     )
-                    HorizontalDivider()
+                    Divider()
                     DropdownMenuItem(
                         text = { Text("Find in Page") },
                         onClick = { expanded = false; viewModel.toggleFindInPage() },
-                        leadingIcon = { Icon(Icons.Default.FindInPage, null) }
+                        leadingIcon = { Icon(Icons.Default.Search, null) }
                     )
                     DropdownMenuItem(
                         text = { Text("Reading Mode") },
                         onClick = { expanded = false; viewModel.toggleReadingMode() },
-                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.MenuBook, null) }
+                        leadingIcon = { Icon(Icons.Default.MenuBook, null) }
                     )
-                    HorizontalDivider()
+                    Divider()
                     DropdownMenuItem(
                         text = {
                             Text(if (isDesktopMode) "Mobile Site" else "Desktop Site")
@@ -246,12 +247,7 @@ fun NavigationBar(
                             )
                         }
                     )
-                    HorizontalDivider()
-                    DropdownMenuItem(
-                        text = { Text("Share") },
-                        onClick = { expanded = false; /* handled by caller */ },
-                        leadingIcon = { Icon(Icons.Default.Share, null) }
-                    )
+                    Divider()
                     DropdownMenuItem(
                         text = { Text("New Tab") },
                         onClick = { expanded = false; viewModel.addTab() },
@@ -262,7 +258,7 @@ fun NavigationBar(
                         onClick = { expanded = false; viewModel.addTab(incognito = true) },
                         leadingIcon = { Icon(Icons.Default.VisibilityOff, null) }
                     )
-                    HorizontalDivider()
+                    Divider()
                     DropdownMenuItem(
                         text = { Text("Settings") },
                         onClick = { expanded = false; viewModel.toggleSettings() },

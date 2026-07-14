@@ -55,8 +55,10 @@ fun SettingsSheet(
                 supportingContent = { Text("Block ads and trackers") },
                 leadingContent = {
                     Icon(
-                        imageVector = if (isAdBlockEnabled) Icons.Default.Shield else Icons.Default.ShieldOutlined,
-                        contentDescription = null
+                        imageVector = if (isAdBlockEnabled) Icons.Default.Shield else Icons.Default.Shield,
+                        contentDescription = null,
+                        tint = if (isAdBlockEnabled) MaterialTheme.colorScheme.primary
+                               else MaterialTheme.colorScheme.onSurface
                     )
                 },
                 trailingContent = {
@@ -85,7 +87,7 @@ fun SettingsSheet(
                 }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Search Engine
             ListItem(
@@ -96,9 +98,6 @@ fun SettingsSheet(
                 },
                 trailingContent = {
                     Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
-                },
-                modifier = Modifier.let { mod ->
-                    mod
                 }
             )
 
@@ -124,13 +123,13 @@ fun SettingsSheet(
                 }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // New Tab
             ListItem(
                 headlineContent = { Text("New Tab") },
                 leadingContent = {
-                    Icon(imageVector = Icons.Default.Tab, contentDescription = null)
+                    Icon(imageVector = Icons.Default.Add, contentDescription = null)
                 }
             )
 
@@ -142,7 +141,7 @@ fun SettingsSheet(
                 }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // About
             ListItem(
