@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Globe circle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,54m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0"/>
+    <!-- Globe lines -->
+    <path
+        android:strokeColor="#1565C0"
+        android:strokeWidth="2"
+        android:fillColor="#00000000"
+        android:pathData="M54,24 L54,84 M24,54 L84,54 M30,35 Q54,45 78,35 M30,73 Q54,63 78,73"/>
+    <!-- Inner horizontal ellipse -->
+    <path
+        android:strokeColor="#1565C0"
+        android:strokeWidth="2"
+        android:fillColor="#00000000"
+        android:pathData="M34,48 Q54,42 74,48 M34,60 Q54,66 74,60"/>
+</vector>
