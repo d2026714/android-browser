@@ -26,7 +26,7 @@ fun HistorySheet(
     val history by if (searchQuery.isNotBlank()) {
         viewModel.bookmarkManager.searchHistory(searchQuery).collectAsState(initial = emptyList())
     } else {
-        viewModel.history.collectAsState()
+        viewModel.history.collectAsState(initial = emptyList())
     }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {

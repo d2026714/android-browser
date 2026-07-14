@@ -250,8 +250,8 @@ class BookmarkManager(
             if (bookmarksJson != null) {
                 try {
                     val bookmarks = Json.decodeFromString<List<Bookmark>>(bookmarksJson)
-                    bookmarks.forEach { bookmark ->
-                        bookmarkDao.insert(BookmarkEntity(url = it.url, title = it.title, createdAt = it.createdAt))
+                    bookmarks.forEach { b ->
+                        bookmarkDao.insert(BookmarkEntity(url = b.url, title = b.title, createdAt = b.createdAt))
                     }
                     Log.d(TAG, "Migrated ${bookmarks.size} bookmarks")
                 } catch (e: Exception) {

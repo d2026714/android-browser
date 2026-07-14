@@ -38,7 +38,7 @@ fun SettingsSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
             }
             ListItem(headlineContent = { Text("Desktop Mode") }, leadingContent = { Icon(if (isDesktopMode) Icons.Default.Computer else Icons.Default.PhoneAndroid, null) }, trailingContent = { Switch(checked = isDesktopMode, onCheckedChange = { viewModel.toggleDesktopMode() }) })
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Privacy & Security
             Text("Privacy & Security", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 8.dp))
@@ -61,13 +61,13 @@ fun SettingsSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
                 FilterChip(selected = cookieMode == "none", onClick = { viewModel.setCookieMode("none") }, label = { Text("None") })
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Content
             Text("Content", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 8.dp))
             ListItem(headlineContent = { Text("Search Suggestions") }, leadingContent = { Icon(Icons.Default.Lightbulb, null) }, trailingContent = { Switch(checked = isSearchSuggestions, onCheckedChange = { viewModel.toggleSearchSuggestions() }) })
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Developer
             Text("Developer", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 8.dp))
@@ -77,7 +77,7 @@ fun SettingsSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
             ListItem(headlineContent = { Text("Traffic Stats") }, leadingContent = { Icon(Icons.Default.DataUsage, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
             ListItem(headlineContent = { Text("Proxy Settings") }, leadingContent = { Icon(Icons.Default.VpnKey, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Tools
             Text("Tools", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 8.dp))
@@ -88,7 +88,7 @@ fun SettingsSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
             ListItem(headlineContent = { Text("Zoom Control") }, leadingContent = { Icon(Icons.Default.ZoomIn, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
             ListItem(headlineContent = { Text("Backup & Restore") }, leadingContent = { Icon(Icons.Default.Backup, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Data
             Text("Data", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 8.dp))
@@ -99,10 +99,10 @@ fun SettingsSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
             ListItem(headlineContent = { Text("Downloads") }, leadingContent = { Icon(Icons.Default.Download, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
             ListItem(headlineContent = { Text("Tab Groups") }, leadingContent = { Icon(Icons.Default.FolderOpen, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
             ListItem(headlineContent = { Text("New Tab") }, leadingContent = { Icon(Icons.Default.Add, null) })
             ListItem(headlineContent = { Text("New Incognito") }, leadingContent = { Icon(Icons.Default.VisibilityOff, null) })
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
             ListItem(headlineContent = { Text("About") }, supportingContent = { Text("Android Browser v2.0.0") }, leadingContent = { Icon(Icons.Default.Info, null) })
             Spacer(modifier = Modifier.height(32.dp))
         }

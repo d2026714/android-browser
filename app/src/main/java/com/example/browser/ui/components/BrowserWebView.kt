@@ -6,10 +6,12 @@ import android.graphics.Bitmap
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.SslError
+import android.webkit.SslErrorHandler
 import android.webkit.*
 import android.widget.FrameLayout
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -100,19 +102,18 @@ fun BrowserWebView(
     Box(
         modifier = modifier
             .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    when {
-                        // Horizontal swipe: back/forward
-                        dragAmount.x > 150 -> viewModel.goBack()
-                        dragAmount.x < -150 -> viewModel.goForward()
-                        // Vertical swipe down at top: pull to refresh
-                        dragAmount.y > 100 -> {
-                            val wv = viewModel.getActiveWebView()
-                            if (wv != null && !wv.canScrollVertically(-1)) {
-                                isPullingToRefresh = true
-                                wv.reload()
-                            }
+                detectHorizontalDragGestures { _, dragAmount ->
+                    if (dragAmount > 150) viewModel.goBack()
+                    else if (dragAmount < -150) viewModel.goForward()
+                }
+            }
+            .pointerInput(Unit) {
+                detectVerticalDragGestures { _, dragAmount ->
+                    if (dragAmount > 100) {
+                        val wv = viewModel.getActiveWebView()
+                        if (wv != null && !wv.canScrollVertically(-1)) {
+                            isPullingToRefresh = true
+                            wv.reload()
                         }
                     }
                 }

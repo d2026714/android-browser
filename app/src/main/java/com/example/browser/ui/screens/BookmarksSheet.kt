@@ -21,7 +21,7 @@ fun BookmarksSheet(
     viewModel: BrowserViewModel,
     onDismiss: () -> Unit
 ) {
-    val bookmarks by viewModel.bookmarks.collectAsState()
+    val bookmarks by viewModel.bookmarks.collectAsState(initial = emptyList())
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(

@@ -57,7 +57,7 @@ fun PageInfoSheet(
                 leadingContent = { Icon(Icons.Default.Shield, null) }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 FilledTonalButton(onClick = { viewModel.copyLink(currentUrl) }) {
