@@ -58,7 +58,7 @@ fun BackupRestoreSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
                             val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
                             val intent = Intent(Intent.ACTION_SEND).apply { type = "application/json"; putExtra(Intent.EXTRA_STREAM, uri); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION) }
                             context.startActivity(Intent.createChooser(intent, "Save Backup").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                            message = stringResource(R.string.backup_created)
+                            message = context.getString(R.string.backup_created)
                             Log.d(TAG, "Backup created: ${file.absolutePath}")
                         } catch (e: Exception) {
                             Log.e(TAG, "Backup failed", e)
@@ -74,7 +74,7 @@ fun BackupRestoreSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     Text(stringResource(R.string.import_from_backup), style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(8.dp))
-                    OutlinedButton(onClick = { message = stringResource(R.string.open_backup_to_restore) }) { Text(stringResource(R.string.select_backup_file)) }
+                    OutlinedButton(onClick = { message = context.getString(R.string.open_backup_to_restore) }) { Text(stringResource(R.string.select_backup_file)) }
                 }
             }
 
