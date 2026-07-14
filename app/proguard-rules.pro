@@ -10,3 +10,7 @@
 # ExoPlayer / Media3
 -keep class androidx.media3.** { *; }
 -dontwarn androidx.media3.**
+
+# GeckoView
+-keep class org.mozilla.geckoview.** { *; }
+-dontwarn org.mozilla.geckoview.**

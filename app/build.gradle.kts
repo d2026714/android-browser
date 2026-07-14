@@ -92,6 +92,6 @@ dependencies {
 
     // GeckoView (Mozilla browser engine)
     val geckoviewChannel = "nightly"  // or "beta" or "release"
-    val geckoviewVersion = "131.0.20240903095158"
+    val geckoviewVersion = "131.0.20240902095218"
     implementation("org.mozilla.geckoview:geckoview-$geckoviewChannel:$geckoviewVersion")
 }
