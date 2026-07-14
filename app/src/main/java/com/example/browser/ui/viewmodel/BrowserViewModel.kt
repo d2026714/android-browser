@@ -7,9 +7,12 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.net.http.SslError
 import android.util.Log
 import android.view.View
-import android.webkit.*
+import android.webkit.CookieManager
+import android.webkit.WebSettings
+import android.webkit.WebView
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope

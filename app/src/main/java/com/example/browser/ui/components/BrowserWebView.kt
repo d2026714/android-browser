@@ -6,7 +6,15 @@ import android.graphics.Bitmap
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.*
+import android.net.http.SslError
+import android.webkit.SslErrorHandler
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.FrameLayout
 
 import androidx.compose.foundation.layout.*
