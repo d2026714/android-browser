@@ -8,16 +8,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.browser.ui.components.BlueLightFilterOverlay
-import com.example.browser.ui.components.BrowserWebView
-import com.example.browser.ui.components.FindInPageBar
-import com.example.browser.ui.components.NavigationBar
+import com.example.browser.ui.components.*
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @Composable
-fun MainScreen(viewModel: BrowserViewModel = viewModel()) {
+fun MainScreen(viewModel: BrowserViewModel) {
     val currentUrl by viewModel.currentUrl.collectAsState()
     val showBookmarks by viewModel.showBookmarks.collectAsState()
     val showHistory by viewModel.showHistory.collectAsState()
@@ -39,21 +34,61 @@ fun MainScreen(viewModel: BrowserViewModel = viewModel()) {
     val showCustomCss by viewModel.showCustomCss.collectAsState()
     val isBlueLightFilter by viewModel.isBlueLightFilter.collectAsState()
     val blueLightIntensity by viewModel.blueLightIntensity.collectAsState()
+    val pageError by viewModel.pageError.collectAsState()
+    val longPressUrl by viewModel.longPressUrl.collectAsState()
+    val showBookmarkFolders by viewModel.showBookmarkFolders.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            AnimatedVisibility(visible = isFindInPage, enter = slideInVertically { -it }, exit = slideOutVertically { -it }) {
-                FindInPageBar(onQueryChanged = { viewModel.findInPage(it) }, onFindNext = { viewModel.findNext() }, onFindPrevious = { viewModel.findPrevious() }, onClose = { viewModel.clearFindInPage() })
+            // Find in page bar
+            AnimatedVisibility(
+                visible = isFindInPage,
+                enter = slideInVertically { -it },
+                exit = slideOutVertically { -it }
+            ) {
+                FindInPageBar(
+                    onQueryChanged = { viewModel.findInPage(it) },
+                    onFindNext = { viewModel.findNext() },
+                    onFindPrevious = { viewModel.findPrevious() },
+                    onClose = { viewModel.clearFindInPage() }
+                )
             }
+
+            // Main content area
             Box(modifier = Modifier.weight(1f)) {
-                if (currentUrl.isBlank() || currentUrl == "about:blank") HomeScreen(viewModel = viewModel)
-                else BrowserWebView(viewModel = viewModel, modifier = Modifier.fillMaxSize())
+                if (currentUrl.isBlank() || currentUrl == "about:blank") {
+                    HomeScreen(viewModel = viewModel)
+                } else {
+                    BrowserWebView(viewModel = viewModel, modifier = Modifier.fillMaxSize())
+
+                    // Error page overlay
+                    if (pageError != null) {
+                        ErrorPage(viewModel = viewModel)
+                    }
+                }
             }
-            NavigationBar(viewModel = viewModel, onGoBack = { viewModel.goBack() }, onGoForward = { viewModel.goForward() }, onReload = { viewModel.reload() }, onStop = { viewModel.stopLoading() }, modifier = Modifier.fillMaxWidth())
+
+            // Navigation bar
+            NavigationBar(
+                viewModel = viewModel,
+                onGoBack = { viewModel.goBack() },
+                onGoForward = { viewModel.goForward() },
+                onReload = { viewModel.reload() },
+                onStop = { viewModel.stopLoading() },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         // Blue light filter overlay
         BlueLightFilterOverlay(intensity = blueLightIntensity, enabled = isBlueLightFilter)
+    }
+
+    // SSL error dialog
+    SslErrorDialog(viewModel = viewModel)
+
+    // Long press context menu
+    if (longPressUrl != null) {
+        LongPressMenuSheet(viewModel = viewModel)
     }
 
     // All bottom sheets
@@ -74,4 +109,5 @@ fun MainScreen(viewModel: BrowserViewModel = viewModel()) {
     if (showCustomCss) CustomCssSheet(viewModel = viewModel, onDismiss = { viewModel.toggleCustomCssSheet() })
     if (isReadingMode) ReadingModeScreen(viewModel = viewModel, onDismiss = { viewModel.toggleReadingMode() })
     if (showViewSource) ViewSourceScreen(viewModel = viewModel, onDismiss = { viewModel.closeViewSource() })
+    if (showBookmarkFolders) BookmarkFoldersSheet(viewModel = viewModel, onDismiss = { viewModel.toggleBookmarkFolders() })
 }

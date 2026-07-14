@@ -1,5 +1,7 @@
 package com.example.browser.manager
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import com.example.browser.data.local.dao.QuickLinkDao
 import com.example.browser.data.local.dao.SettingsDao
@@ -19,7 +21,8 @@ private const val TAG = "SettingsManager"
 class SettingsManager(
     private val settingsDao: SettingsDao,
     private val quickLinkDao: QuickLinkDao,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val context: Context? = null
 ) {
     companion object {
         const val KEY_DARK_MODE = "dark_mode"
@@ -27,6 +30,8 @@ class SettingsManager(
         const val KEY_AD_BLOCK = "ad_block"
         const val KEY_SEARCH_ENGINE = "search_engine"
         const val KEY_SEARCH_SUGGESTIONS = "search_suggestions"
+        const val KEY_DOH = "dns_over_https"
+        const val KEY_COOKIE_MODE = "cookie_mode" // "all", "first_party", "none"
         const val DEFAULT_SEARCH_ENGINE = "https://www.google.com/search?q="
 
         private val DEFAULT_QUICK_LINKS = listOf(
@@ -57,8 +62,14 @@ class SettingsManager(
     private val _searchEngine = MutableStateFlow(DEFAULT_SEARCH_ENGINE)
     val searchEngine: StateFlow<String> = _searchEngine.asStateFlow()
 
+    private val _isDohEnabled = MutableStateFlow(false)
+    val isDohEnabled: StateFlow<Boolean> = _isDohEnabled.asStateFlow()
+
+    private val _cookieMode = MutableStateFlow("all")
+    val cookieMode: StateFlow<String> = _cookieMode.asStateFlow()
+
     init {
-        // Load settings from DB into StateFlows
+        // Load settings from DB
         scope.launch {
             try {
                 _isDarkMode.value = settingsDao.getValue(KEY_DARK_MODE)?.toBoolean() ?: false
@@ -66,10 +77,15 @@ class SettingsManager(
                 _isAdBlockEnabled.value = settingsDao.getValue(KEY_AD_BLOCK)?.toBoolean() ?: true
                 _isSearchSuggestions.value = settingsDao.getValue(KEY_SEARCH_SUGGESTIONS)?.toBoolean() ?: true
                 _searchEngine.value = settingsDao.getValue(KEY_SEARCH_ENGINE) ?: DEFAULT_SEARCH_ENGINE
+                _isDohEnabled.value = settingsDao.getValue(KEY_DOH)?.toBoolean() ?: false
+                _cookieMode.value = settingsDao.getValue(KEY_COOKIE_MODE) ?: "all"
                 Log.d(TAG, "Settings loaded from DB")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load settings", e)
             }
+
+            // Migrate SP settings
+            if (context != null) migrateSettingsFromSP(context)
         }
 
         // Ensure default quick links exist
@@ -96,6 +112,7 @@ class SettingsManager(
     fun toggleAmoledDark() = toggleSetting(KEY_AMOLED_DARK, _isAmoledDark)
     fun toggleAdBlock() = toggleSetting(KEY_AD_BLOCK, _isAdBlockEnabled)
     fun toggleSearchSuggestions() = toggleSetting(KEY_SEARCH_SUGGESTIONS, _isSearchSuggestions)
+    fun toggleDoh() = toggleSetting(KEY_DOH, _isDohEnabled)
 
     fun setSearchEngine(url: String) {
         _searchEngine.value = url
@@ -104,6 +121,18 @@ class SettingsManager(
                 settingsDao.setValue(SettingsEntity(KEY_SEARCH_ENGINE, url))
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to set search engine", e)
+            }
+        }
+    }
+
+    fun setCookieMode(mode: String) {
+        _cookieMode.value = mode
+        scope.launch {
+            try {
+                settingsDao.setValue(SettingsEntity(KEY_COOKIE_MODE, mode))
+                Log.d(TAG, "Cookie mode set to: $mode")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to set cookie mode", e)
             }
         }
     }
@@ -149,6 +178,40 @@ class SettingsManager(
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to update quick link", e)
             }
+        }
+    }
+
+    // --- SP migration ---
+
+    private suspend fun migrateSettingsFromSP(context: Context) {
+        try {
+            val prefs: SharedPreferences =
+                context.getSharedPreferences("browser_prefs", Context.MODE_PRIVATE)
+
+            // Only migrate if SP has settings data and Room doesn't
+            if (!prefs.contains("dark_mode") && !prefs.contains("search_engine")) return
+            if (settingsDao.getValue(KEY_DARK_MODE) != null) {
+                // Room already has settings, just clear SP
+                prefs.edit().remove(KEY_DARK_MODE).remove(KEY_AMOLED_DARK)
+                    .remove(KEY_AD_BLOCK).remove(KEY_SEARCH_ENGINE)
+                    .remove(KEY_SEARCH_SUGGESTIONS).apply()
+                return
+            }
+
+            Log.d(TAG, "Migrating settings from SP to Room")
+            prefs.getString("search_engine", null)?.let { setSearchEngine(it) }
+            prefs.getBoolean("dark_mode", false).let { if (it) toggleDarkMode() }
+            prefs.getBoolean("amoled_dark", false).let { if (it) toggleAmoledDark() }
+            prefs.getBoolean("ad_block", true).let { if (!it) toggleAdBlock() }
+            prefs.getBoolean("search_suggestions", true).let { if (!it) toggleSearchSuggestions() }
+
+            // Clean up migrated keys
+            prefs.edit().remove(KEY_DARK_MODE).remove(KEY_AMOLED_DARK)
+                .remove(KEY_AD_BLOCK).remove(KEY_SEARCH_ENGINE)
+                .remove(KEY_SEARCH_SUGGESTIONS).apply()
+            Log.d(TAG, "Settings migration complete")
+        } catch (e: Exception) {
+            Log.e(TAG, "Settings migration failed", e)
         }
     }
 }

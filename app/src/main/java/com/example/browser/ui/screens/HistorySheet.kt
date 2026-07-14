@@ -22,8 +22,12 @@ fun HistorySheet(
     viewModel: BrowserViewModel,
     onDismiss: () -> Unit
 ) {
-    val history by viewModel.history.collectAsState()
-    val dateFormat = remember { SimpleDateFormat("MM/dd HH:mm", Locale.getDefault()) }
+    var searchQuery by remember { mutableStateOf("") }
+    val history by if (searchQuery.isNotBlank()) {
+        viewModel.bookmarkManager.searchHistory(searchQuery).collectAsState(initial = emptyList())
+    } else {
+        viewModel.history.collectAsState()
+    }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -42,12 +46,35 @@ fun HistorySheet(
                 )
                 if (history.isNotEmpty()) {
                     TextButton(onClick = { viewModel.clearHistory() }) {
-                        Text("Clear All", color = MaterialTheme.colorScheme.error)
+                        Icon(
+                            imageVector = Icons.Default.DeleteSweep,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Clear")
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Search bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                placeholder = { Text("Search history...") },
+                leadingIcon = { Icon(Icons.Default.Search, null) },
+                trailingIcon = {
+                    if (searchQuery.isNotBlank()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Default.Clear, "Clear")
+                        }
+                    }
+                },
+                singleLine = true
+            )
 
             if (history.isEmpty()) {
                 Box(
@@ -56,12 +83,23 @@ fun HistorySheet(
                         .height(120.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "No history yet",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Default.History,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            if (searchQuery.isNotBlank()) "No results" else "No history yet",
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    }
                 }
             } else {
+                val dateFormat = remember { SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()) }
+
                 LazyColumn {
                     items(history) { item ->
                         ListItem(
@@ -82,7 +120,7 @@ fun HistorySheet(
                                     )
                                     Text(
                                         text = dateFormat.format(Date(item.visitedAt)),
-                                        style = MaterialTheme.typography.bodySmall,
+                                        style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                                     )
                                 }
@@ -91,7 +129,7 @@ fun HistorySheet(
                                 Icon(
                                     imageVector = Icons.Default.History,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.secondary
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                 )
                             },
                             modifier = Modifier.clickable {

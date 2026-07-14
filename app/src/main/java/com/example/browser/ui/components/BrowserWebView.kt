@@ -1,181 +1,289 @@
 package com.example.browser.ui.components
 
-import android.app.DownloadManager
-
 import android.annotation.SuppressLint
+import android.app.DownloadManager
 import android.graphics.Bitmap
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
+import android.widget.FrameLayout
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.browser.manager.TabManager
 import com.example.browser.ui.viewmodel.BrowserViewModel
 import com.example.browser.util.AdBlocker
 
+private const val TAG = "BrowserWebView"
+
+/**
+ * BrowserWebView v2: uses TabManager's WebView pool.
+ * Each tab has its own WebView instance. Switching tabs swaps views
+ * in the container instead of creating new ones.
+ */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun BrowserWebView(
     viewModel: BrowserViewModel,
     modifier: Modifier = Modifier
 ) {
-    val currentUrl by viewModel.currentUrl.collectAsState()
+    val context = LocalContext.current
+    val activeTabIndex by viewModel.activeTabIndex.collectAsState()
+    val tabs by viewModel.tabs.collectAsState()
     val isAdBlockEnabled by viewModel.isAdBlockEnabled.collectAsState()
+    val progress by viewModel.pageProgress.collectAsState()
 
-    var webView by remember { mutableStateOf<WebView?>(null) }
-    var isRefreshing by remember { mutableStateOf(false) }
+    var container by remember { mutableStateOf<FrameLayout?>(null) }
+    var previousTabIndex by remember { mutableIntStateOf(-1) }
 
-    LaunchedEffect(currentUrl) {
-        webView?.let { wv ->
-            if (currentUrl.isNotBlank() && currentUrl != wv.url) {
-                wv.loadUrl(currentUrl)
+    // Swap WebView when tab changes
+    LaunchedEffect(activeTabIndex, tabs.size) {
+        val tab = tabs.getOrNull(activeTabIndex) ?: return@LaunchedEffect
+        val frame = container ?: return@LaunchedEffect
+
+        // Remove old WebView from container
+        if (frame.childCount > 0) {
+            val oldWv = frame.getChildAt(0)
+            frame.removeView(oldWv)
+            // Pause the old WebView to save resources
+            (oldWv as? WebView)?.onPause()
+        }
+
+        // Get or create WebView for new tab
+        val wv = viewModel.tabManager.getOrCreateWebView(tab.id)
+
+        // Configure WebView
+        configureWebView(wv, viewModel, isAdBlockEnabled)
+
+        // Attach to container
+        if (wv.parent != null) {
+            (wv.parent as? ViewGroup)?.removeView(wv)
+        }
+        frame.addView(wv)
+
+        // Resume the new WebView
+        wv.onResume()
+
+        // Update ViewModel's active reference
+        viewModel.setActiveWebView(wv)
+
+        // Sync ViewModel state from tab
+        viewModel.syncFromTab(tab)
+
+        // Load URL if this is a fresh tab or switching tabs
+        if (previousTabIndex != activeTabIndex) {
+            if (tab.url.isNotBlank() && tab.url != "about:blank" && tab.url != wv.url) {
+                wv.loadUrl(tab.url)
             }
+            previousTabIndex = activeTabIndex
         }
     }
+
+    // Handle URL changes from navigation bar (user types new URL)
+    val currentUrl by viewModel.currentUrl.collectAsState()
+    LaunchedEffect(currentUrl) {
+        val wv = viewModel.getActiveWebView() ?: return@LaunchedEffect
+        if (currentUrl.isNotBlank() && currentUrl != "about:blank" && currentUrl != wv.url) {
+            wv.loadUrl(currentUrl)
+        }
+    }
+
+    var isPullingToRefresh by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
             .pointerInput(Unit) {
-                detectHorizontalDragGestures { _, dragAmount ->
-                    if (dragAmount > 150) viewModel.goBack()
-                    else if (dragAmount < -150) viewModel.goForward()
+                detectDragGestures { change, dragAmount ->
+                    change.consume()
+                    when {
+                        // Horizontal swipe: back/forward
+                        dragAmount.x > 150 -> viewModel.goBack()
+                        dragAmount.x < -150 -> viewModel.goForward()
+                        // Vertical swipe down at top: pull to refresh
+                        dragAmount.y > 100 -> {
+                            val wv = viewModel.getActiveWebView()
+                            if (wv != null && !wv.canScrollVertically(-1)) {
+                                isPullingToRefresh = true
+                                wv.reload()
+                            }
+                        }
+                    }
                 }
             }
     ) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
-            factory = { context ->
-                WebView(context).apply {
+            factory = { ctx ->
+                FrameLayout(ctx).apply {
                     layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-
-                    settings.apply {
-                        javaScriptEnabled = true
-                        domStorageEnabled = true
-                        databaseEnabled = true
-                        allowFileAccess = false
-                        allowContentAccess = false
-                        mediaPlaybackRequiresUserGesture = false
-                        setSupportZoom(true)
-                        builtInZoomControls = true
-                        displayZoomControls = false
-                        loadWithOverviewMode = true
-                        useWideViewPort = true
-                        cacheMode = WebSettings.LOAD_DEFAULT
-                        mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-                        textZoom = 100
-                        // Enable video fullscreen support
-                        loadWithOverviewMode = true
-                        useWideViewPort = true
-                    }
-
-                    webViewClient = object : WebViewClient() {
-                        override fun shouldInterceptRequest(
-                            view: WebView?, request: WebResourceRequest?
-                        ): WebResourceResponse? {
-                            if (isAdBlockEnabled && request != null) {
-                                if (AdBlocker.isAd(request.url.toString())) {
-                                    return WebResourceResponse("text/plain", "utf-8", "".byteInputStream())
-                                }
-                            }
-                            return super.shouldInterceptRequest(view, request)
-                        }
-
-                        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                            super.onPageStarted(view, url, favicon)
-                            viewModel.onLoadingChanged(true)
-                            url?.let { viewModel.onUrlChanged(it) }
-                        }
-
-                        override fun onPageFinished(view: WebView?, url: String?) {
-                            super.onPageFinished(view, url)
-                            isRefreshing = false
-                            url?.let { viewModel.onPageFinished(it, view?.title ?: "") }
-                            viewModel.onNavigationStateChanged(
-                                view?.canGoBack() ?: false,
-                                view?.canGoForward() ?: false
-                            )
-                        }
-
-                        override fun shouldOverrideUrlLoading(
-                            view: WebView?, request: WebResourceRequest?
-                        ): Boolean = false
-                    }
-
-                    webChromeClient = object : WebChromeClient() {
-                        override fun onReceivedTitle(view: WebView?, title: String?) {
-                            super.onReceivedTitle(view, title)
-                            title?.let { viewModel.onTitleChanged(it) }
-                        }
-
-                        override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
-                            view?.let { viewModel.enterFullScreen(it) }
-                            super.onShowCustomView(view, callback)
-                        }
-
-                        override fun onHideCustomView() {
-                            viewModel.exitFullScreen()
-                            super.onHideCustomView()
-                        }
-                    }
-
-                    setDownloadListener { url, _, _, _, _ ->
-                        try {
-                            val request = DownloadManager.Request(android.net.Uri.parse(url))
-                            request.setNotificationVisibility(
-                                DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
-                            )
-                            val dm = context.getSystemService(android.content.Context.DOWNLOAD_SERVICE) as DownloadManager
-                            dm.enqueue(request)
-                            Log.d("BrowserWebView", "Download started: $url")
-                        } catch (e: Exception) {
-                            Log.e("BrowserWebView", "Download failed: $url", e)
-                        }
-                    }
-
-                    // Long press context menu
-                    setOnLongClickListener { v ->
-                        val hitTestResult = (v as WebView).hitTestResult
-                        if (hitTestResult.type == WebView.HitTestResult.SRC_ANCHOR_TYPE ||
-                            hitTestResult.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
-                            val url = hitTestResult.extra
-                            if (url != null) {
-                                // Trigger context menu via ViewModel
-                                true
-                            } else false
-                        } else false
-                    }
-
-                    viewModel.setActiveWebView(this)
-                    webView = this
+                    container = this
                 }
-            },
-            update = { }
+            }
         )
 
         // Pull to refresh indicator
-        if (isRefreshing) {
+        if (isPullingToRefresh && viewModel.isLoading.collectAsState().value) {
+            isPullingToRefresh = false
+        }
+        if (isPullingToRefresh) {
             LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            )
+        }
+
+        // Page loading progress bar
+        if (progress in 1..99) {
+            LinearProgressIndicator(
+                progress = { progress / 100f },
+                modifier = Modifier.fillMaxWidth(),
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
         }
     }
 }
 
-// Helper extension for pull-to-refresh via swipe down
-@Composable
-fun Modifier.pullToRefresh(
-    isRefreshing: Boolean,
-    onRefresh: () -> Unit
-): Modifier {
-    return this.pointerInput(isRefreshing) {
-        detectHorizontalDragGestures { _, _ -> }
+/**
+ * Configure a WebView with standard settings and callbacks.
+ * Called once per WebView when it's first attached.
+ */
+@SuppressLint("SetJavaScriptEnabled")
+private fun configureWebView(
+    wv: WebView,
+    viewModel: BrowserViewModel,
+    isAdBlockEnabled: Boolean
+) {
+    // Skip if already configured
+    if (wv.tag == "configured") return
+    wv.tag = "configured"
+
+    wv.settings.apply {
+        javaScriptEnabled = true
+        domStorageEnabled = true
+        databaseEnabled = true
+        allowFileAccess = false
+        allowContentAccess = false
+        mediaPlaybackRequiresUserGesture = false
+        setSupportZoom(true)
+        builtInZoomControls = true
+        displayZoomControls = false
+        loadWithOverviewMode = true
+        useWideViewPort = true
+        cacheMode = WebSettings.LOAD_DEFAULT
+        mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+        textZoom = 100
+    }
+
+    wv.webViewClient = object : WebViewClient() {
+        override fun shouldInterceptRequest(
+            view: WebView?, request: WebResourceRequest?
+        ): WebResourceResponse? {
+            if (isAdBlockEnabled && request != null) {
+                if (AdBlocker.isAd(request.url.toString())) {
+                    return WebResourceResponse("text/plain", "utf-8", "".byteInputStream())
+                }
+            }
+            return super.shouldInterceptRequest(view, request)
+        }
+
+        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+            super.onPageStarted(view, url, favicon)
+            viewModel.onLoadingChanged(true)
+            url?.let { viewModel.onUrlChanged(it) }
+        }
+
+        override fun onPageFinished(view: WebView?, url: String?) {
+            super.onPageFinished(view, url)
+            url?.let { viewModel.onPageFinished(it, view?.title ?: "") }
+            viewModel.onNavigationStateChanged(
+                view?.canGoBack() ?: false,
+                view?.canGoForward() ?: false
+            )
+        }
+
+        override fun shouldOverrideUrlLoading(
+            view: WebView?, request: WebResourceRequest?
+        ): Boolean = false
+
+        override fun onReceivedError(
+            view: WebView?, request: WebResourceRequest?, error: WebResourceError?
+        ) {
+            super.onReceivedError(view, request, error)
+            // Only handle main frame errors
+            if (request?.isForMainFrame == true) {
+                val errorCode = error?.errorCode ?: 0
+                val desc = error?.description?.toString() ?: "Unknown error"
+                Log.e(TAG, "Page error: $errorCode - $desc for ${request.url}")
+                viewModel.onPageError(errorCode, desc, request.url?.toString())
+            }
+        }
+
+        override fun onReceivedSslError(
+            view: WebView?, handler: SslErrorHandler?, error: SslError?
+        ) {
+            Log.e(TAG, "SSL error: ${error?.primaryError} for ${error?.url}")
+            // Cancel by default - don't proceed with invalid SSL
+            handler?.cancel()
+            viewModel.onSslError(error)
+        }
+    }
+
+    wv.webChromeClient = object : WebChromeClient() {
+        override fun onReceivedTitle(view: WebView?, title: String?) {
+            super.onReceivedTitle(view, title)
+            title?.let { viewModel.onTitleChanged(it) }
+        }
+
+        override fun onProgressChanged(view: WebView?, newProgress: Int) {
+            super.onProgressChanged(view, newProgress)
+            viewModel.onProgressChanged(newProgress)
+        }
+
+        override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
+            view?.let { viewModel.enterFullScreen(it) }
+            super.onShowCustomView(view, callback)
+        }
+
+        override fun onHideCustomView() {
+            viewModel.exitFullScreen()
+            super.onHideCustomView()
+        }
+    }
+
+    wv.setDownloadListener { url, _, _, _, _ ->
+        try {
+            val request = DownloadManager.Request(android.net.Uri.parse(url))
+            request.setNotificationVisibility(
+                DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+            )
+            request.setTitle("Downloading...")
+            val dm = wv.context.getSystemService(android.content.Context.DOWNLOAD_SERVICE) as DownloadManager
+            dm.enqueue(request)
+            Log.d(TAG, "Download started: $url")
+        } catch (e: Exception) {
+            Log.e(TAG, "Download failed: $url", e)
+        }
+    }
+
+    wv.setOnLongClickListener { v ->
+        val hitTestResult = (v as WebView).hitTestResult
+        if (hitTestResult.type == WebView.HitTestResult.SRC_ANCHOR_TYPE ||
+            hitTestResult.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+            val url = hitTestResult.extra
+            if (url != null) {
+                viewModel.onLongPressUrl(url)
+                true
+            } else false
+        } else false
     }
 }

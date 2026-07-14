@@ -6,11 +6,10 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import android.view.View
-import android.webkit.CookieManager
-import android.webkit.WebSettings
-import android.webkit.WebView
+import android.webkit.*
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,13 +18,16 @@ import com.example.browser.data.model.*
 import com.example.browser.manager.BookmarkManager
 import com.example.browser.manager.SettingsManager
 import com.example.browser.manager.TabManager
-import com.example.browser.util.AdBlocker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
+import java.net.URL
+import java.net.URLEncoder
 
 private const val TAG = "BrowserViewModel"
 
@@ -33,24 +35,32 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val db = BrowserDatabase.getInstance(application)
 
     // --- Managers ---
-    val tabManager = TabManager(application)
+    val tabManager = TabManager(
+        context = application,
+        tabStateDao = db.tabStateDao(),
+        scope = viewModelScope
+    )
     val bookmarkManager = BookmarkManager(
         bookmarkDao = db.bookmarkDao(),
         historyDao = db.historyDao(),
         readingListDao = db.readingListDao(),
         tabGroupDao = db.tabGroupDao(),
-        scope = viewModelScope
+        bookmarkFolderDao = db.bookmarkFolderDao(),
+        scope = viewModelScope,
+        context = application
     )
     val settingsManager = SettingsManager(
         settingsDao = db.settingsDao(),
         quickLinkDao = db.quickLinkDao(),
-        scope = viewModelScope
+        scope = viewModelScope,
+        context = application
     )
 
-    // --- Delegated flows (backward compat for UI) ---
+    // --- Delegated flows ---
     val tabs = tabManager.tabs
     val activeTabIndex = tabManager.activeTabIndex
     val bookmarks = bookmarkManager.bookmarks
+    val bookmarkFolders = bookmarkManager.bookmarkFolders
     val history = bookmarkManager.history
     val readingList = bookmarkManager.readingList
     val tabGroups = bookmarkManager.tabGroups
@@ -59,6 +69,8 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     val isAmoledDark = settingsManager.isAmoledDark
     val isAdBlockEnabled = settingsManager.isAdBlockEnabled
     val isSearchSuggestions = settingsManager.isSearchSuggestions
+    val isDohEnabled = settingsManager.isDohEnabled
+    val cookieMode = settingsManager.cookieMode
 
     // --- URL bar state ---
     private val _currentUrl = MutableStateFlow("")
@@ -97,6 +109,24 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     val isCustomCssEnabled: StateFlow<Boolean> = _isCustomCssEnabled.asStateFlow()
     private val _userAgent = MutableStateFlow<String?>(null)
     val userAgent: StateFlow<String?> = _userAgent.asStateFlow()
+    private val _pageProgress = MutableStateFlow(0)
+    val pageProgress: StateFlow<Int> = _pageProgress.asStateFlow()
+
+    // --- Search suggestions ---
+    private val _searchSuggestions = MutableStateFlow<List<String>>(emptyList())
+    val searchSuggestions: StateFlow<List<String>> = _searchSuggestions.asStateFlow()
+
+    // --- Page error state ---
+    private val _pageError = MutableStateFlow<PageError?>(null)
+    val pageError: StateFlow<PageError?> = _pageError.asStateFlow()
+
+    // --- SSL error state ---
+    private val _sslError = MutableStateFlow<SslError?>(null)
+    val sslError: StateFlow<SslError?> = _sslError.asStateFlow()
+
+    // --- Long press URL ---
+    private val _longPressUrl = MutableStateFlow<String?>(null)
+    val longPressUrl: StateFlow<String?> = _longPressUrl.asStateFlow()
 
     // --- Bottom sheet visibility ---
     private val _showBookmarks = MutableStateFlow(false); val showBookmarks: StateFlow<Boolean> = _showBookmarks.asStateFlow()
@@ -115,13 +145,35 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val _showUserAgent = MutableStateFlow(false); val showUserAgent: StateFlow<Boolean> = _showUserAgent.asStateFlow()
     private val _showZoomControl = MutableStateFlow(false); val showZoomControl: StateFlow<Boolean> = _showZoomControl.asStateFlow()
     private val _showCustomCss = MutableStateFlow(false); val showCustomCss: StateFlow<Boolean> = _showCustomCss.asStateFlow()
+    private val _showBookmarkFolders = MutableStateFlow(false); val showBookmarkFolders: StateFlow<Boolean> = _showBookmarkFolders.asStateFlow()
 
-    // Active WebView reference (set by BrowserWebView composable)
     private var activeWebView: WebView? = null
 
     fun setActiveWebView(webView: WebView?) {
         activeWebView = webView
         Log.d(TAG, "Active WebView set: ${webView != null}")
+    }
+
+    fun getActiveWebView(): WebView? = activeWebView
+
+    fun syncFromTab(tab: Tab) {
+        _currentUrl.value = tab.url
+        _currentTitle.value = tab.title
+        viewModelScope.launch {
+            _isBookmarked.value = bookmarkManager.isBookmarked(tab.url)
+        }
+    }
+
+    // --- Intent handling ---
+
+    fun handleIntentUri(uri: Uri?) {
+        if (uri == null) return
+        val url = uri.toString()
+        Log.d(TAG, "Handling intent URI: $url")
+        if (url.isNotBlank()) {
+            addTab()
+            navigateTo(url)
+        }
     }
 
     // --- Navigation ---
@@ -135,10 +187,12 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         Log.d(TAG, "navigateTo: $finalUrl")
         _currentUrl.value = finalUrl
         tabManager.updateActiveTabUrl(finalUrl)
+        _pageError.value = null // Clear error on new navigation
     }
 
     fun onUrlChanged(url: String) {
         _currentUrl.value = url
+        _pageError.value = null
         viewModelScope.launch {
             _isBookmarked.value = bookmarkManager.isBookmarked(url)
         }
@@ -150,6 +204,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun onLoadingChanged(loading: Boolean) { _isLoading.value = loading }
+    fun onProgressChanged(progress: Int) { _pageProgress.value = progress }
 
     fun onNavigationStateChanged(canGoBack: Boolean, canGoForward: Boolean) {
         _canGoBack.value = canGoBack
@@ -160,6 +215,8 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         _currentUrl.value = url
         _currentTitle.value = title
         _isLoading.value = false
+        _pageProgress.value = 0
+        _pageError.value = null
         tabManager.updateActiveTabUrl(url)
         tabManager.updateActiveTabTitle(title)
 
@@ -177,12 +234,30 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun onPageError(errorCode: Int, description: String, url: String?) {
+        _pageError.value = PageError(errorCode, description, url)
+        _isLoading.value = false
+        _pageProgress.value = 0
+    }
+
+    fun onSslError(error: SslError?) {
+        _sslError.value = error
+    }
+
+    fun dismissSslError() { _sslError.value = null }
+
+    fun onLongPressUrl(url: String) {
+        _longPressUrl.value = url
+    }
+
+    fun dismissLongPressMenu() { _longPressUrl.value = null }
+
     fun goBack() { activeWebView?.goBack() }
     fun goForward() { activeWebView?.goForward() }
     fun reload() { activeWebView?.reload() }
     fun stopLoading() { activeWebView?.stopLoading() }
 
-    // --- Tab management (delegates to TabManager) ---
+    // --- Tab management ---
 
     fun addTab(incognito: Boolean = false) {
         tabManager.addTab(incognito)
@@ -190,6 +265,8 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         _currentTitle.value = if (incognito) "Incognito" else "New Tab"
         _canGoBack.value = false
         _canGoForward.value = false
+        _pageProgress.value = 0
+        _pageError.value = null
     }
 
     fun switchTab(index: Int) {
@@ -197,6 +274,8 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         val tab = tabManager.tabs.value[index]
         _currentUrl.value = tab.url
         _currentTitle.value = tab.title
+        _pageProgress.value = 0
+        _pageError.value = null
     }
 
     fun closeTab(index: Int) {
@@ -208,7 +287,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    // --- Bookmarks (delegates to BookmarkManager) ---
+    // --- Bookmarks ---
 
     fun toggleBookmark() {
         val url = _currentUrl.value
@@ -244,18 +323,51 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
 
     fun removeTabGroup(id: String) = bookmarkManager.removeTabGroup(id)
 
-    // --- Settings (delegates to SettingsManager) ---
+    fun addBookmarkFolder(name: String) = bookmarkManager.addBookmarkFolder(name)
+    fun removeBookmarkFolder(id: String) = bookmarkManager.removeBookmarkFolder(id)
+
+    // --- Settings ---
 
     fun toggleDarkMode() = settingsManager.toggleDarkMode()
     fun toggleAmoledDark() = settingsManager.toggleAmoledDark()
     fun toggleAdBlock() = settingsManager.toggleAdBlock()
     fun toggleSearchSuggestions() = settingsManager.toggleSearchSuggestions()
+    fun toggleDoh() = settingsManager.toggleDoh()
     fun setSearchEngine(url: String) = settingsManager.setSearchEngine(url)
     fun getSearchEngine(): String = settingsManager.searchEngine.value
+    fun setCookieMode(mode: String) = settingsManager.setCookieMode(mode)
 
     fun addQuickLink(link: QuickLink) = settingsManager.addQuickLink(link)
     fun removeQuickLink(id: String) = settingsManager.removeQuickLink(id)
     fun updateQuickLink(link: QuickLink) = settingsManager.updateQuickLink(link)
+
+    // --- Search suggestions ---
+
+    fun fetchSearchSuggestions(query: String) {
+        if (query.length < 2) {
+            _searchSuggestions.value = emptyList()
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val encoded = URLEncoder.encode(query, "UTF-8")
+                val url = URL("https://suggestqueries.google.com/complete/search?client=firefox&q=$encoded")
+                val connection = url.openConnection()
+                connection.connectTimeout = 1000
+                connection.readTimeout = 1000
+                val response = connection.getInputStream().bufferedReader().readText()
+                val jsonArray = JSONArray(response)
+                val suggestionsArray = jsonArray.getJSONArray(1)
+                val suggestions = (0 until suggestionsArray.length()).map { suggestionsArray.getString(it) }
+                _searchSuggestions.value = suggestions.take(6)
+            } catch (e: Exception) {
+                Log.v(TAG, "Search suggestions failed: ${e.message}")
+                _searchSuggestions.value = emptyList()
+            }
+        }
+    }
+
+    fun clearSearchSuggestions() { _searchSuggestions.value = emptyList() }
 
     // --- Desktop mode ---
 
@@ -442,6 +554,29 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // --- Keyboard shortcuts ---
+
+    fun handleKeyShortcut(keyCode: Int): Boolean {
+        return when (keyCode) {
+            android.view.KeyEvent.KEYCODE_R -> { reload(); true }
+            android.view.KeyEvent.KEYCODE_L -> { _currentUrl.value = ""; true } // Focus URL bar
+            android.view.KeyEvent.KEYCODE_T -> { addTab(); true }
+            android.view.KeyEvent.KEYCODE_W -> {
+                val idx = activeTabIndex.value
+                if (tabs.value.size > 1) closeTab(idx)
+                true
+            }
+            android.view.KeyEvent.KEYCODE_D -> { toggleBookmark(); true }
+            android.view.KeyEvent.KEYCODE_H -> { goBack(); true }
+            android.view.KeyEvent.KEYCODE_F -> { toggleFindInPage(); true }
+            android.view.KeyEvent.KEYCODE_N -> { toggleReadingMode(); true }
+            android.view.KeyEvent.KEYCODE_PLUS -> { setZoomLevel((activeWebView?.settings?.textZoom ?: 100) + 10); true }
+            android.view.KeyEvent.KEYCODE_MINUS -> { setZoomLevel((activeWebView?.settings?.textZoom ?: 100) - 10); true }
+            android.view.KeyEvent.KEYCODE_0 -> { setZoomLevel(100); true }
+            else -> false
+        }
+    }
+
     // --- UI toggles ---
 
     fun toggleBookmarks() { _showBookmarks.value = !_showBookmarks.value }
@@ -459,6 +594,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun toggleUserAgent() { _showUserAgent.value = !_showUserAgent.value }
     fun toggleZoomControl() { _showZoomControl.value = !_showZoomControl.value }
     fun toggleCustomCssSheet() { _showCustomCss.value = !_showCustomCss.value }
+    fun toggleBookmarkFolders() { _showBookmarkFolders.value = !_showBookmarkFolders.value }
 
     fun hideOverlays() {
         _showBookmarks.value = false; _showHistory.value = false; _showTabs.value = false
@@ -466,7 +602,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         _showViewSource.value = false; _showReadingList.value = false; _showTabGroups.value = false
         _showQuickLinksEditor.value = false; _showQrCode.value = false; _showPageInfo.value = false
         _showBackupRestore.value = false; _showUserAgent.value = false; _showZoomControl.value = false
-        _showCustomCss.value = false
+        _showCustomCss.value = false; _showBookmarkFolders.value = false
     }
 
     override fun onCleared() {
@@ -479,3 +615,9 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         private const val DESKTOP_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
 }
+
+data class PageError(
+    val errorCode: Int,
+    val description: String,
+    val url: String?
+)

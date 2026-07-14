@@ -14,9 +14,11 @@ import com.example.browser.data.local.entity.*
         ReadingItemEntity::class,
         QuickLinkEntity::class,
         TabGroupEntity::class,
-        SettingsEntity::class
+        SettingsEntity::class,
+        TabStateEntity::class,
+        BookmarkFolderEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class BrowserDatabase : RoomDatabase() {
@@ -26,6 +28,8 @@ abstract class BrowserDatabase : RoomDatabase() {
     abstract fun quickLinkDao(): QuickLinkDao
     abstract fun tabGroupDao(): TabGroupDao
     abstract fun settingsDao(): SettingsDao
+    abstract fun tabStateDao(): TabStateDao
+    abstract fun bookmarkFolderDao(): BookmarkFolderDao
 
     companion object {
         @Volatile

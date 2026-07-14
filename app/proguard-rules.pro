@@ -3,3 +3,5 @@
 -keep class com.example.browser.data.local.entity.** { *; }
 -keep class com.example.browser.data.local.dao.** { *; }
 -keep class com.example.browser.data.local.BrowserDatabase { *; }
+-keep class com.example.browser.manager.** { *; }
+-keep class com.example.browser.ui.viewmodel.** { *; }

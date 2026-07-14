@@ -2,18 +2,18 @@
 
 [![Build APK](https://github.com/d2026714/android-browser/actions/workflows/build.yml/badge.svg)](https://github.com/d2026714/android-browser/actions/workflows/build.yml)
 
-A lightweight, modern Android browser built with **Kotlin**, **Jetpack Compose**, and **WebView**. **40+ features**, zero dependencies on third-party services.
+A lightweight, modern Android browser built with **Kotlin**, **Jetpack Compose**, and **WebView**. **50+ features**, zero dependencies on third-party services.
 
 ## ✨ Features (v2.0.0)
 
 ### Core
-- 🌐 Browsing (back/forward/reload) | 📑 Multi-tab + badge | 🥷 Incognito | 🔍 Smart search bar
+- 🌐 Browsing (back/forward/reload) | 📑 Multi-tab + badge | 🥷 Incognito | 🔍 Smart search bar with suggestions
 
 ### Content
-- 🔖 Bookmarks | 📜 History | 📚 Reading List | 📑 Tab Groups | ⚡ Custom Quick Links
+- 🔖 Bookmarks + Folders | 📜 History with search | 📚 Reading List | 📑 Tab Groups | ⚡ Custom Quick Links
 
-### Privacy
-- 🚫 Ad blocker | 🔒 HTTPS indicator | 🍪 Clear cookies | ⚡ JavaScript toggle | 🛡️ Zero tracking
+### Privacy & Security
+- 🚫 Ad blocker | 🔒 HTTPS + SSL error handling | 🍪 Cookie control (all/1st-party/none) | ⚡ JavaScript toggle | 🛡️ Zero tracking | 🌐 DNS-over-HTTPS
 
 ### Display
 - 📖 Reading mode | 🌙 Dark + AMOLED | 🖥️ Desktop mode | 🌙 Blue light filter | 🎭 Custom User Agent | 🎨 Custom CSS | 🔍 Zoom control
@@ -22,36 +22,31 @@ A lightweight, modern Android browser built with **Kotlin**, **Jetpack Compose**
 - 🔎 Find in page | 📄 View source | 📸 Screenshot | 📤 Share | 📥 Downloads | 🌐 Translate | 📱 QR code | 📊 Page info | 📋 Copy link | 🖨️ Print | 💾 Backup/restore
 
 ### Power
-- 🔃 Swipe gestures | 📉 Data saver | 🎬 Full-screen video | 🚀 GitHub Actions CI
+- 🔃 Swipe gestures + Pull to refresh | 📉 Data saver | 🎬 Full-screen video | ⌨️ Keyboard shortcuts | ♿ Accessibility | 🕸️ WebView pool (tabs persist state) | 💾 Tab state persistence
 
-## 🏗️ Architecture (v2.0.0)
-
-**v2.0.0 重构：从"上帝 ViewModel"到分层架构**
+## 🏗️ Architecture
 
 ```
 manager/
-  TabManager.kt      — Tab 生命周期 + WebView 池
-  BookmarkManager.kt  — 书签/历史/阅读列表/标签组
-  SettingsManager.kt  — 设置持久化 + 快捷链接
+  TabManager.kt       — Tab lifecycle + WebView pool + tab state persistence
+  BookmarkManager.kt   — Bookmarks/History/Reading list/Tab groups/SP migration
+  SettingsManager.kt   — Settings persistence + Quick links + Cookie/DOH/SP migration
 
 data/local/
-  BrowserDatabase.kt  — Room 数据库
-  entity/             — Room Entity (6 张表)
-  dao/                — Room DAO (6 个)
+  BrowserDatabase.kt   — Room database (8 tables)
+  entity/              — Room Entity
+  dao/                 — Room DAO
 
 ui/viewmodel/
-  BrowserViewModel.kt — 薄编排层，委托给 Manager
+  BrowserViewModel.kt  — Thin orchestrator, delegates to managers
+
+ui/components/
+  BrowserWebView.kt    — WebView pool integration, pull-to-refresh, progress bar
+  ErrorPage.kt         — Custom error page
+  SslErrorDialog.kt    — SSL certificate error dialog
+  LongPressMenu.kt     — Long-press link context menu
+  NavigationBar.kt     — Search suggestions, accessibility
 ```
-
-### 核心改进
-
-| 改动 | v1.x | v2.0.0 |
-|------|------|--------|
-| 数据持久化 | SharedPreferences (JSON 序列化) | Room 数据库 |
-| ViewModel | 324 行上帝类 | 拆分为 3 个 Manager + 薄 ViewModel |
-| Tab 管理 | 仅存 URL/title，切换重建 | WebView 池，每个 Tab 独立 WebView |
-| 异常处理 | `catch (_: Exception) {}` | 全部带 `Log.e` 日志 |
-| 依赖注入 | 单例 + Application 强转 | 构造函数注入 DAO |
 
 ## 📦 Download
 
@@ -63,29 +58,36 @@ git clone https://github.com/d2026714/android-browser.git && cd android-browser 
 
 ## 🛠️ Tech
 
-Kotlin · Jetpack Compose · Material 3 · MVVM · Room · WebView · API 26-34
+Kotlin · Jetpack Compose · Material 3 · MVVM · Room · WebView · KSP · API 26-34
 
 ## 📋 Changelog
 
 ### v2.0.0
-- 🗄️ Room 数据库替换 SharedPreferences
-- 🧩 ViewModel 拆分：TabManager / BookmarkManager / SettingsManager
-- 🕸️ WebView 池：每个 Tab 持有独立 WebView，切换不重建
-- 📝 全面日志：替换所有空 catch，关键路径加 Log
-- 📦 添加 KSP + Room 依赖，移除 DataStore
+**Architecture:**
+- 🗄️ Room database replaces SharedPreferences (8 tables, 8 DAOs)
+- 🧩 ViewModel split into TabManager / BookmarkManager / SettingsManager
+- 🕸️ WebView pool: each tab holds its own WebView, switch without rebuild
+- 📝 All silent catches replaced with proper logging
+
+**New Features:**
+- 🔍 Search suggestions (Google Suggest API)
+- 📁 Bookmark folders (create/delete)
+- 🔎 History search (filter by title/URL)
+- 🌐 Intent handling (open links from other apps)
+- 💾 Tab state persistence (restore tabs on restart)
+- 📊 Page loading progress bar
+- 🛡️ SSL certificate error handling
+- 🚫 Custom error page
+- 🍪 Cookie control (all / first-party / none)
+- 🌐 DNS-over-HTTPS toggle
+- ⌨️ Keyboard shortcuts (R=reload, T=new tab, W=close, L=URL bar, D=bookmark, F=find, H=back, N=reader, +/-/0=zoom)
+- 🔗 Long-press link context menu (new tab, incognito, copy, share)
+- ⬇️ Pull-to-refresh gesture
+- ♿ Accessibility content descriptions on all interactive elements
+- 🔄 SP→Room data migration (seamless upgrade from v1.x)
 
 ### v1.4.0
-- 🌙 Blue light filter with intensity slider
-- 📉 Data saver (block images, use cache)
-- ⚡ JavaScript on/off toggle
-- 🎭 Custom User Agent (8 presets + custom)
-- 🎨 Custom CSS injection (dark reader, readability presets)
-- 🔍 Zoom control with slider and presets
-- 📊 Page info sheet
-- 📋 Copy link to clipboard
-- 🖨️ Print page support
-- 💾 Backup & restore (export/import JSON)
-- ⚙️ Settings reorganized with categories
+- Blue light filter, data saver, JavaScript toggle, custom UA/CSS, zoom, print, backup/restore
 
 ### v1.3.0
 - Reading List, Tab Groups, Quick Links Editor, QR Code, Translate, AMOLED

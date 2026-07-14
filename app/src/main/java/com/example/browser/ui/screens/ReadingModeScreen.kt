@@ -94,7 +94,7 @@ fun ReadingModeScreen(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier.padding(bottom = 16.dp),
                     color = MaterialTheme.colorScheme.outlineVariant
                 )
