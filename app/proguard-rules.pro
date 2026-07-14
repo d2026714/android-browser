@@ -1,0 +1,2 @@
+-keepattributes *Annotation*
+-keep class com.example.browser.data.model.** { *; }
