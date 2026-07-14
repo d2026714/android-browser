@@ -239,6 +239,10 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     // Reading mode
     fun toggleReadingMode() { _isReadingMode.value = !_isReadingMode.value }
 
+    // Full-screen video
+    fun enterFullScreen(view: View) { /* handled by WebChromeClient */ }
+    fun exitFullScreen() { /* handled by WebChromeClient */ }
+
     // View page source
     fun viewPageSource() {
         webViewRef?.evaluateJavascript("(function(){return document.documentElement.outerHTML;})()") { html ->
