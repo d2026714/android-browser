@@ -9,7 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
@@ -33,16 +35,16 @@ fun BackupRestoreSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-            Text("Backup & Restore", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 8.dp))
-            Text("Export or import your bookmarks, history, and settings.",
+            Text(stringResource(R.string.backup_restore), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 8.dp))
+            Text(stringResource(R.string.backup_restore_description),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.padding(bottom = 16.dp))
 
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row { Icon(Icons.Default.Backup, null, tint = MaterialTheme.colorScheme.primary); Spacer(Modifier.width(8.dp)); Text("Backup", style = MaterialTheme.typography.titleMedium) }
+                    Row { Icon(Icons.Default.Backup, null, tint = MaterialTheme.colorScheme.primary); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.backup), style = MaterialTheme.typography.titleMedium) }
                     Spacer(Modifier.height(8.dp))
-                    Text("Save all data to a JSON file.", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.save_all_data_json), style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = {
                         try {
@@ -56,23 +58,23 @@ fun BackupRestoreSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
                             val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
                             val intent = Intent(Intent.ACTION_SEND).apply { type = "application/json"; putExtra(Intent.EXTRA_STREAM, uri); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION) }
                             context.startActivity(Intent.createChooser(intent, "Save Backup").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                            message = "Backup created!"
+                            message = stringResource(R.string.backup_created)
                             Log.d(TAG, "Backup created: ${file.absolutePath}")
                         } catch (e: Exception) {
                             Log.e(TAG, "Backup failed", e)
                             message = "Error: ${e.message}"
                         }
-                    }) { Text("Create Backup") }
+                    }) { Text(stringResource(R.string.create_backup)) }
                 }
             }
 
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row { Icon(Icons.Default.Restore, null, tint = MaterialTheme.colorScheme.secondary); Spacer(Modifier.width(8.dp)); Text("Restore", style = MaterialTheme.typography.titleMedium) }
+                    Row { Icon(Icons.Default.Restore, null, tint = MaterialTheme.colorScheme.secondary); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.restore), style = MaterialTheme.typography.titleMedium) }
                     Spacer(Modifier.height(8.dp))
-                    Text("Import data from a backup file.", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.import_from_backup), style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(8.dp))
-                    OutlinedButton(onClick = { message = "Open a .json backup file with this browser to restore." }) { Text("Select Backup File") }
+                    OutlinedButton(onClick = { message = stringResource(R.string.open_backup_to_restore) }) { Text(stringResource(R.string.select_backup_file)) }
                 }
             }
 

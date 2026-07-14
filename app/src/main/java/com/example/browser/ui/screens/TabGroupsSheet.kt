@@ -14,8 +14,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.data.model.TabGroup
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
@@ -39,11 +41,11 @@ fun TabGroupsSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Tab Groups", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.tab_groups), style = MaterialTheme.typography.titleLarge)
                 FilledTonalButton(onClick = { showNewGroupDialog = true }) {
                     Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("New Group")
+                    Text(stringResource(R.string.new_group))
                 }
             }
 
@@ -55,7 +57,7 @@ fun TabGroupsSheet(
                         Icon(Icons.Default.FolderOpen, null, modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("No tab groups yet", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                        Text(stringResource(R.string.no_tab_groups_yet), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                     }
                 }
             } else {
@@ -75,11 +77,11 @@ fun TabGroupsSheet(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(group.name, style = MaterialTheme.typography.bodyMedium)
-                                    Text("${groupTabs.size} tabs", style = MaterialTheme.typography.bodySmall,
+                                    Text(stringResource(R.string.tabs_count_lower, groupTabs.size), style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                                 }
                                 IconButton(onClick = { viewModel.removeTabGroup(group.id) }) {
-                                    Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.Delete, stringResource(R.string.delete), modifier = Modifier.size(18.dp))
                                 }
                             }
                         }
@@ -94,12 +96,12 @@ fun TabGroupsSheet(
     if (showNewGroupDialog) {
         AlertDialog(
             onDismissRequest = { showNewGroupDialog = false },
-            title = { Text("New Tab Group") },
+            title = { Text(stringResource(R.string.new_tab_group)) },
             text = {
                 OutlinedTextField(
                     value = newGroupName,
                     onValueChange = { newGroupName = it },
-                    label = { Text("Group Name") },
+                    label = { Text(stringResource(R.string.group_name)) },
                     singleLine = true
                 )
             },
@@ -110,10 +112,10 @@ fun TabGroupsSheet(
                         newGroupName = ""
                         showNewGroupDialog = false
                     }
-                }) { Text("Create") }
+                }) { Text(stringResource(R.string.create)) }
             },
             dismissButton = {
-                TextButton(onClick = { showNewGroupDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showNewGroupDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }

@@ -10,8 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.translator.TranslationManager
 import com.example.browser.ui.viewmodel.BrowserViewModel
 import kotlinx.coroutines.launch
@@ -59,7 +61,7 @@ fun TranslateScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
-                "Translate",
+                stringResource(R.string.translate),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
@@ -76,11 +78,11 @@ fun TranslateScreen(
                     modifier = Modifier.weight(1f)
                 ) {
                     OutlinedTextField(
-                        value = if (sourceLang == "auto") "Auto Detect"
+                        value = if (sourceLang == "auto") stringResource(R.string.auto_detect)
                         else translationManager.getLanguageName(sourceLang),
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("From") },
+                        label = { Text(stringResource(R.string.from)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = sourceExpanded) },
                         modifier = Modifier.fillMaxWidth().menuAnchor()
                     )
@@ -89,7 +91,7 @@ fun TranslateScreen(
                         onDismissRequest = { sourceExpanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Auto Detect") },
+                            text = { Text(stringResource(R.string.auto_detect)) },
                             onClick = { sourceLang = "auto"; sourceExpanded = false }
                         )
                         translationManager.supportedLanguages.forEach { lang ->
@@ -112,7 +114,7 @@ fun TranslateScreen(
                     },
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
-                    Icon(Icons.Default.SwapHoriz, "Swap languages")
+                    Icon(Icons.Default.SwapHoriz, stringResource(R.string.swap_languages))
                 }
 
                 // Target language
@@ -125,7 +127,7 @@ fun TranslateScreen(
                         value = translationManager.getLanguageName(targetLang),
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("To") },
+                        label = { Text(stringResource(R.string.to)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = targetExpanded) },
                         modifier = Modifier.fillMaxWidth().menuAnchor()
                     )
@@ -150,8 +152,8 @@ fun TranslateScreen(
                 value = inputText,
                 onValueChange = { inputText = it },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp, max = 200.dp),
-                placeholder = { Text("Enter text to translate...") },
-                label = { Text("Input") },
+                placeholder = { Text(stringResource(R.string.enter_text_to_translate)) },
+                label = { Text(stringResource(R.string.input)) },
                 maxLines = 8
             )
 
@@ -185,7 +187,7 @@ fun TranslateScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
-                Text("Translate")
+                Text(stringResource(R.string.translate))
             }
 
             // Model status warning
@@ -212,7 +214,7 @@ fun TranslateScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    "Language model not downloaded",
+                                    stringResource(R.string.language_model_not_downloaded),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onErrorContainer
                                 )
@@ -220,7 +222,7 @@ fun TranslateScreen(
                                 if (!sourceReady) missing.add(translationManager.getLanguageName(sourceLang))
                                 if (!targetReady) missing.add(translationManager.getLanguageName(targetLang))
                                 Text(
-                                    "Missing: ${missing.joinToString(", ")}. Go to Translation Settings to download.",
+                                    stringResource(R.string.missing_models_hint, missing.joinToString(", ")),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
                                 )
@@ -242,21 +244,21 @@ fun TranslateScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Result",
+                        stringResource(R.string.result),
                         style = MaterialTheme.typography.titleMedium
                     )
                     Row {
                         IconButton(onClick = {
                             clipboardManager.setText(AnnotatedString(result.translatedText))
                         }) {
-                            Icon(Icons.Default.ContentCopy, "Copy translation")
+                            Icon(Icons.Default.ContentCopy, stringResource(R.string.copy_translation))
                         }
                         IconButton(onClick = {
                             // Use as new input
                             inputText = result.translatedText
                             viewModel.clearTranslationResult()
                         }) {
-                            Icon(Icons.Default.Input, "Use as input")
+                            Icon(Icons.Default.Input, stringResource(R.string.use_as_input))
                         }
                     }
                 }

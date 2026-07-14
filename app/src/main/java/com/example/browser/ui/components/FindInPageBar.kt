@@ -16,10 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.browser.R
 
 @Composable
 fun FindInPageBar(
@@ -41,7 +43,7 @@ fun FindInPageBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onClose, modifier = Modifier.size(36.dp)) {
-            Icon(Icons.Default.Close, "Close", modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.Close, stringResource(R.string.close), modifier = Modifier.size(20.dp))
         }
 
         Box(
@@ -53,7 +55,7 @@ fun FindInPageBar(
         ) {
             if (query.isEmpty()) {
                 Text(
-                    "Find in page",
+                    stringResource(R.string.find_in_page_placeholder),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     fontSize = 14.sp
                 )
@@ -89,11 +91,11 @@ fun FindInPageBar(
         }
 
         IconButton(onClick = onFindPrevious, modifier = Modifier.size(36.dp)) {
-            Icon(Icons.Default.KeyboardArrowUp, "Previous", modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.KeyboardArrowUp, stringResource(R.string.previous), modifier = Modifier.size(20.dp))
         }
 
         IconButton(onClick = onFindNext, modifier = Modifier.size(36.dp)) {
-            Icon(Icons.Default.KeyboardArrowDown, "Next", modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.KeyboardArrowDown, stringResource(R.string.next), modifier = Modifier.size(20.dp))
         }
     }
 }

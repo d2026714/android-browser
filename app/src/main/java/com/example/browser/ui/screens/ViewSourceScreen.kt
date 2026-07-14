@@ -10,9 +10,11 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,10 +31,10 @@ fun ViewSourceScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Page Source", maxLines = 1) },
+                title = { Text(stringResource(R.string.page_source), maxLines = 1) },
                 navigationIcon = {
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.Default.ArrowBack, stringResource(R.string.back))
                     }
                 },
                 actions = {
@@ -77,7 +79,7 @@ fun ViewSourceScreen(
                     .padding(12.dp)
             ) {
                 Text(
-                    text = pageSource ?: "Loading...",
+                    text = pageSource ?: stringResource(R.string.loading),
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
                     lineHeight = 16.sp,

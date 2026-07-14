@@ -24,6 +24,7 @@ import com.example.browser.notes.HighlightColor
 import com.example.browser.notes.NoteManager
 import com.example.browser.manager.SettingsManager
 import com.example.browser.manager.TabManager
+import com.example.browser.gecko.GeckoBrowserEngine
 import com.example.browser.adblock.AdBlockEngine
 import com.example.browser.adblock.AdBlockStats
 import com.example.browser.privacy.PrivacyReport
@@ -79,6 +80,11 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         noteDao = db.noteDao(),
         scope = viewModelScope
     )
+
+    // --- GeckoView Engine ---
+    val geckoEngine: GeckoBrowserEngine = GeckoBrowserEngine.getInstance(application)
+    private var activeGeckoSessionId: String? = null
+    private var useGeckoView = true  // Toggle between GeckoView and WebView
 
     private val _allNotes = MutableStateFlow<List<NoteEntity>>(emptyList())
     val allNotes: StateFlow<List<NoteEntity>> = _allNotes.asStateFlow()
@@ -208,6 +214,11 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private var activeWebView: WebView? = null
 
     init {
+        // Initialize GeckoView engine
+        if (useGeckoView) {
+            geckoEngine.initialize()
+        }
+
         // Collect notes
         viewModelScope.launch {
             noteManager.allNotesFlow().collect { _allNotes.value = it }
@@ -230,6 +241,20 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun getActiveWebView(): WebView? = activeWebView
+
+    /**
+     * Set the active GeckoSession for the current tab.
+     * Called by GeckoBrowserView when switching tabs.
+     */
+    fun setActiveGeckoSession(tabId: String, engine: GeckoBrowserEngine) {
+        activeGeckoSessionId = tabId
+        Log.d(TAG, "Active GeckoSession set for tab: $tabId")
+    }
+
+    /**
+     * Check if we're using GeckoView mode.
+     */
+    fun isUsingGeckoView(): Boolean = useGeckoView
 
     fun syncFromTab(tab: Tab) {
         _currentUrl.value = tab.url
@@ -333,10 +358,34 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
 
     fun dismissTextSelection() { _selectedText.value = null }
 
-    fun goBack() { activeWebView?.goBack() }
-    fun goForward() { activeWebView?.goForward() }
-    fun reload() { activeWebView?.reload() }
-    fun stopLoading() { activeWebView?.stopLoading() }
+    fun goBack() {
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { geckoEngine.goBack(it) }
+        } else {
+            activeWebView?.goBack()
+        }
+    }
+    fun goForward() {
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { geckoEngine.goForward(it) }
+        } else {
+            activeWebView?.goForward()
+        }
+    }
+    fun reload() {
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { geckoEngine.reload(it) }
+        } else {
+            activeWebView?.reload()
+        }
+    }
+    fun stopLoading() {
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { geckoEngine.stopLoading(it) }
+        } else {
+            activeWebView?.stopLoading()
+        }
+    }
 
     // --- Tab management ---
 
@@ -459,24 +508,55 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun applyDesktopMode() {
-        activeWebView?.let { wv ->
-            val ua = _userAgent.value
-            wv.settings.userAgentString = if (_isDesktopMode.value) {
-                ua ?: DESKTOP_UA
-            } else {
-                ua
+        if (useGeckoView) {
+            activeGeckoSessionId?.let {
+                geckoEngine.setDesktopMode(it, _isDesktopMode.value)
             }
-            wv.reload()
+        } else {
+            activeWebView?.let { wv ->
+                val ua = _userAgent.value
+                wv.settings.userAgentString = if (_isDesktopMode.value) {
+                    ua ?: DESKTOP_UA
+                } else {
+                    ua
+                }
+                wv.reload()
+            }
         }
     }
 
     // --- Find in page ---
 
     fun toggleFindInPage() { _isFindInPage.value = !_isFindInPage.value }
-    fun findInPage(query: String) { activeWebView?.findAllAsync(query) }
-    fun findNext() { activeWebView?.findNext(true) }
-    fun findPrevious() { activeWebView?.findNext(false) }
-    fun clearFindInPage() { activeWebView?.clearMatches(); _isFindInPage.value = false }
+    fun findInPage(query: String) {
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { geckoEngine.findAll(it, query) }
+        } else {
+            activeWebView?.findAllAsync(query)
+        }
+    }
+    fun findNext() {
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { geckoEngine.findNext(it) }
+        } else {
+            activeWebView?.findNext(true)
+        }
+    }
+    fun findPrevious() {
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { geckoEngine.findPrevious(it) }
+        } else {
+            activeWebView?.findNext(false)
+        }
+    }
+    fun clearFindInPage() {
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { geckoEngine.clearFind(it) }
+        } else {
+            activeWebView?.clearMatches()
+        }
+        _isFindInPage.value = false
+    }
 
     // --- Reading mode ---
 
@@ -543,12 +623,26 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     // --- View page source ---
 
     fun viewPageSource() {
-        activeWebView?.evaluateJavascript("(function(){return document.documentElement.outerHTML;})()") { html ->
-            _pageSource.value = html?.removeSurrounding("\"")
-                ?.replace("\\n", "\n")
-                ?.replace("\\\"", "\"")
-                ?.replace("\\t", "\t")
-            _showViewSource.value = true
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { tabId ->
+                geckoEngine.evaluateJavaScript(tabId,
+                    "(function(){return document.documentElement.outerHTML;})()"
+                ) { html ->
+                    _pageSource.value = html?.removeSurrounding("\"")
+                        ?.replace("\\n", "\n")
+                        ?.replace("\\\"", "\"")
+                        ?.replace("\\t", "\t")
+                    _showViewSource.value = true
+                }
+            }
+        } else {
+            activeWebView?.evaluateJavascript("(function(){return document.documentElement.outerHTML;})()") { html ->
+                _pageSource.value = html?.removeSurrounding("\"")
+                    ?.replace("\\n", "\n")
+                    ?.replace("\\\"", "\"")
+                    ?.replace("\\t", "\t")
+                _showViewSource.value = true
+            }
         }
     }
 
@@ -637,9 +731,14 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun clearSiteData() {
-        CookieManager.getInstance().removeAllCookies(null)
-        activeWebView?.clearCache(true)
-        activeWebView?.reload()
+        if (useGeckoView) {
+            geckoEngine.clearBrowsingData()
+            activeGeckoSessionId?.let { geckoEngine.reload(it) }
+        } else {
+            CookieManager.getInstance().removeAllCookies(null)
+            activeWebView?.clearCache(true)
+            activeWebView?.reload()
+        }
         Log.d(TAG, "Site data cleared")
     }
 
@@ -656,8 +755,12 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun toggleJavaScript() {
         val v = !_isJavaScriptEnabled.value
         _isJavaScriptEnabled.value = v
-        activeWebView?.settings?.javaScriptEnabled = v
-        activeWebView?.reload()
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { geckoEngine.setJavaScriptEnabled(it, v) }
+        } else {
+            activeWebView?.settings?.javaScriptEnabled = v
+        }
+        reload()
     }
 
     // --- Data saver ---
@@ -665,10 +768,22 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun toggleDataSaver() {
         val v = !_isDataSaver.value
         _isDataSaver.value = v
-        activeWebView?.let { wv ->
-            wv.settings.blockNetworkImage = v
-            wv.settings.cacheMode = if (v) WebSettings.LOAD_CACHE_ELSE_NETWORK else WebSettings.LOAD_DEFAULT
-            wv.reload()
+        if (useGeckoView) {
+            // GeckoView: data saver via JS to disable images
+            activeGeckoSessionId?.let { tabId ->
+                if (v) {
+                    geckoEngine.evaluateJavaScript(tabId,
+                        "(function(){var imgs=document.querySelectorAll('img');for(var i=0;i<imgs.length;i++){imgs[i].style.display='none';}})()"
+                    )
+                }
+                geckoEngine.reload(tabId)
+            }
+        } else {
+            activeWebView?.let { wv ->
+                wv.settings.blockNetworkImage = v
+                wv.settings.cacheMode = if (v) WebSettings.LOAD_CACHE_ELSE_NETWORK else WebSettings.LOAD_DEFAULT
+                wv.reload()
+            }
         }
     }
 
@@ -676,13 +791,35 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
 
     fun setUserAgent(ua: String?) {
         _userAgent.value = ua
-        activeWebView?.settings?.userAgentString = ua
-        activeWebView?.reload()
+        if (useGeckoView) {
+            // GeckoView: set via session settings and reload
+            activeGeckoSessionId?.let { tabId ->
+                val session = geckoEngine.getSession(tabId)
+                session?.settings?.userAgentOverride = ua
+                geckoEngine.reload(tabId)
+            }
+        } else {
+            activeWebView?.settings?.userAgentString = ua
+            activeWebView?.reload()
+        }
     }
 
     // --- Zoom ---
 
-    fun setZoomLevel(level: Int) { activeWebView?.settings?.textZoom = level }
+    fun setZoomLevel(level: Int) {
+        if (useGeckoView) {
+            // GeckoView uses zoom scale, not text zoom
+            // We'll evaluate JS to set zoom via CSS transform
+            activeGeckoSessionId?.let { tabId ->
+                val scale = level / 100.0
+                geckoEngine.evaluateJavaScript(tabId,
+                    "document.body.style.zoom='$scale'"
+                )
+            }
+        } else {
+            activeWebView?.settings?.textZoom = level
+        }
+    }
 
     // --- Custom CSS ---
 
@@ -701,10 +838,12 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
 
     private fun injectCustomCss(css: String) {
         val escaped = css.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n")
-        activeWebView?.evaluateJavascript(
-            "(function(){var s=document.createElement('style');s.textContent='$escaped';document.head.appendChild(s);})()",
-            null
-        )
+        val script = "(function(){var s=document.createElement('style');s.textContent='$escaped';document.head.appendChild(s);})()"
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { geckoEngine.evaluateJavaScript(it, script) }
+        } else {
+            activeWebView?.evaluateJavascript(script, null)
+        }
     }
 
     // --- Print ---
@@ -857,8 +996,11 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     override fun onCleared() {
         super.onCleared()
         mediaPlaybackManager.release()
+        if (useGeckoView) {
+            tabManager.destroyAllGeckoSessions(geckoEngine)
+        }
         tabManager.destroyAllWebViews()
-        Log.d(TAG, "ViewModel cleared, all WebViews destroyed")
+        Log.d(TAG, "ViewModel cleared, all sessions destroyed")
     }
 
     companion object {

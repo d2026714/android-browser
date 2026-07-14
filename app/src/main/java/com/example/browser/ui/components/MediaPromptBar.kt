@@ -11,7 +11,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 /**
@@ -62,7 +64,7 @@ fun MediaPromptBar(viewModel: BrowserViewModel) {
                     }
                 }
                 TextButton(onClick = { viewModel.openInPlayer() }) {
-                    Text("Open in Player")
+                    Text(stringResource(R.string.open_in_player))
                 }
                 IconButton(
                     onClick = { viewModel.dismissMediaPrompt() },
@@ -70,7 +72,7 @@ fun MediaPromptBar(viewModel: BrowserViewModel) {
                 ) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Dismiss",
+                        contentDescription = stringResource(R.string.dismiss),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }

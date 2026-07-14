@@ -8,8 +8,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @Composable
@@ -46,12 +48,12 @@ fun ErrorPage(
 
             Text(
                 text = when {
-                    error.description.contains("net::ERR_NAME_NOT_RESOLVED") -> "Can't reach this site"
-                    error.description.contains("net::ERR_INTERNET_DISCONNECTED") -> "No internet connection"
-                    error.description.contains("net::ERR_CONNECTION_TIMED_OUT") -> "Connection timed out"
-                    error.description.contains("net::ERR_CONNECTION_REFUSED") -> "Connection refused"
-                    error.description.contains("ssl", ignoreCase = true) -> "SSL certificate error"
-                    else -> "This page can't be loaded"
+                    error.description.contains("net::ERR_NAME_NOT_RESOLVED") -> stringResource(R.string.cant_reach_site)
+                    error.description.contains("net::ERR_INTERNET_DISCONNECTED") -> stringResource(R.string.no_internet)
+                    error.description.contains("net::ERR_CONNECTION_TIMED_OUT") -> stringResource(R.string.connection_timed_out)
+                    error.description.contains("net::ERR_CONNECTION_REFUSED") -> stringResource(R.string.connection_refused)
+                    error.description.contains("ssl", ignoreCase = true) -> stringResource(R.string.ssl_certificate_error)
+                    else -> stringResource(R.string.page_cant_be_loaded)
                 },
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -82,7 +84,7 @@ fun ErrorPage(
             Button(onClick = { viewModel.reload() }) {
                 Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Try Again")
+                Text(stringResource(R.string.try_again))
             }
         }
     }

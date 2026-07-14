@@ -10,8 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.data.model.ReadingItem
 import com.example.browser.ui.viewmodel.BrowserViewModel
 import java.text.SimpleDateFormat
@@ -35,9 +37,9 @@ fun ReadingListSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Reading List", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.reading_list), style = MaterialTheme.typography.titleLarge)
                 if (readingList.isNotEmpty()) {
-                    Text("${readingList.size} items", style = MaterialTheme.typography.bodySmall,
+                    Text(stringResource(R.string.items_count, readingList.size), style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 }
             }
@@ -50,7 +52,7 @@ fun ReadingListSheet(
                         Icon(Icons.Default.MenuBook, null, modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("No saved articles", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                        Text(stringResource(R.string.no_saved_articles), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                     }
                 }
             } else {
@@ -80,7 +82,7 @@ fun ReadingListSheet(
                             },
                             trailingContent = {
                                 IconButton(onClick = { viewModel.removeFromReadingList(item.url) }) {
-                                    Icon(Icons.Default.Close, "Remove", modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.Close, stringResource(R.string.remove), modifier = Modifier.size(18.dp))
                                 }
                             },
                             modifier = Modifier.clickable {

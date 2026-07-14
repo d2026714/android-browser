@@ -6,9 +6,11 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -23,7 +25,7 @@ fun CustomCssSheet(
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Custom CSS", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.custom_css), style = MaterialTheme.typography.titleLarge)
                 Switch(checked = isEnabled, onCheckedChange = { isEnabled = it; viewModel.toggleCustomCss() })
             }
             Text("Inject custom styles into web pages", style = MaterialTheme.typography.bodySmall,
@@ -47,7 +49,7 @@ fun CustomCssSheet(
                         html { filter: invert(1) hue-rotate(180deg) !important; }
                         img, video, iframe { filter: invert(1) hue-rotate(180deg) !important; }
                     """.trimIndent()
-                }, modifier = Modifier.weight(1f)) { Text("Dark Reader") }
+                }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.dark_reader)) }
 
                 OutlinedButton(onClick = {
                     cssText = """
@@ -55,13 +57,13 @@ fun CustomCssSheet(
                         body { font-family: Georgia, serif !important; line-height: 1.8 !important; max-width: 700px !important; margin: 0 auto !important; padding: 20px !important; }
                         * { font-size: 18px !important; }
                     """.trimIndent()
-                }, modifier = Modifier.weight(1f)) { Text("Readable") }
+                }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.readable)) }
             }
 
             Spacer(Modifier.height(8.dp))
 
             Button(onClick = { viewModel.setCustomCss(cssText); onDismiss() }, modifier = Modifier.fillMaxWidth()) {
-                Text("Apply CSS")
+                Text(stringResource(R.string.apply_css))
             }
 
             Spacer(modifier = Modifier.height(32.dp))

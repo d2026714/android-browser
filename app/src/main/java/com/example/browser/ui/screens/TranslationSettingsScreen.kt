@@ -9,7 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.translator.TranslationManager
 import com.example.browser.ui.viewmodel.BrowserViewModel
 import kotlinx.coroutines.launch
@@ -38,12 +40,12 @@ fun TranslationSettingsScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
-                "Offline Translation",
+                stringResource(R.string.offline_translation),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
-                "Download language models for offline translation. Each model uses ~30MB of storage.",
+                stringResource(R.string.download_models_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -51,7 +53,7 @@ fun TranslationSettingsScreen(
 
             // Source language selector
             Text(
-                "Source Language",
+                stringResource(R.string.source_language),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 4.dp)
@@ -89,7 +91,7 @@ fun TranslationSettingsScreen(
 
             // Target language selector
             Text(
-                "Target Language",
+                stringResource(R.string.target_language),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 4.dp)
@@ -141,7 +143,7 @@ fun TranslationSettingsScreen(
                 ) {
                     Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Source", maxLines = 1)
+                    Text(stringResource(R.string.source), maxLines = 1)
                 }
                 Button(
                     onClick = {
@@ -154,7 +156,7 @@ fun TranslationSettingsScreen(
                 ) {
                     Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Target", maxLines = 1)
+                    Text(stringResource(R.string.target), maxLines = 1)
                 }
                 OutlinedButton(
                     onClick = {
@@ -168,7 +170,7 @@ fun TranslationSettingsScreen(
                 ) {
                     Icon(Icons.Default.DownloadDone, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Both", maxLines = 1)
+                    Text(stringResource(R.string.both), maxLines = 1)
                 }
             }
 
@@ -176,7 +178,7 @@ fun TranslationSettingsScreen(
             downloadProgress?.let { progress ->
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    "Downloading ${translationManager.getLanguageName(progress.languageCode)}...",
+                    stringResource(R.string.downloading_model, translationManager.getLanguageName(progress.languageCode)),
                     style = MaterialTheme.typography.bodySmall
                 )
                 LinearProgressIndicator(
@@ -189,7 +191,7 @@ fun TranslationSettingsScreen(
 
             // Downloaded models management
             Text(
-                "Downloaded Models",
+                stringResource(R.string.downloaded_models),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -200,7 +202,7 @@ fun TranslationSettingsScreen(
 
             if (downloadedLanguages.isEmpty()) {
                 Text(
-                    "No models downloaded yet.",
+                    stringResource(R.string.no_models_downloaded),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -225,7 +227,7 @@ fun TranslationSettingsScreen(
                             }) {
                                 Icon(
                                     Icons.Default.Delete,
-                                    "Delete model",
+                                    stringResource(R.string.delete_model),
                                     tint = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -238,7 +240,7 @@ fun TranslationSettingsScreen(
 
             // All models status
             Text(
-                "All Languages",
+                stringResource(R.string.all_languages),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -269,7 +271,7 @@ fun TranslationSettingsScreen(
                                     }
                                 },
                                 enabled = !isDownloading
-                            ) { Text("Download") }
+                            ) { Text(stringResource(R.string.download)) }
                         }
                     }
                 )

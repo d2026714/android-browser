@@ -9,7 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 
 data class LinkContextMenu(
     val url: String,
@@ -42,25 +44,25 @@ fun LinkContextMenuSheet(
             )
 
             ListItem(
-                headlineContent = { Text("Open in new tab") },
+                headlineContent = { Text(stringResource(R.string.open_in_new_tab_lower)) },
                 leadingContent = { Icon(Icons.Default.Tab, null) },
                 modifier = Modifier.let { it }
             )
 
             ListItem(
-                headlineContent = { Text("Open in incognito") },
+                headlineContent = { Text(stringResource(R.string.open_in_incognito_lower)) },
                 leadingContent = { Icon(Icons.Default.VisibilityOff, null) },
                 modifier = Modifier.let { it }
             )
 
             ListItem(
-                headlineContent = { Text("Copy link") },
+                headlineContent = { Text(stringResource(R.string.copy_link_lower)) },
                 leadingContent = { Icon(Icons.Default.ContentCopy, null) },
                 modifier = Modifier.let { it }
             )
 
             ListItem(
-                headlineContent = { Text("Share link") },
+                headlineContent = { Text(stringResource(R.string.share_link_lower)) },
                 leadingContent = { Icon(Icons.Default.Share, null) },
                 modifier = Modifier.let { it }
             )
@@ -93,7 +95,7 @@ fun PageActionsSheet(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Page Actions",
+                text = stringResource(R.string.page_actions),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -106,26 +108,26 @@ fun PageActionsSheet(
             )
 
             ListItem(
-                headlineContent = { Text("View Page Source") },
-                supportingContent = { Text("See the HTML code") },
+                headlineContent = { Text(stringResource(R.string.view_page_source)) },
+                supportingContent = { Text(stringResource(R.string.see_html_code)) },
                 leadingContent = { Icon(Icons.Default.Code, null) }
             )
 
             ListItem(
-                headlineContent = { Text("Find in Page") },
-                supportingContent = { Text("Search text on this page") },
+                headlineContent = { Text(stringResource(R.string.find_in_page)) },
+                supportingContent = { Text(stringResource(R.string.search_text_on_page)) },
                 leadingContent = { Icon(Icons.Default.Search, null) }
             )
 
             ListItem(
-                headlineContent = { Text("Reading Mode") },
-                supportingContent = { Text("Clean, distraction-free reading") },
+                headlineContent = { Text(stringResource(R.string.reading_mode)) },
+                supportingContent = { Text(stringResource(R.string.clean_distraction_free)) },
                 leadingContent = { Icon(Icons.Default.MenuBook, null) }
             )
 
             ListItem(
-                headlineContent = { Text(if (isDesktopMode) "Mobile Site" else "Desktop Site") },
-                supportingContent = { Text("Switch between mobile and desktop") },
+                headlineContent = { Text(if (isDesktopMode) stringResource(R.string.mobile_site) else stringResource(R.string.desktop_site)) },
+                supportingContent = { Text(stringResource(R.string.switch_mobile_desktop)) },
                 leadingContent = {
                     Icon(
                         if (isDesktopMode) Icons.Default.PhoneAndroid else Icons.Default.Computer,
@@ -137,28 +139,28 @@ fun PageActionsSheet(
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             ListItem(
-                headlineContent = { Text("Screenshot") },
-                supportingContent = { Text("Capture the current page") },
+                headlineContent = { Text(stringResource(R.string.screenshot)) },
+                supportingContent = { Text(stringResource(R.string.capture_current_page)) },
                 leadingContent = { Icon(Icons.Default.CameraAlt, null) }
             )
 
             ListItem(
-                headlineContent = { Text("Save for Offline") },
-                supportingContent = { Text("Download page for offline reading") },
+                headlineContent = { Text(stringResource(R.string.save_for_offline)) },
+                supportingContent = { Text(stringResource(R.string.download_page_offline)) },
                 leadingContent = { Icon(Icons.Default.SaveAlt, null) }
             )
 
             ListItem(
-                headlineContent = { Text("Share Page") },
-                supportingContent = { Text("Share via other apps") },
+                headlineContent = { Text(stringResource(R.string.share_page)) },
+                supportingContent = { Text(stringResource(R.string.share_via_other_apps)) },
                 leadingContent = { Icon(Icons.Default.Share, null) }
             )
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             ListItem(
-                headlineContent = { Text("Clear Cookies & Data") },
-                supportingContent = { Text("Remove site data for this page") },
+                headlineContent = { Text(stringResource(R.string.clear_cookies_data)) },
+                supportingContent = { Text(stringResource(R.string.remove_site_data)) },
                 leadingContent = {
                     Icon(Icons.Default.DeleteSweep, null, tint = MaterialTheme.colorScheme.error)
                 }

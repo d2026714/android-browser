@@ -10,8 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -41,7 +43,7 @@ fun HistorySheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "History",
+                    text = stringResource(R.string.history),
                     style = MaterialTheme.typography.titleLarge
                 )
                 if (history.isNotEmpty()) {
@@ -52,7 +54,7 @@ fun HistorySheet(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Clear")
+                        Text(stringResource(R.string.clear))
                     }
                 }
             }
@@ -64,12 +66,12 @@ fun HistorySheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                placeholder = { Text("Search history...") },
+                placeholder = { Text(stringResource(R.string.search_history)) },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 trailingIcon = {
                     if (searchQuery.isNotBlank()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Default.Clear, "Clear")
+                            Icon(Icons.Default.Clear, stringResource(R.string.clear))
                         }
                     }
                 },
@@ -92,7 +94,7 @@ fun HistorySheet(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            if (searchQuery.isNotBlank()) "No results" else "No history yet",
+                            if (searchQuery.isNotBlank()) stringResource(R.string.no_results) else stringResource(R.string.no_history_yet),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
                     }

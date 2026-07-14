@@ -13,8 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import kotlinx.coroutines.delay
 
 data class DownloadItem(
@@ -50,7 +52,7 @@ fun DownloadsSheet(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Downloads",
+                text = stringResource(R.string.downloads),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
@@ -71,7 +73,7 @@ fun DownloadsSheet(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "No downloads yet",
+                            stringResource(R.string.no_downloads_yet),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
                     }
@@ -92,12 +94,12 @@ fun DownloadsSheet(
 @Composable
 fun DownloadItemRow(item: DownloadItem) {
     val statusText = when (item.status) {
-        DownloadManager.STATUS_RUNNING -> "Downloading..."
-        DownloadManager.STATUS_SUCCESSFUL -> "Complete"
-        DownloadManager.STATUS_FAILED -> "Failed"
-        DownloadManager.STATUS_PAUSED -> "Paused"
-        DownloadManager.STATUS_PENDING -> "Pending"
-        else -> "Unknown"
+        DownloadManager.STATUS_RUNNING -> stringResource(R.string.downloading)
+        DownloadManager.STATUS_SUCCESSFUL -> stringResource(R.string.complete)
+        DownloadManager.STATUS_FAILED -> stringResource(R.string.failed)
+        DownloadManager.STATUS_PAUSED -> stringResource(R.string.paused)
+        DownloadManager.STATUS_PENDING -> stringResource(R.string.pending)
+        else -> stringResource(R.string.status_unknown)
     }
     val statusIcon = when (item.status) {
         DownloadManager.STATUS_RUNNING -> Icons.Default.Downloading

@@ -13,8 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,11 +50,11 @@ fun TabsSheet(
                     }) {
                         Icon(
                             imageVector = Icons.Default.VisibilityOff,
-                            contentDescription = "Incognito",
+                            contentDescription = stringResource(R.string.incognito),
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Incognito")
+                        Text(stringResource(R.string.incognito))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     FilledTonalButton(onClick = {
@@ -61,11 +63,11 @@ fun TabsSheet(
                     }) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "New Tab",
+                            contentDescription = stringResource(R.string.new_tab),
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("New Tab")
+                        Text(stringResource(R.string.new_tab))
                     }
                 }
             }
@@ -98,7 +100,7 @@ fun TabsSheet(
                             if (tab.isIncognito) {
                                 Icon(
                                     imageVector = Icons.Default.VisibilityOff,
-                                    contentDescription = "Incognito",
+                                    contentDescription = stringResource(R.string.incognito),
                                     modifier = Modifier.size(20.dp),
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
@@ -138,7 +140,7 @@ fun TabsSheet(
                             }) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Close Tab",
+                                    contentDescription = stringResource(R.string.close_tab),
                                     modifier = Modifier.size(18.dp)
                                 )
                             }

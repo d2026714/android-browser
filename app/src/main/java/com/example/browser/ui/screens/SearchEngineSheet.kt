@@ -8,7 +8,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 data class SearchEngineOption(
@@ -51,7 +53,7 @@ fun SearchEngineSheet(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Default Search Engine",
+                text = stringResource(R.string.default_search_engine),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )

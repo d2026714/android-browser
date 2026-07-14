@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.browser.ui.components.*
+import com.example.browser.gecko.GeckoBrowserView
 import com.example.browser.player.PlayerScreen
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
@@ -74,7 +75,7 @@ fun MainScreen(viewModel: BrowserViewModel) {
                 if (currentUrl.isBlank() || currentUrl == "about:blank") {
                     HomeScreen(viewModel = viewModel)
                 } else {
-                    BrowserWebView(viewModel = viewModel, modifier = Modifier.fillMaxSize())
+                    GeckoBrowserView(viewModel = viewModel, modifier = Modifier.fillMaxSize())
                     if (pageError != null) {
                         ErrorPage(viewModel = viewModel)
                     }

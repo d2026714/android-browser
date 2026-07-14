@@ -3,6 +3,8 @@ package com.example.browser.ui.components
 import android.net.http.SslError
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @Composable
@@ -13,28 +15,26 @@ fun SslErrorDialog(viewModel: BrowserViewModel) {
     AlertDialog(
         onDismissRequest = { viewModel.dismissSslError() },
         icon = { },
-        title = { Text("Security Warning") },
+        title = { Text(stringResource(R.string.security_warning)) },
         text = {
+            val errorMsg = when (error.primaryError) {
+                SslError.SSL_DATE_INVALID -> stringResource(R.string.ssl_date_invalid)
+                SslError.SSL_EXPIRED -> stringResource(R.string.ssl_expired)
+                SslError.SSL_IDMISMATCH -> stringResource(R.string.ssl_id_mismatch)
+                SslError.SSL_NOTYETVALID -> stringResource(R.string.ssl_not_yet_valid)
+                SslError.SSL_UNTRUSTED -> stringResource(R.string.ssl_untrusted)
+                SslError.SSL_INVALID -> stringResource(R.string.ssl_invalid)
+                else -> stringResource(R.string.ssl_unknown_error)
+            }
             Text(
-                "The SSL certificate for this site is not valid. " +
-                    "Your connection may not be secure.\n\n" +
-                    "URL: ${error.url ?: "unknown"}\n" +
-                    "Error: ${
-                        when (error.primaryError) {
-                            SslError.SSL_DATE_INVALID -> "Certificate date is invalid"
-                            SslError.SSL_EXPIRED -> "Certificate has expired"
-                            SslError.SSL_IDMISMATCH -> "Certificate ID mismatch"
-                            SslError.SSL_NOTYETVALID -> "Certificate not yet valid"
-                            SslError.SSL_UNTRUSTED -> "Certificate not trusted"
-                            SslError.SSL_INVALID -> "Invalid certificate"
-                            else -> "Unknown SSL error"
-                        }
-                    }"
+                stringResource(R.string.ssl_warning_message) + "\n\n" +
+                    stringResource(R.string.url_label, error.url ?: "unknown") + "\n" +
+                    stringResource(R.string.error_label, errorMsg)
             )
         },
         confirmButton = {
             TextButton(onClick = { viewModel.dismissSslError() }) {
-                Text("OK")
+                Text(stringResource(R.string.ok))
             }
         }
     )

@@ -14,9 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.data.local.entity.NoteEntity
 import com.example.browser.notes.HighlightColor
 import com.example.browser.notes.NoteType
@@ -44,16 +46,16 @@ fun NotesListSheet(
     if (showExportDialog) {
         AlertDialog(
             onDismissRequest = { showExportDialog = false },
-            title = { Text("Export Notes") },
-            text = { Text("Export all notes as a Markdown file?") },
+            title = { Text(stringResource(R.string.export_notes)) },
+            text = { Text(stringResource(R.string.export_notes_confirm)) },
             confirmButton = {
                 Button(onClick = {
                     viewModel.exportNotes()
                     showExportDialog = false
-                }) { Text("Export") }
+                }) { Text(stringResource(R.string.export)) }
             },
             dismissButton = {
-                TextButton(onClick = { showExportDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showExportDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -72,20 +74,20 @@ fun NotesListSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "All Notes (${allNotes.size})",
+                    text = stringResource(R.string.all_notes_count, allNotes.size),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Row {
                     IconButton(onClick = { showExportDialog = true }) {
-                        Icon(Icons.Default.Share, contentDescription = "Export")
+                        Icon(Icons.Default.Share, contentDescription = stringResource(R.string.export))
                     }
                     IconButton(onClick = {
                         sortMode = if (sortMode == SortMode.BY_TIME) SortMode.BY_URL else SortMode.BY_TIME
                     }) {
                         Icon(
                             if (sortMode == SortMode.BY_TIME) Icons.Default.AccessTime else Icons.Default.Link,
-                            contentDescription = "Sort"
+                            contentDescription = stringResource(R.string.sort)
                         )
                     }
                 }
@@ -107,7 +109,7 @@ fun NotesListSheet(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search notes...") },
+                placeholder = { Text(stringResource(R.string.search_notes)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
@@ -115,7 +117,7 @@ fun NotesListSheet(
                             searchQuery = ""
                             searchedNotes = null
                         }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear))
                         }
                     }
                 },
@@ -132,7 +134,7 @@ fun NotesListSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (searchQuery.isBlank()) "No notes yet" else "No matching notes",
+                        text = if (searchQuery.isBlank()) stringResource(R.string.no_notes_yet) else stringResource(R.string.no_matching_notes),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -253,7 +255,7 @@ private fun NoteListItem(
                 }
             }
             IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete), modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
             }
         }
     }

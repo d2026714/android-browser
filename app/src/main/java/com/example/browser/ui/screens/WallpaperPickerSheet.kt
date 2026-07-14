@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.browser.R
@@ -28,17 +29,18 @@ import com.example.browser.ui.viewmodel.BrowserViewModel
 data class WallpaperItem(
     val key: String,
     val name: String,
-    val resId: Int?
+    val resId: Int?,
+    val nameResId: Int = 0
 )
 
 val wallpaperOptions = listOf(
-    WallpaperItem(SettingsManager.WALLPAPER_NONE, "None", null),
-    WallpaperItem(SettingsManager.WALLPAPER_DEFAULT, "Default", R.drawable.wallpaper_geometric_blue),
-    WallpaperItem("night_mountain", "Night Mountain", R.drawable.wallpaper_night_mountain),
-    WallpaperItem("sunset_ocean", "Sunset Ocean", R.drawable.wallpaper_sunset_ocean),
-    WallpaperItem("forest", "Forest", R.drawable.wallpaper_forest),
-    WallpaperItem("aurora", "Aurora", R.drawable.wallpaper_aurora),
-    WallpaperItem("abstract_waves", "Abstract Waves", R.drawable.wallpaper_abstract_waves),
+    WallpaperItem(SettingsManager.WALLPAPER_NONE, "None", null, R.string.wallpaper_none),
+    WallpaperItem(SettingsManager.WALLPAPER_DEFAULT, "Default", R.drawable.wallpaper_geometric_blue, R.string.wallpaper_default),
+    WallpaperItem("night_mountain", "Night Mountain", R.drawable.wallpaper_night_mountain, R.string.wallpaper_night_mountain),
+    WallpaperItem("sunset_ocean", "Sunset Ocean", R.drawable.wallpaper_sunset_ocean, R.string.wallpaper_sunset_ocean),
+    WallpaperItem("forest", "Forest", R.drawable.wallpaper_forest, R.string.wallpaper_forest),
+    WallpaperItem("aurora", "Aurora", R.drawable.wallpaper_aurora, R.string.wallpaper_aurora),
+    WallpaperItem("abstract_waves", "Abstract Waves", R.drawable.wallpaper_abstract_waves, R.string.wallpaper_abstract_waves),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,12 +55,12 @@ fun WallpaperPickerSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                "Wallpaper",
+                stringResource(R.string.wallpaper),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
-                "Choose a background for your new tab page",
+                stringResource(R.string.choose_wallpaper_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -109,7 +111,7 @@ fun WallpaperOptionCard(
             if (item.resId != null) {
                 Image(
                     painter = painterResource(id = item.resId),
-                    contentDescription = item.name,
+                    contentDescription = if (item.nameResId != 0) stringResource(item.nameResId) else item.name,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
@@ -130,7 +132,7 @@ fun WallpaperOptionCard(
 
             // Label
             Text(
-                text = item.name,
+                text = if (item.nameResId != 0) stringResource(item.nameResId) else item.name,
                 style = MaterialTheme.typography.titleSmall,
                 color = if (item.resId != null) Color.White else MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
@@ -143,7 +145,7 @@ fun WallpaperOptionCard(
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "Selected",
+                    contentDescription = stringResource(R.string.selected),
                     tint = Color.White,
                     modifier = Modifier
                         .align(Alignment.TopEnd)

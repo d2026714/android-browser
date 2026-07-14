@@ -7,7 +7,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -20,16 +22,16 @@ fun ZoomControlSheet(
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-            Text("Zoom Control", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+            Text(stringResource(R.string.zoom_control), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
 
             // Zoom slider
-            Text("Page Zoom: ${zoomLevel}%", style = MaterialTheme.typography.bodyLarge,
+            Text(stringResource(R.string.page_zoom, zoomLevel), style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.align(Alignment.CenterHorizontally))
             Spacer(Modifier.height(8.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { if (zoomLevel > 25) zoomLevel -= 25 }) {
-                    Icon(Icons.Default.Remove, "Zoom out")
+                    Icon(Icons.Default.Remove, stringResource(R.string.zoom_out))
                 }
                 Slider(
                     value = zoomLevel.toFloat(),
@@ -39,7 +41,7 @@ fun ZoomControlSheet(
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = { if (zoomLevel < 300) zoomLevel += 25 }) {
-                    Icon(Icons.Default.Add, "Zoom in")
+                    Icon(Icons.Default.Add, stringResource(R.string.zoom_in))
                 }
             }
 
@@ -60,7 +62,7 @@ fun ZoomControlSheet(
             Button(
                 onClick = { viewModel.setZoomLevel(zoomLevel); onDismiss() },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Apply Zoom") }
+            ) { Text(stringResource(R.string.apply_zoom)) }
 
             Spacer(modifier = Modifier.height(32.dp))
         }

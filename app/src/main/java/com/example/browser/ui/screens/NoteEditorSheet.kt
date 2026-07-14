@@ -16,9 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.browser.R
 import com.example.browser.data.local.entity.NoteEntity
 import com.example.browser.notes.HighlightColor
 import com.example.browser.notes.NoteType
@@ -47,7 +49,7 @@ fun NoteEditorSheet(
         ) {
             // Header
             Text(
-                text = "Page Notes",
+                text = stringResource(R.string.page_notes),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -71,7 +73,7 @@ fun NoteEditorSheet(
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add Note")
+                    Text(stringResource(R.string.add_note))
                 }
                 OutlinedButton(
                     onClick = { showAddHighlight = true; showAddTextNote = false },
@@ -79,7 +81,7 @@ fun NoteEditorSheet(
                 ) {
                     Icon(Icons.Default.Highlight, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add Highlight")
+                    Text(stringResource(R.string.add_highlight))
                 }
             }
 
@@ -130,7 +132,7 @@ fun NoteEditorSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No notes for this page yet",
+                        text = stringResource(R.string.no_notes_for_page),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -164,23 +166,23 @@ private fun AddTextNoteForm(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text("New Text Note", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.new_text_note), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Enter your note...") },
+                placeholder = { Text(stringResource(R.string.enter_your_note)) },
                 minLines = 2,
                 maxLines = 5
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = onCancel) { Text("Cancel") }
+                TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) }
                 Button(
                     onClick = { onAdd(text) },
                     enabled = text.isNotBlank()
-                ) { Text("Save") }
+                ) { Text(stringResource(R.string.save)) }
             }
         }
     }
@@ -199,18 +201,18 @@ private fun AddHighlightForm(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text("New Highlight", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.new_highlight), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Enter or paste highlighted text...") },
+                placeholder = { Text(stringResource(R.string.enter_highlighted_text)) },
                 minLines = 2,
                 maxLines = 5
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Highlight Color", style = MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.highlight_color), style = MaterialTheme.typography.labelMedium)
             Spacer(modifier = Modifier.height(4.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 HighlightColor.entries.forEach { color ->
@@ -229,11 +231,11 @@ private fun AddHighlightForm(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = onCancel) { Text("Cancel") }
+                TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) }
                 Button(
                     onClick = { onAdd(text, selectedColor) },
                     enabled = text.isNotBlank()
-                ) { Text("Save") }
+                ) { Text(stringResource(R.string.save)) }
             }
         }
     }
@@ -297,10 +299,10 @@ private fun NoteCard(
             }
             Column {
                 IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit), modifier = Modifier.size(18.dp))
                 }
                 IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete), modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -317,7 +319,7 @@ private fun EditNoteDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Note") },
+        title = { Text(stringResource(R.string.edit_note)) },
         text = {
             OutlinedTextField(
                 value = text,
@@ -328,10 +330,10 @@ private fun EditNoteDialog(
             )
         },
         confirmButton = {
-            Button(onClick = { onSave(text) }, enabled = text.isNotBlank()) { Text("Save") }
+            Button(onClick = { onSave(text) }, enabled = text.isNotBlank()) { Text(stringResource(R.string.save)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     )
 }

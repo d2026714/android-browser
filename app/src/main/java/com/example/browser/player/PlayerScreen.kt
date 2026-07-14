@@ -23,9 +23,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.browser.R
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
 import kotlinx.coroutines.delay
@@ -193,7 +195,7 @@ fun PlayerScreen(
                         manager.clearError()
                         onBack()
                     }) {
-                        Text("Close")
+                        Text(stringResource(R.string.close))
                     }
                 }
             }
@@ -236,12 +238,12 @@ fun PlayerScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                             tint = Color.White
                         )
                     }
                     Text(
-                        text = mediaTitle.ifBlank { "Player" },
+                        text = mediaTitle.ifBlank { stringResource(R.string.player) },
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
@@ -252,7 +254,7 @@ fun PlayerScreen(
                     IconButton(onClick = { manager.toggleFullScreen() }) {
                         Icon(
                             if (isFullScreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
-                            contentDescription = if (isFullScreen) "Exit Fullscreen" else "Fullscreen",
+                            contentDescription = if (isFullScreen) stringResource(R.string.exit_fullscreen) else stringResource(R.string.fullscreen),
                             tint = Color.White
                         )
                     }
@@ -269,7 +271,7 @@ fun PlayerScreen(
                 ) {
                     Icon(
                         if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) "Pause" else "Play",
+                        contentDescription = if (isPlaying) stringResource(R.string.pause_playback) else stringResource(R.string.play_playback),
                         tint = Color.White,
                         modifier = Modifier.size(48.dp)
                     )
@@ -336,7 +338,7 @@ fun PlayerScreen(
                                 volume < 0.5f -> Icons.Default.VolumeDown
                                 else -> Icons.Default.VolumeUp
                             },
-                            contentDescription = "Volume",
+                            contentDescription = stringResource(R.string.volume),
                             tint = Color.White,
                             modifier = Modifier.size(20.dp)
                         )

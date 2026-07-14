@@ -10,7 +10,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,13 +37,13 @@ fun BookmarkFoldersSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Bookmark Folders",
+                    text = stringResource(R.string.bookmark_folders),
                     style = MaterialTheme.typography.titleLarge
                 )
                 FilledTonalButton(onClick = { showAddDialog = true }) {
                     Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("New Folder")
+                    Text(stringResource(R.string.new_group))
                 }
             }
 
@@ -63,7 +65,7 @@ fun BookmarkFoldersSheet(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "No folders yet",
+                            stringResource(R.string.no_bookmarks_yet),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
                     }
@@ -84,7 +86,7 @@ fun BookmarkFoldersSheet(
                                 IconButton(onClick = { viewModel.removeBookmarkFolder(folder.id) }) {
                                     Icon(
                                         Icons.Default.Delete,
-                                        "Delete",
+                                        stringResource(R.string.delete),
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -105,12 +107,12 @@ fun BookmarkFoldersSheet(
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false; newFolderName = "" },
-            title = { Text("New Folder") },
+            title = { Text(stringResource(R.string.new_group)) },
             text = {
                 OutlinedTextField(
                     value = newFolderName,
                     onValueChange = { newFolderName = it },
-                    placeholder = { Text("Folder name") },
+                    placeholder = { Text(stringResource(R.string.folder)) },
                     singleLine = true
                 )
             },
@@ -121,11 +123,11 @@ fun BookmarkFoldersSheet(
                         newFolderName = ""
                         showAddDialog = false
                     }
-                }) { Text("Create") }
+                }) { Text(stringResource(R.string.create)) }
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false; newFolderName = "" }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )

@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -124,7 +125,7 @@ fun HomeScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Search icon",
+                    contentDescription = stringResource(R.string.search_icon),
                     tint = if (hasWallpaper) Color.White.copy(alpha = 0.7f)
                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     modifier = Modifier.size(20.dp)
@@ -136,7 +137,7 @@ fun HomeScreen(
                     modifier = Modifier.weight(1f),
                     placeholder = {
                         Text(
-                            "Search or enter URL",
+                            stringResource(R.string.search_or_enter_url),
                             color = if (hasWallpaper) Color.White.copy(alpha = 0.6f)
                                     else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
@@ -158,7 +159,7 @@ fun HomeScreen(
                     }) {
                         Icon(
                             imageVector = Icons.Default.ArrowForward,
-                            contentDescription = "Go",
+                            contentDescription = stringResource(R.string.go),
                             tint = if (hasWallpaper) Color.White else MaterialTheme.colorScheme.primary
                         )
                     }

@@ -11,10 +11,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,15 +49,15 @@ fun ReadingModeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Reading Mode") },
+                title = { Text(stringResource(R.string.reading_mode)) },
                 navigationIcon = {
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.Default.ArrowBack, stringResource(R.string.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { if (fontSize > 12) fontSize-- }) {
-                        Icon(Icons.Default.Remove, "Decrease font")
+                        Icon(Icons.Default.Remove, stringResource(R.string.decrease_font))
                     }
                     Text(
                         text = "${fontSize}sp",
@@ -63,7 +65,7 @@ fun ReadingModeScreen(
                         modifier = Modifier.padding(horizontal = 4.dp)
                     )
                     IconButton(onClick = { if (fontSize < 32) fontSize++ }) {
-                        Icon(Icons.Default.Add, "Increase font")
+                        Icon(Icons.Default.Add, stringResource(R.string.increase_font))
                     }
                 }
             )

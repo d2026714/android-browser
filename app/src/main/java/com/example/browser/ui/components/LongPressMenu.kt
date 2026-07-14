@@ -7,7 +7,9 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -22,28 +24,28 @@ fun LongPressMenuSheet(viewModel: BrowserViewModel) {
         )
         Divider()
         ListItem(
-            headlineContent = { Text("Open in New Tab") },
+            headlineContent = { Text(stringResource(R.string.open_in_new_tab)) },
             modifier = Modifier.clickable {
                 viewModel.openInNewTab(url)
                 viewModel.dismissLongPressMenu()
             }
         )
         ListItem(
-            headlineContent = { Text("Open in Incognito") },
+            headlineContent = { Text(stringResource(R.string.open_in_incognito)) },
             modifier = Modifier.clickable {
                 viewModel.openInIncognito(url)
                 viewModel.dismissLongPressMenu()
             }
         )
         ListItem(
-            headlineContent = { Text("Copy Link") },
+            headlineContent = { Text(stringResource(R.string.copy_link)) },
             modifier = Modifier.clickable {
                 viewModel.copyLink(url)
                 viewModel.dismissLongPressMenu()
             }
         )
         ListItem(
-            headlineContent = { Text("Share Link") },
+            headlineContent = { Text(stringResource(R.string.share_link)) },
             modifier = Modifier.clickable {
                 viewModel.shareCurrentPage()
                 viewModel.dismissLongPressMenu()
@@ -70,7 +72,7 @@ fun TextSelectionMenuSheet(viewModel: BrowserViewModel) {
         )
         Divider()
         ListItem(
-            headlineContent = { Text("Translate Selected Text") },
+            headlineContent = { Text(stringResource(R.string.translate_selected_text)) },
             leadingContent = { Icon(Icons.Default.Translate, null) },
             modifier = Modifier.clickable {
                 viewModel.openTranslate(text)
@@ -78,7 +80,7 @@ fun TextSelectionMenuSheet(viewModel: BrowserViewModel) {
             }
         )
         ListItem(
-            headlineContent = { Text("Copy") },
+            headlineContent = { Text(stringResource(R.string.copy)) },
             leadingContent = { Icon(Icons.Default.ContentCopy, null) },
             modifier = Modifier.clickable {
                 viewModel.copyLink(text)
@@ -86,7 +88,7 @@ fun TextSelectionMenuSheet(viewModel: BrowserViewModel) {
             }
         )
         ListItem(
-            headlineContent = { Text("Share") },
+            headlineContent = { Text(stringResource(R.string.share)) },
             leadingContent = { Icon(Icons.Default.Share, null) },
             modifier = Modifier.clickable {
                 val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {

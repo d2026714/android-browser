@@ -7,6 +7,9 @@ import android.webkit.WebView
 import com.example.browser.data.local.dao.TabStateDao
 import com.example.browser.data.local.entity.TabStateEntity
 import com.example.browser.data.model.Tab
+import com.example.browser.gecko.GeckoBrowserEngine
+import com.example.browser.gecko.clearGeckoViewCache
+import com.example.browser.gecko.removeGeckoViewFromCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -101,6 +104,7 @@ class TabManager(
 
         val closedTab = current.removeAt(index)
         destroyWebView(closedTab.id)
+        destroyGeckoSession(closedTab.id)
         Log.d(TAG, "Closed tab ${closedTab.id}")
 
         if (current.isEmpty()) {
@@ -197,6 +201,60 @@ class TabManager(
         val ids = webViewPool.keys.toList()
         ids.forEach { destroyWebView(it) }
         Log.d(TAG, "Destroyed all WebViews (${ids.size})")
+    }
+
+    // --- GeckoSession Pool ---
+
+    /**
+     * Get or create a GeckoSession for a tab via the engine.
+     * Returns the session, creating it through GeckoBrowserEngine if needed.
+     */
+    fun getOrCreateGeckoSession(tabId: String, engine: GeckoBrowserEngine): org.mozilla.geckoview.GeckoSession {
+        return engine.getOrCreateSession(tabId)
+    }
+
+    /**
+     * Destroy a GeckoSession for a closed tab.
+     */
+    fun destroyGeckoSession(tabId: String) {
+        try {
+            GeckoBrowserEngine.getInstance(context).closeSession(tabId)
+            removeGeckoViewFromCache(tabId)
+            Log.d(TAG, "Destroyed GeckoSession for tab $tabId")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error destroying GeckoSession for tab $tabId", e)
+        }
+    }
+
+    /**
+     * Pause a GeckoSession.
+     */
+    fun pauseGeckoSession(tabId: String, engine: GeckoBrowserEngine) {
+        try {
+            engine.pauseSession(tabId)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error pausing GeckoSession for tab $tabId", e)
+        }
+    }
+
+    /**
+     * Resume a GeckoSession.
+     */
+    fun resumeGeckoSession(tabId: String, engine: GeckoBrowserEngine) {
+        try {
+            engine.resumeSession(tabId)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error resuming GeckoSession for tab $tabId", e)
+        }
+    }
+
+    /**
+     * Destroy all GeckoSessions.
+     */
+    fun destroyAllGeckoSessions(engine: GeckoBrowserEngine) {
+        engine.closeAllSessions()
+        clearGeckoViewCache()
+        Log.d(TAG, "Destroyed all GeckoSessions")
     }
 
     fun getWebViewCount(): Int = webViewPool.size

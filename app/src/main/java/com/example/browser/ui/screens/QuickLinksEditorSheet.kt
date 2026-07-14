@@ -9,8 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.data.model.QuickLink
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
@@ -35,13 +37,13 @@ fun QuickLinksEditorSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Quick Links", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.quick_links), style = MaterialTheme.typography.titleLarge)
                 FilledTonalButton(onClick = {
                     newTitle = ""; newUrl = ""; editingLink = null; showAddDialog = true
                 }) {
                     Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add")
+                    Text(stringResource(R.string.add))
                 }
             }
 
@@ -66,10 +68,10 @@ fun QuickLinksEditorSheet(
                                     editingLink = link; newTitle = link.title; newUrl = link.url
                                     showAddDialog = true
                                 }) {
-                                    Icon(Icons.Default.Edit, "Edit", modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.Edit, stringResource(R.string.edit), modifier = Modifier.size(18.dp))
                                 }
                                 IconButton(onClick = { viewModel.removeQuickLink(link.id) }) {
-                                    Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(18.dp),
+                                    Icon(Icons.Default.Delete, stringResource(R.string.delete), modifier = Modifier.size(18.dp),
                                         tint = MaterialTheme.colorScheme.error)
                                 }
                             }
@@ -85,13 +87,13 @@ fun QuickLinksEditorSheet(
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text(if (editingLink != null) "Edit Quick Link" else "Add Quick Link") },
+            title = { Text(if (editingLink != null) stringResource(R.string.edit_quick_link) else stringResource(R.string.add_quick_link)) },
             text = {
                 Column {
                     OutlinedTextField(
                         value = newTitle,
                         onValueChange = { newTitle = it },
-                        label = { Text("Title") },
+                        label = { Text(stringResource(R.string.title)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -99,7 +101,7 @@ fun QuickLinksEditorSheet(
                     OutlinedTextField(
                         value = newUrl,
                         onValueChange = { newUrl = it },
-                        label = { Text("URL") },
+                        label = { Text(stringResource(R.string.url)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -115,10 +117,10 @@ fun QuickLinksEditorSheet(
                         }
                         showAddDialog = false
                     }
-                }) { Text(if (editingLink != null) "Save" else "Add") }
+                }) { Text(if (editingLink != null) stringResource(R.string.save) else stringResource(R.string.add)) }
             },
             dismissButton = {
-                TextButton(onClick = { showAddDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showAddDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }

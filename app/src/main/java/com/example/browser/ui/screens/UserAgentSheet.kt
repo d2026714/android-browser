@@ -7,7 +7,9 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 data class UserAgentOption(val name: String, val description: String, val ua: String?)
@@ -35,7 +37,7 @@ fun UserAgentSheet(
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-            Text("User Agent", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+            Text(stringResource(R.string.user_agent), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
 
             userAgents.forEachIndexed { index, ua ->
                 ListItem(
@@ -61,14 +63,14 @@ fun UserAgentSheet(
                 OutlinedTextField(
                     value = customUA,
                     onValueChange = { customUA = it },
-                    label = { Text("Custom User-Agent") },
+                    label = { Text(stringResource(R.string.custom_user_agent)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2
                 )
                 Spacer(Modifier.height(8.dp))
                 Button(onClick = {
                     if (customUA.isNotBlank()) { viewModel.setUserAgent(customUA); onDismiss() }
-                }, modifier = Modifier.fillMaxWidth()) { Text("Apply") }
+                }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.apply)) }
             }
 
             Spacer(modifier = Modifier.height(32.dp))

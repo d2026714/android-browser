@@ -89,4 +89,9 @@ dependencies {
 
     // OkHttp (download manager)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // GeckoView (Mozilla browser engine)
+    val geckoviewChannel = "nightly"  // or "beta" or "release"
+    val geckoviewVersion = "131.0.20240903095158"
+    implementation("org.mozilla.geckoview:geckoview-$geckoviewChannel:$geckoviewVersion")
 }

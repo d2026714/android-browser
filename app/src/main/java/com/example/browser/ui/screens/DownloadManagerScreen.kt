@@ -13,8 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import androidx.core.content.FileProvider
 import com.example.browser.data.local.entity.DownloadEntity
 import com.example.browser.data.local.entity.DownloadEntity.Companion.STATUS_CANCELLED
@@ -37,7 +39,12 @@ fun DownloadManagerScreen(
     val progressUpdates by downloadManager.progressUpdates.collectAsState()
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("All", "Active", "Completed", "Failed")
+    val tabs = listOf(
+        stringResource(R.string.tab_all),
+        stringResource(R.string.tab_active),
+        stringResource(R.string.tab_completed),
+        stringResource(R.string.tab_failed)
+    )
 
     val filteredDownloads = when (selectedTab) {
         1 -> allDownloads.filter { it.status == STATUS_DOWNLOADING || it.status == STATUS_PENDING || it.status == STATUS_PAUSED }
@@ -59,18 +66,18 @@ fun DownloadManagerScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Downloads",
+                    text = stringResource(R.string.downloads),
                     style = MaterialTheme.typography.titleLarge
                 )
                 Row {
                     if (allDownloads.any { it.status == STATUS_COMPLETED }) {
                         TextButton(onClick = { downloadManager.clearCompleted() }) {
-                            Text("Clear completed", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.clear_completed), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                     if (allDownloads.any { it.status == STATUS_FAILED || it.status == STATUS_CANCELLED }) {
                         TextButton(onClick = { downloadManager.clearFailed() }) {
-                            Text("Clear failed", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.clear_failed), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -112,10 +119,10 @@ fun DownloadManagerScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = when (selectedTab) {
-                                1 -> "No active downloads"
-                                2 -> "No completed downloads"
-                                3 -> "No failed downloads"
-                                else -> "No downloads yet"
+                                1 -> stringResource(R.string.no_active_downloads)
+                                2 -> stringResource(R.string.no_completed_downloads)
+                                3 -> stringResource(R.string.no_failed_downloads)
+                                else -> stringResource(R.string.no_downloads_yet)
                             },
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
@@ -179,17 +186,17 @@ private fun DownloadItemCard(
     } else 0f
 
     val statusText = when (status) {
-        STATUS_PENDING -> "Waiting..."
+        STATUS_PENDING -> stringResource(R.string.status_waiting)
         STATUS_DOWNLOADING -> if (totalBytes > 0) {
             "${formatSize(downloadedBytes)} / ${formatSize(totalBytes)}"
         } else {
             formatSize(downloadedBytes)
         }
-        STATUS_PAUSED -> "Paused - ${formatSize(downloadedBytes)}"
-        STATUS_COMPLETED -> "Completed - ${formatSize(totalBytes)}"
-        STATUS_FAILED -> "Failed: ${entity.errorMessage ?: "Unknown error"}"
-        STATUS_CANCELLED -> "Cancelled"
-        else -> "Unknown"
+        STATUS_PAUSED -> stringResource(R.string.status_paused_with_size, formatSize(downloadedBytes))
+        STATUS_COMPLETED -> stringResource(R.string.status_completed_with_size, formatSize(totalBytes))
+        STATUS_FAILED -> stringResource(R.string.status_failed_with_message, entity.errorMessage ?: stringResource(R.string.unknown_error))
+        STATUS_CANCELLED -> stringResource(R.string.status_cancelled)
+        else -> stringResource(R.string.status_unknown)
     }
 
     val statusColor = when (status) {
@@ -265,42 +272,42 @@ private fun DownloadItemCard(
                 when (status) {
                     STATUS_DOWNLOADING -> {
                         IconButton(onClick = { downloadManager.pauseDownload(entity.id) }, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.Pause, "Pause", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Pause, stringResource(R.string.pause), modifier = Modifier.size(20.dp))
                         }
                         IconButton(onClick = { downloadManager.cancelDownload(entity.id) }, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.Close, "Cancel", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Close, stringResource(R.string.cancel), modifier = Modifier.size(20.dp))
                         }
                     }
                     STATUS_PAUSED, STATUS_PENDING -> {
                         IconButton(onClick = { downloadManager.resumeDownload(entity.id) }, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.PlayArrow, "Resume", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.PlayArrow, stringResource(R.string.resume), modifier = Modifier.size(20.dp))
                         }
                         IconButton(onClick = { downloadManager.cancelDownload(entity.id) }, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.Close, "Cancel", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Close, stringResource(R.string.cancel), modifier = Modifier.size(20.dp))
                         }
                     }
                     STATUS_FAILED -> {
                         IconButton(onClick = { downloadManager.retryDownload(entity.id) }, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.Refresh, "Retry", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Refresh, stringResource(R.string.retry), modifier = Modifier.size(20.dp))
                         }
                         IconButton(onClick = { downloadManager.removeDownload(entity.id) }, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Delete, stringResource(R.string.delete), modifier = Modifier.size(20.dp))
                         }
                     }
                     STATUS_COMPLETED -> {
                         IconButton(onClick = onOpenFile, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.OpenInNew, "Open", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.OpenInNew, stringResource(R.string.open), modifier = Modifier.size(20.dp))
                         }
                         IconButton(onClick = onOpenFolder, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.FolderOpen, "Folder", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.FolderOpen, stringResource(R.string.folder), modifier = Modifier.size(20.dp))
                         }
                         IconButton(onClick = { downloadManager.removeDownload(entity.id) }, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Delete, stringResource(R.string.delete), modifier = Modifier.size(20.dp))
                         }
                     }
                     STATUS_CANCELLED -> {
                         IconButton(onClick = { downloadManager.removeDownload(entity.id) }, modifier = Modifier.size(36.dp)) {
-                            Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Delete, stringResource(R.string.delete), modifier = Modifier.size(20.dp))
                         }
                     }
                 }

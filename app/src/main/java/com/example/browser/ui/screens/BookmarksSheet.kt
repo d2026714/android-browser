@@ -11,8 +11,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.browser.R
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,7 +32,7 @@ fun BookmarksSheet(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Bookmarks",
+                text = stringResource(R.string.bookmarks),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
@@ -43,7 +45,7 @@ fun BookmarksSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No bookmarks yet",
+                        text = stringResource(R.string.no_bookmarks_yet),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
                 }
@@ -77,7 +79,7 @@ fun BookmarksSheet(
                                 IconButton(onClick = { viewModel.deleteBookmark(bookmark.url) }) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete",
+                                        contentDescription = stringResource(R.string.delete),
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 }
