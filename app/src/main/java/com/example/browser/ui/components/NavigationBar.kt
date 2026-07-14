@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -16,9 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -44,13 +41,10 @@ fun NavigationBar(
     val isDesktopMode by viewModel.isDesktopMode.collectAsState()
 
     var urlText by remember { mutableStateOf("") }
-    var isEditing by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(currentUrl) {
-        if (!isEditing) {
-            urlText = if (currentUrl == "about:blank") "" else currentUrl
-        }
+        urlText = if (currentUrl == "about:blank") "" else currentUrl
     }
 
     Column(modifier = modifier) {
@@ -77,46 +71,33 @@ fun NavigationBar(
                 )
             }
 
-            Box(
+            TextField(
+                value = urlText,
+                onValueChange = { urlText = it },
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(horizontal = 16.dp, vertical = 10.dp)
-            ) {
-                if (urlText.isEmpty() && !isEditing) {
-                    Text(
-                        text = "Search or enter URL",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        fontSize = 15.sp
-                    )
-                }
-                BasicTextField(
-                    value = urlText,
-                    onValueChange = { urlText = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    textStyle = TextStyle(
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 15.sp
-                    ),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Uri,
-                        imeAction = ImeAction.Go
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onGo = {
-                            viewModel.navigateTo(urlText)
-                            focusManager.clearFocus()
-                            isEditing = false
-                        }
-                    ),
-                    onFocusChanged = { focusState ->
-                        isEditing = focusState.isFocused
+                    .clip(RoundedCornerShape(24.dp)),
+                placeholder = {
+                    Text("Search or enter URL", fontSize = 15.sp)
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                    unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                ),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Go
+                ),
+                keyboardActions = KeyboardActions(
+                    onGo = {
+                        viewModel.navigateTo(urlText)
+                        focusManager.clearFocus()
                     }
                 )
-            }
+            )
 
             Spacer(modifier = Modifier.width(6.dp))
 
