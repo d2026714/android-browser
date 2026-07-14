@@ -1,7 +1,7 @@
 package com.example.browser.ui.components
 
 import android.net.http.SslError
-import android.net.http.SslErrorHandler
+import android.webkit.SslErrorHandler
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import com.example.browser.ui.viewmodel.BrowserViewModel
@@ -25,7 +25,7 @@ fun SslErrorDialog(viewModel: BrowserViewModel) {
                             SslError.SSL_DATE_INVALID -> "Certificate date is invalid"
                             SslError.SSL_EXPIRED -> "Certificate has expired"
                             SslError.SSL_IDMISMATCH -> "Certificate ID mismatch"
-                            SslError.SSSL_NOTYETVALID -> "Certificate not yet valid"
+                            SslError.SSL_NOTYETVALID -> "Certificate not yet valid"
                             SslError.SSL_UNTRUSTED -> "Certificate not trusted"
                             SslError.SSL_INVALID -> "Invalid certificate"
                             else -> "Unknown SSL error"
