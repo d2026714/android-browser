@@ -71,7 +71,7 @@ fun MainScreen(viewModel: BrowserViewModel = viewModel()) {
     if (showBackupRestore) BackupRestoreSheet(onDismiss = { viewModel.toggleBackupRestore() })
     if (showUserAgent) UserAgentSheet(viewModel = viewModel, onDismiss = { viewModel.toggleUserAgent() })
     if (showZoomControl) ZoomControlSheet(viewModel = viewModel, onDismiss = { viewModel.toggleZoomControl() })
-    if (showCustomCss) CustomCssSheet(viewModel = viewModel, onDismiss = { viewModel.toggleCustomCss() })
+    if (showCustomCss) CustomCssSheet(viewModel = viewModel, onDismiss = { viewModel.toggleCustomCssSheet() })
     if (isReadingMode) ReadingModeScreen(viewModel = viewModel, onDismiss = { viewModel.toggleReadingMode() })
     if (showViewSource) ViewSourceScreen(viewModel = viewModel, onDismiss = { viewModel.closeViewSource() })
 }

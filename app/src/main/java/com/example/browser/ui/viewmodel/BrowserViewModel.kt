@@ -308,7 +308,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun toggleBackupRestore() { _showBackupRestore.value = !_showBackupRestore.value }
     fun toggleUserAgent() { _showUserAgent.value = !_showUserAgent.value }
     fun toggleZoomControl() { _showZoomControl.value = !_showZoomControl.value }
-    fun toggleCustomCss() { _showCustomCss.value = !_showCustomCss.value }
+    fun toggleCustomCssSheet() { _showCustomCss.value = !_showCustomCss.value }
 
     fun hideOverlays() {
         _showBookmarks.value = false; _showHistory.value = false; _showTabs.value = false; _showSettings.value = false
