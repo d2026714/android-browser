@@ -14,3 +14,8 @@
 # GeckoView
 -keep class org.mozilla.geckoview.** { *; }
 -dontwarn org.mozilla.geckoview.**
+
+# SnakeYAML (used by GeckoView)
+-dontwarn org.yaml.snakeyaml.**
+-keep class org.yaml.snakeyaml.** { *; }
+-dontwarn java.beans.**
