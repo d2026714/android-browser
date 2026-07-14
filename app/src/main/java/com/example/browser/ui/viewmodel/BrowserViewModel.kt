@@ -17,8 +17,11 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.browser.data.local.BrowserDatabase
+import com.example.browser.data.local.entity.NoteEntity
 import com.example.browser.data.model.*
 import com.example.browser.manager.BookmarkManager
+import com.example.browser.notes.HighlightColor
+import com.example.browser.notes.NoteManager
 import com.example.browser.manager.SettingsManager
 import com.example.browser.manager.TabManager
 import com.example.browser.adblock.AdBlockEngine
@@ -28,9 +31,14 @@ import com.example.browser.traffic.TrafficStats
 import com.example.browser.offline.OfflinePageManager
 import com.example.browser.userscript.UserScriptManager
 import com.example.browser.password.PasswordManager
+import com.example.browser.download.BrowserDownloadManager
+import com.example.browser.player.MediaPlaybackManager
+import com.example.browser.translator.TranslationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -66,6 +74,20 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         context = application
     )
 
+    // --- Notes ---
+    val noteManager = NoteManager(
+        noteDao = db.noteDao(),
+        scope = viewModelScope
+    )
+
+    private val _allNotes = MutableStateFlow<List<NoteEntity>>(emptyList())
+    val allNotes: StateFlow<List<NoteEntity>> = _allNotes.asStateFlow()
+    private val _notesForCurrentUrl = MutableStateFlow<List<NoteEntity>>(emptyList())
+    val notesForCurrentUrl: StateFlow<List<NoteEntity>> = _notesForCurrentUrl.asStateFlow()
+
+    // --- Download Manager ---
+    val downloadManager = BrowserDownloadManager.getInstance(application)
+
     // --- Delegated flows ---
     val tabs = tabManager.tabs
     val activeTabIndex = tabManager.activeTabIndex
@@ -96,6 +118,17 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     val canGoForward: StateFlow<Boolean> = _canGoForward.asStateFlow()
     private val _isBookmarked = MutableStateFlow(false)
     val isBookmarked: StateFlow<Boolean> = _isBookmarked.asStateFlow()
+
+    // --- Translation ---
+    val translationManager = TranslationManager.getInstance(application)
+    private val _translationResult = MutableStateFlow<TranslationManager.TranslationResult?>(null)
+    val translationResult: StateFlow<TranslationManager.TranslationResult?> = _translationResult.asStateFlow()
+    private val _pendingTranslateText = MutableStateFlow<String?>(null)
+    val pendingTranslateText: StateFlow<String?> = _pendingTranslateText.asStateFlow()
+    private val _showTranslateScreen = MutableStateFlow(false)
+    val showTranslateScreen: StateFlow<Boolean> = _showTranslateScreen.asStateFlow()
+    private val _showTranslationSettings = MutableStateFlow(false)
+    val showTranslationSettings: StateFlow<Boolean> = _showTranslationSettings.asStateFlow()
 
     // --- Feature state ---
     private val _isDesktopMode = MutableStateFlow(false)
@@ -139,6 +172,10 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val _longPressUrl = MutableStateFlow<String?>(null)
     val longPressUrl: StateFlow<String?> = _longPressUrl.asStateFlow()
 
+    // --- Selected text (from long press on text) ---
+    private val _selectedText = MutableStateFlow<String?>(null)
+    val selectedText: StateFlow<String?> = _selectedText.asStateFlow()
+
     // --- Bottom sheet visibility ---
     private val _showBookmarks = MutableStateFlow(false); val showBookmarks: StateFlow<Boolean> = _showBookmarks.asStateFlow()
     private val _showHistory = MutableStateFlow(false); val showHistory: StateFlow<Boolean> = _showHistory.asStateFlow()
@@ -165,8 +202,27 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val _showUserScripts = MutableStateFlow(false); val showUserScripts: StateFlow<Boolean> = _showUserScripts.asStateFlow()
     private val _showWallpaperPicker = MutableStateFlow(false); val showWallpaperPicker: StateFlow<Boolean> = _showWallpaperPicker.asStateFlow()
     private val _showOfflinePages = MutableStateFlow(false); val showOfflinePages: StateFlow<Boolean> = _showOfflinePages.asStateFlow()
+    private val _showNoteEditor = MutableStateFlow(false); val showNoteEditor: StateFlow<Boolean> = _showNoteEditor.asStateFlow()
+    private val _showNotesList = MutableStateFlow(false); val showNotesList: StateFlow<Boolean> = _showNotesList.asStateFlow()
 
     private var activeWebView: WebView? = null
+
+    init {
+        // Collect notes
+        viewModelScope.launch {
+            noteManager.allNotesFlow().collect { _allNotes.value = it }
+        }
+        // Observe URL changes to load notes for current page
+        viewModelScope.launch {
+            currentUrl.flatMapLatest { url ->
+                if (url.isNotBlank() && url != "about:blank") {
+                    noteManager.notesForUrlFlow(url)
+                } else {
+                    flowOf(emptyList())
+                }
+            }.collect { _notesForCurrentUrl.value = it }
+        }
+    }
 
     fun setActiveWebView(webView: WebView?) {
         activeWebView = webView
@@ -270,6 +326,12 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun dismissLongPressMenu() { _longPressUrl.value = null }
+
+    fun onTextSelected(text: String) {
+        _selectedText.value = text
+    }
+
+    fun dismissTextSelection() { _selectedText.value = null }
 
     fun goBack() { activeWebView?.goBack() }
     fun goForward() { activeWebView?.goForward() }
@@ -420,7 +482,60 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
 
     fun toggleReadingMode() { _isReadingMode.value = !_isReadingMode.value }
 
-    // --- Full-screen video ---
+    // --- Media player ---
+    val mediaPlaybackManager = MediaPlaybackManager(application)
+
+    private val _showPlayer = MutableStateFlow(false)
+    val showPlayer: StateFlow<Boolean> = _showPlayer.asStateFlow()
+
+    private val _pendingMediaUrl = MutableStateFlow<String?>(null)
+    val pendingMediaUrl: StateFlow<String?> = _pendingMediaUrl.asStateFlow()
+
+    private val _pendingMediaTitle = MutableStateFlow("")
+    val pendingMediaTitle: StateFlow<String> = _pendingMediaTitle.asStateFlow()
+
+    /**
+     * Called when the WebView intercepts a media URL.
+     * Shows a snackbar-style prompt to open in the built-in player.
+     */
+    fun onMediaUrlDetected(url: String, title: String = "") {
+        if (MediaPlaybackManager.isMediaUrl(url)) {
+            _pendingMediaUrl.value = url
+            _pendingMediaTitle.value = title
+        }
+    }
+
+    /**
+     * Open the detected media URL in the built-in player.
+     */
+    fun openInPlayer(url: String? = null, title: String? = null) {
+        val mediaUrl = url ?: _pendingMediaUrl.value ?: return
+        val mediaTitle = title ?: _pendingMediaTitle.value
+        val mimeType = MediaPlaybackManager.guessMimeType(mediaUrl)
+        mediaPlaybackManager.load(mediaUrl, mediaTitle, mimeType)
+        _showPlayer.value = true
+        _pendingMediaUrl.value = null
+        _pendingMediaTitle.value = ""
+        Log.d(TAG, "Opening in player: $mediaUrl")
+    }
+
+    /**
+     * Dismiss the pending media prompt without opening the player.
+     */
+    fun dismissMediaPrompt() {
+        _pendingMediaUrl.value = null
+        _pendingMediaTitle.value = ""
+    }
+
+    /**
+     * Close the player screen and release media.
+     */
+    fun closePlayer() {
+        mediaPlaybackManager.stop()
+        _showPlayer.value = false
+    }
+
+    // --- Full-screen video (WebView native) ---
 
     fun enterFullScreen(view: View) {}
     fun exitFullScreen() {}
@@ -486,6 +601,39 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         val url = _currentUrl.value
         if (url.isBlank()) return
         navigateTo("https://translate.google.com/translate?sl=auto&tl=en&u=$url")
+    }
+
+    /** Open the offline translate screen with optional pre-filled text. */
+    fun openTranslate(text: String? = null) {
+        _pendingTranslateText.value = text
+        _showTranslateScreen.value = true
+    }
+
+    /** Translate the entire page offline by extracting text via JS. */
+    fun translatePageOffline() {
+        activeWebView?.evaluateJavascript(
+            "(function(){return document.body.innerText;})()"
+        ) { text ->
+            val cleaned = text?.removeSurrounding("\"")
+                ?.replace("\\n", "\n")
+                ?.replace("\\\"", "\"")
+                ?.replace("\\t", "\t")
+            if (!cleaned.isNullOrBlank() && cleaned != "null") {
+                openTranslate(cleaned)
+            }
+        }
+    }
+
+    fun setTranslationResult(result: TranslationManager.TranslationResult) {
+        _translationResult.value = result
+    }
+
+    fun clearTranslationResult() {
+        _translationResult.value = null
+    }
+
+    fun clearPendingTranslateText() {
+        _pendingTranslateText.value = null
     }
 
     fun clearSiteData() {
@@ -623,6 +771,74 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun toggleUserScripts() { _showUserScripts.value = !_showUserScripts.value }
     fun toggleWallpaperPicker() { _showWallpaperPicker.value = !_showWallpaperPicker.value }
     fun toggleOfflinePages() { _showOfflinePages.value = !_showOfflinePages.value }
+    fun toggleNoteEditor() { _showNoteEditor.value = !_showNoteEditor.value }
+    fun toggleNotesList() { _showNotesList.value = !_showNotesList.value }
+    fun toggleTranslateScreen() { _showTranslateScreen.value = !_showTranslateScreen.value }
+    fun toggleTranslationSettings() { _showTranslationSettings.value = !_showTranslationSettings.value }
+
+    // --- Notes ---
+
+    fun addTextNote(url: String, pageTitle: String, content: String) {
+        noteManager.addTextNote(url, pageTitle, content)
+    }
+
+    fun addHighlight(url: String, pageTitle: String, text: String, color: HighlightColor) {
+        noteManager.addHighlight(url, pageTitle, text, color)
+    }
+
+    fun updateNote(note: NoteEntity) {
+        noteManager.updateNote(note)
+    }
+
+    fun deleteNote(id: Long) {
+        noteManager.deleteNote(id)
+    }
+
+    fun searchNotes(query: String, onResult: (List<NoteEntity>) -> Unit) {
+        viewModelScope.launch {
+            val results = noteManager.search(query)
+            onResult(results)
+        }
+    }
+
+    fun exportNotes() {
+        viewModelScope.launch {
+            val markdown = noteManager.exportNotesAsMarkdown()
+            try {
+                val dir = File(getApplication<Application>().getExternalFilesDir(null), "notes")
+                dir.mkdirs()
+                val file = File(dir, "notes_export_${System.currentTimeMillis()}.md")
+                file.writeText(markdown)
+                val uri = FileProvider.getUriForFile(
+                    getApplication(),
+                    "${getApplication<Application>().packageName}.fileprovider",
+                    file
+                )
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/markdown"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                getApplication<Application>().startActivity(
+                    Intent.createChooser(intent, "Export Notes").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+                Log.d(TAG, "Notes exported to: ${file.absolutePath}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Export notes failed", e)
+            }
+        }
+    }
+
+    fun addNoteFromSelection(highlightedText: String) {
+        val url = _currentUrl.value
+        if (url.isBlank() || url == "about:blank") return
+        noteManager.addHighlight(
+            url = url,
+            pageTitle = _currentTitle.value,
+            highlightedText = highlightedText,
+            color = HighlightColor.YELLOW
+        )
+    }
 
     fun hideOverlays() {
         _showBookmarks.value = false; _showHistory.value = false; _showTabs.value = false
@@ -634,10 +850,13 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         _showDevTools.value = false; _showPasswordSheet.value = false; _showProxySheet.value = false
         _showPrivacyReport.value = false; _showTrafficStats.value = false; _showUserScripts.value = false
         _showWallpaperPicker.value = false; _showOfflinePages.value = false
+        _showNoteEditor.value = false; _showNotesList.value = false
+        _showTranslateScreen.value = false; _showTranslationSettings.value = false
     }
 
     override fun onCleared() {
         super.onCleared()
+        mediaPlaybackManager.release()
         tabManager.destroyAllWebViews()
         Log.d(TAG, "ViewModel cleared, all WebViews destroyed")
     }

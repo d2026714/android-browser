@@ -6,6 +6,9 @@
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:name=".BrowserApp"
@@ -51,5 +54,22 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Download Foreground Service -->
+        <service
+            android:name=".download.DownloadService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- Download Action Receiver (notification buttons) -->
+        <receiver
+            android:name=".download.DownloadActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.browser.download.CANCEL_DOWNLOAD" />
+                <action android:name="com.example.browser.download.PAUSE_DOWNLOAD" />
+                <action android:name="com.example.browser.download.RETRY_DOWNLOAD" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

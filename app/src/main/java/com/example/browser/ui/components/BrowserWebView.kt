@@ -1,7 +1,6 @@
 package com.example.browser.ui.components
 
 import android.annotation.SuppressLint
-import android.app.DownloadManager
 import android.graphics.Bitmap
 import android.util.Log
 import android.view.View
@@ -27,6 +26,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.example.browser.manager.TabManager
 import com.example.browser.ui.viewmodel.BrowserViewModel
 import com.example.browser.adblock.AdBlockEngine
+import com.example.browser.download.BrowserDownloadManager
+import com.example.browser.download.DownloadService
+import com.example.browser.player.MediaPlaybackManager
 
 private const val TAG = "BrowserWebView"
 
@@ -176,6 +178,18 @@ private fun configureWebView(
             return super.shouldInterceptRequest(view, request)
         }
 
+        override fun shouldOverrideUrlLoading(
+            view: WebView?, request: WebResourceRequest?
+        ): Boolean {
+            val url = request?.url?.toString() ?: return false
+            // Intercept media URLs and prompt user to open in built-in player
+            if (MediaPlaybackManager.isMediaUrl(url)) {
+                viewModel.onMediaUrlDetected(url, view?.title ?: "")
+                return false // Let WebView still try to load it, but show the prompt
+            }
+            return false
+        }
+
         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
             super.onPageStarted(view, url, favicon)
             viewModel.onLoadingChanged(true)
@@ -190,10 +204,6 @@ private fun configureWebView(
                 view?.canGoForward() ?: false
             )
         }
-
-        override fun shouldOverrideUrlLoading(
-            view: WebView?, request: WebResourceRequest?
-        ): Boolean = false
 
         override fun onReceivedError(
             view: WebView?, request: WebResourceRequest?, error: WebResourceError?
@@ -240,16 +250,18 @@ private fun configureWebView(
         }
     }
 
-    wv.setDownloadListener { url, _, _, _, _ ->
+    wv.setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
         try {
-            val request = DownloadManager.Request(android.net.Uri.parse(url))
-            request.setNotificationVisibility(
-                DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+            val downloadManager = BrowserDownloadManager.getInstance(wv.context)
+            val fileName = extractDownloadFileName(url, contentDisposition)
+            val downloadId = downloadManager.download(
+                url = url,
+                fileName = fileName,
+                mimeType = mimeType.ifBlank { "*/*" }
             )
-            request.setTitle("Downloading...")
-            val dm = wv.context.getSystemService(android.content.Context.DOWNLOAD_SERVICE) as DownloadManager
-            dm.enqueue(request)
-            Log.d(TAG, "Download started: $url")
+            // Start foreground service to keep downloads alive
+            DownloadService.start(wv.context)
+            Log.d(TAG, "Download #$downloadId started: $fileName ($url)")
         } catch (e: Exception) {
             Log.e(TAG, "Download failed: $url", e)
         }
@@ -257,13 +269,58 @@ private fun configureWebView(
 
     wv.setOnLongClickListener { v ->
         val hitTestResult = (v as WebView).hitTestResult
-        if (hitTestResult.type == WebView.HitTestResult.SRC_ANCHOR_TYPE ||
-            hitTestResult.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
-            val url = hitTestResult.extra
-            if (url != null) {
-                viewModel.onLongPressUrl(url)
-                true
-            } else false
-        } else false
+        when (hitTestResult.type) {
+            WebView.HitTestResult.SRC_ANCHOR_TYPE,
+            WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE,
+            WebView.HitTestResult.VIDEO_TYPE,
+            WebView.HitTestResult.AUDIO_TYPE -> {
+                val url = hitTestResult.extra
+                if (url != null) {
+                    viewModel.onLongPressUrl(url)
+                    true
+                } else false
+            }
+            WebView.HitTestResult.PHONE_TYPE,
+            WebView.HitTestResult.EMAIL_TYPE,
+            WebView.HitTestResult.GEO_TYPE,
+            WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE -> false
+            else -> {
+                // For text selection: try to get selected text via JavaScript
+                v.evaluateJavascript(
+                    "(function(){var s=window.getSelection();return s?s.toString():'';})()"
+                ) { text ->
+                    val selected = text?.removeSurrounding("\"")?.replace("\\n", "\n")?.replace("\\\"", "\"")
+                    if (!selected.isNullOrBlank() && selected != "null") {
+                        viewModel.onTextSelected(selected)
+                    }
+                }
+                false // Don't consume the event so text selection handles still work
+            }
+        }
     }
+}
+
+/**
+ * Extract a meaningful filename from URL and Content-Disposition header.
+ */
+private fun extractDownloadFileName(url: String, contentDisposition: String?): String {
+    // Try Content-Disposition first
+    if (!contentDisposition.isNullOrBlank()) {
+        val patterns = listOf(
+            Regex("filename\*=UTF-8''(.+)", RegexOption.IGNORE_CASE),
+            Regex("filename=\"([^\"]+)\"", RegexOption.IGNORE_CASE),
+            Regex("filename=([^;\s]+)", RegexOption.IGNORE_CASE)
+        )
+        for (pattern in patterns) {
+            val match = pattern.find(contentDisposition)
+            if (match != null) {
+                val name = match.groupValues[1].trim()
+                if (name.isNotBlank()) return java.net.URLDecoder.decode(name, "UTF-8")
+            }
+        }
+    }
+    // Fallback to URL path
+    val path = url.substringAfterLast("/").substringBefore("?").substringBefore("#")
+    val decoded = try { java.net.URLDecoder.decode(path, "UTF-8") } catch (e: Exception) { path }
+    return decoded.ifBlank { "download_\${System.currentTimeMillis()}" }
 }

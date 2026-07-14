@@ -89,6 +89,7 @@ fun SettingsSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
             ListItem(headlineContent = { Text("Custom CSS") }, supportingContent = { Text("Inject custom styles") }, leadingContent = { Icon(Icons.Default.Palette, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
             ListItem(headlineContent = { Text("Zoom Control") }, leadingContent = { Icon(Icons.Default.ZoomIn, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
             ListItem(headlineContent = { Text("Backup & Restore") }, leadingContent = { Icon(Icons.Default.Backup, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
+            ListItem(headlineContent = { Text("Offline Translation") }, supportingContent = { Text("Download language models for offline translation") }, leadingContent = { Icon(Icons.Default.Translate, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) }, modifier = Modifier.clickable { viewModel.toggleTranslationSettings() })
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 

@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.browser.ui.components.*
+import com.example.browser.player.PlayerScreen
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @Composable
@@ -38,6 +39,21 @@ fun MainScreen(viewModel: BrowserViewModel) {
     val longPressUrl by viewModel.longPressUrl.collectAsState()
     val showBookmarkFolders by viewModel.showBookmarkFolders.collectAsState()
     val showWallpaperPicker by viewModel.showWallpaperPicker.collectAsState()
+    val showTranslateScreen by viewModel.showTranslateScreen.collectAsState()
+    val showTranslationSettings by viewModel.showTranslationSettings.collectAsState()
+    val selectedText by viewModel.selectedText.collectAsState()
+    val showNoteEditor by viewModel.showNoteEditor.collectAsState()
+    val showNotesList by viewModel.showNotesList.collectAsState()
+    val showPlayer by viewModel.showPlayer.collectAsState()
+
+    // Full-screen player takes over the entire screen
+    if (showPlayer) {
+        PlayerScreen(
+            manager = viewModel.mediaPlaybackManager,
+            onBack = { viewModel.closePlayer() }
+        )
+        return
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -65,6 +81,9 @@ fun MainScreen(viewModel: BrowserViewModel) {
                 }
             }
 
+            // Media prompt bar (shows when media URL detected)
+            MediaPromptBar(viewModel = viewModel)
+
             NavigationBar(
                 viewModel = viewModel,
                 onGoBack = { viewModel.goBack() },
@@ -84,12 +103,19 @@ fun MainScreen(viewModel: BrowserViewModel) {
         LongPressMenuSheet(viewModel = viewModel)
     }
 
+    if (selectedText != null) {
+        TextSelectionMenuSheet(viewModel = viewModel)
+    }
+
     if (showBookmarks) BookmarksSheet(viewModel = viewModel, onDismiss = { viewModel.toggleBookmarks() })
     if (showHistory) HistorySheet(viewModel = viewModel, onDismiss = { viewModel.toggleHistory() })
     if (showTabs) TabsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleTabs() })
     if (showSettings) SettingsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleSettings() })
     if (showSearchEngineSheet) SearchEngineSheet(viewModel = viewModel, onDismiss = { viewModel.toggleSearchEngineSheet() })
-    if (showDownloads) DownloadsSheet(onDismiss = { viewModel.toggleDownloads() })
+    if (showDownloads) DownloadManagerScreen(
+        onDismiss = { viewModel.toggleDownloads() },
+        downloadManager = viewModel.downloadManager
+    )
     if (showReadingList) ReadingListSheet(viewModel = viewModel, onDismiss = { viewModel.toggleReadingList() })
     if (showTabGroups) TabGroupsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleTabGroups() })
     if (showQuickLinksEditor) QuickLinksEditorSheet(viewModel = viewModel, onDismiss = { viewModel.toggleQuickLinksEditor() })
@@ -103,4 +129,8 @@ fun MainScreen(viewModel: BrowserViewModel) {
     if (showViewSource) ViewSourceScreen(viewModel = viewModel, onDismiss = { viewModel.closeViewSource() })
     if (showBookmarkFolders) BookmarkFoldersSheet(viewModel = viewModel, onDismiss = { viewModel.toggleBookmarkFolders() })
     if (showWallpaperPicker) WallpaperPickerSheet(viewModel = viewModel, onDismiss = { viewModel.toggleWallpaperPicker() })
+    if (showTranslateScreen) TranslateScreen(viewModel = viewModel, onDismiss = { viewModel.toggleTranslateScreen() })
+    if (showTranslationSettings) TranslationSettingsScreen(viewModel = viewModel, onDismiss = { viewModel.toggleTranslationSettings() })
+    if (showNoteEditor) NoteEditorSheet(viewModel = viewModel, onDismiss = { viewModel.toggleNoteEditor() })
+    if (showNotesList) NotesListSheet(viewModel = viewModel, onDismiss = { viewModel.toggleNotesList() })
 }
