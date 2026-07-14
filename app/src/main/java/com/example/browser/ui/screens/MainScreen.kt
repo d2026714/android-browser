@@ -4,10 +4,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.*
-import androidx.compose.ui.unit.dp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.browser.ui.components.BrowserWebView
 import com.example.browser.ui.components.FindInPageBar
@@ -28,25 +28,6 @@ fun MainScreen(
     val showSearchEngineSheet by viewModel.showSearchEngineSheet.collectAsState()
     val showDownloads by viewModel.showDownloads.collectAsState()
     val showViewSource by viewModel.showViewSource.collectAsState()
-    val isFullScreen by viewModel.isFullScreen.collectAsState()
-
-    // Full-screen video mode
-    if (isFullScreen) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            // The full-screen WebView view is managed by the system
-            IconButton(
-                onClick = { viewModel.exitFullScreen() },
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Icon(
-                    androidx.compose.material.icons.Icons.Default.Close,
-                    "Exit Fullscreen",
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        }
-        return
-    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Find in page bar

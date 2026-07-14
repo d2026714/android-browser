@@ -133,7 +133,7 @@ fun DownloadItemRow(item: DownloadItem) {
                 if (item.status == DownloadManager.STATUS_RUNNING && item.totalBytes > 0) {
                     Spacer(modifier = Modifier.height(4.dp))
                     LinearProgressIndicator(
-                        progress = { progress },
+                        progress = progress,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Text(
