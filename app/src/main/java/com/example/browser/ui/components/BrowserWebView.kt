@@ -10,9 +10,7 @@ import android.net.http.SslError
 import android.webkit.SslErrorHandler
 import android.webkit.*
 import android.widget.FrameLayout
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.drag
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -113,17 +111,6 @@ fun BrowserWebView(
                 }
             }
         )
-
-        // Pull to refresh indicator
-        if (isPullingToRefresh && viewModel.isLoading.collectAsState().value) {
-            isPullingToRefresh = false
-        }
-        if (isPullingToRefresh) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            )
-        }
 
         // Page loading progress bar
         if (progress in 1..99) {
