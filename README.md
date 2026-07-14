@@ -7,121 +7,99 @@ A lightweight, modern Android browser built with **Kotlin**, **Jetpack Compose**
 ## ✨ Features
 
 ### Core Browsing
-- 🌐 **Full Browsing** - Navigate, go back/forward, reload
-- 📑 **Multi-Tab** - Open, switch, and close multiple tabs
-- 🥷 **Incognito Mode** - Private browsing
-- 🔍 **Smart Search** - Search or enter URL from the same bar
+- 🌐 Full browsing with back/forward/reload
+- 📑 Multi-tab with tab counter badge
+- 🥷 Incognito mode
+- 🔍 Smart URL/search bar
 
 ### Content & Organization
-- 🔖 **Bookmarks** - Save and manage your favorite sites
-- 📜 **History** - Browse history with clear option
-- ⚡ **Quick Links** - Customizable home page shortcuts
+- 🔖 Bookmarks (add/delete/browse)
+- 📜 History (browse/clear)
+- ⚡ Quick links on home page
 
 ### Privacy & Security
-- 🚫 **Ad Blocker** - Built-in ad and tracker blocking
-- 🔒 **HTTPS Indicator** - Visual security indicator
-- 🛡️ **No Tracking** - Zero analytics, zero telemetry
+- 🚫 Built-in ad & tracker blocker
+- 🔒 HTTPS/HTTP security indicator
+- 🍪 Clear cookies & site data
+- 🛡️ Zero analytics, zero telemetry
 
 ### Reading & Display
-- 📖 **Reading Mode** - Distraction-free reading with adjustable font size
-- 🌙 **Dark Mode** - Light/dark theme support
-- 🖥️ **Desktop Mode** - Request desktop site with one tap
+- 📖 Reading mode with adjustable font
+- 🌙 Dark mode (light/dark themes)
+- 🖥️ Desktop/mobile mode toggle
 
 ### Tools
-- 🔎 **Find in Page** - Search within any page
-- 📤 **Share Page** - Share links via any app
-- 📥 **Downloads** - System download manager integration
-- 👆 **Swipe Navigation** - Swipe right/left to go back/forward
+- 🔎 Find in page
+- 📄 View page source code
+- 📸 Screenshot capture & share
+- 📤 Share page via system share
+- 📥 Download manager with progress tracking
+- 👆 Swipe navigation (left/right gestures)
 
-## 🛠️ Tech Stack
+## 📦 Download
 
-- **Language**: Kotlin
-- **UI**: Jetpack Compose + Material 3
-- **Architecture**: MVVM with StateFlow
-- **Storage**: SharedPreferences + DataStore
-- **Min SDK**: Android 8.0 (API 26)
-- **Target SDK**: Android 14 (API 34)
-
-## 📦 Download APK
-
-### Automatic Build (Recommended)
+### From GitHub Actions (Recommended)
 1. Go to [Actions](https://github.com/d2026714/android-browser/actions)
-2. Click the latest successful build
-3. Download `debug-apk` or `release-apk` from Artifacts
+2. Click the latest ✅ build
+3. Download **debug-apk** from Artifacts
 
 ### Build Locally
 ```bash
 git clone https://github.com/d2026714/android-browser.git
 cd android-browser
 ./gradlew assembleDebug
-# APK at: app/build/outputs/apk/debug/app-debug.apk
 ```
+
+## 🛠️ Tech Stack
+
+- **Kotlin** + **Jetpack Compose** + **Material 3**
+- **MVVM** (ViewModel + StateFlow)
+- **WebView** with custom ad blocking
+- **Min SDK**: Android 8.0 (API 26)
+- **Target SDK**: Android 14 (API 34)
 
 ## 📁 Project Structure
 
 ```
 app/src/main/java/com/example/browser/
-├── BrowserApp.kt              # Application class
-├── MainActivity.kt            # Main entry point
+├── BrowserApp.kt / MainActivity.kt
 ├── data/
-│   ├── model/                 # Data models (Tab, Bookmark, HistoryItem)
-│   └── repository/            # Data persistence
+│   ├── model/        (Tab, Bookmark, HistoryItem)
+│   └── repository/   (SharedPreferences persistence)
 ├── ui/
-│   ├── components/            # Reusable UI components
-│   │   ├── BrowserWebView.kt  # WebView with gestures & ad blocking
-│   │   ├── FindInPageBar.kt   # Find in page search bar
-│   │   └── NavigationBar.kt   # URL bar + bottom toolbar + menu
-│   ├── screens/               # App screens
-│   │   ├── MainScreen.kt      # Main container
-│   │   ├── HomeScreen.kt      # Home page with quick links
-│   │   ├── ReadingModeScreen.kt # Distraction-free reading
-│   │   ├── BookmarksSheet.kt  # Bookmarks management
-│   │   ├── HistorySheet.kt    # History management
-│   │   ├── TabsSheet.kt       # Tab manager
-│   │   ├── SettingsSheet.kt   # Settings & preferences
-│   │   └── SearchEngineSheet.kt # Search engine picker
-│   ├── theme/                 # Material 3 theme
-│   └── viewmodel/             # ViewModel for state management
+│   ├── components/   (WebView, NavigationBar, FindInPage, ContextMenu)
+│   ├── screens/      (Home, Bookmarks, History, Tabs, Settings,
+│   │                   Downloads, ReadingMode, ViewSource, SearchEngine)
+│   ├── theme/        (Material 3 colors & theme)
+│   └── viewmodel/    (BrowserViewModel)
 └── util/
-    └── AdBlocker.kt           # Ad blocking logic
+    └── AdBlocker.kt  (domain & pattern blocking)
 ```
 
-## 🚀 Getting Started
+## 📋 Changelog
 
-### Prerequisites
-- [Android Studio](https://developer.android.com/studio) Hedgehog (2023.1.1) or later
-- JDK 17
-- Android SDK 34
+### v1.2.0 (Latest)
+- 📥 Download manager UI with progress tracking
+- 📄 View page source code
+- 📸 Screenshot capture & share
+- 🍪 Clear cookies & site data
+- 📤 Share page from menu
+- 🔗 Long-press context menu for links
 
-### Build & Run
-1. Open the project in Android Studio
-2. Sync Gradle
-3. Connect a device or start an emulator
-4. Click **Run** ▶️
+### v1.1.0
+- 📖 Reading mode
+- 👆 Swipe navigation gestures
+- 🖥️ Desktop mode toggle
+- 🔎 Find in page
+- 🌙 Dark mode improvements
 
-## 📋 Roadmap
-
-- [x] Basic browsing
-- [x] Multi-tab support
-- [x] Incognito mode
-- [x] Bookmarks & history
-- [x] Ad blocker
-- [x] Dark mode
-- [x] Desktop mode
-- [x] Find in page
-- [x] Reading mode
-- [x] Swipe navigation
-- [x] Share page
-- [ ] Download manager UI
-- [ ] Tab groups
-- [ ] Custom home page widgets
-- [ ] Gesture shortcuts
-- [ ] Extension support
+### v1.0.0
+- Initial release with core browsing features
 
 ## 📄 License
 
-MIT License - feel free to use and modify.
+MIT License
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to open issues and pull requests.
+Contributions welcome! Open issues and PRs.

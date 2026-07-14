@@ -1,7 +1,5 @@
 package com.example.browser.ui.screens
 
-import android.content.Intent
-import android.webkit.WebView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -9,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.browser.ui.components.BrowserWebView
 import com.example.browser.ui.components.FindInPageBar
@@ -28,10 +25,30 @@ fun MainScreen(
     val isFindInPage by viewModel.isFindInPage.collectAsState()
     val isReadingMode by viewModel.isReadingMode.collectAsState()
     val showSearchEngineSheet by viewModel.showSearchEngineSheet.collectAsState()
-    val context = LocalContext.current
+    val showDownloads by viewModel.showDownloads.collectAsState()
+    val showViewSource by viewModel.showViewSource.collectAsState()
+    val isFullScreen by viewModel.isFullScreen.collectAsState()
+
+    // Full-screen video mode
+    if (isFullScreen) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // The full-screen WebView view is managed by the system
+            IconButton(
+                onClick = { viewModel.exitFullScreen() },
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Icon(
+                    androidx.compose.material.icons.Icons.Default.FullscreenExit,
+                    "Exit Fullscreen",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+        return
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Find in page bar (animated)
+        // Find in page bar
         AnimatedVisibility(
             visible = isFindInPage,
             enter = slideInVertically { -it },
@@ -50,14 +67,11 @@ fun MainScreen(
             if (currentUrl.isBlank() || currentUrl == "about:blank") {
                 HomeScreen(viewModel = viewModel)
             } else {
-                BrowserWebView(
-                    viewModel = viewModel,
-                    modifier = Modifier.fillMaxSize()
-                )
+                BrowserWebView(viewModel = viewModel, modifier = Modifier.fillMaxSize())
             }
         }
 
-        // Navigation bar at the bottom
+        // Navigation bar
         NavigationBar(
             viewModel = viewModel,
             onGoBack = { viewModel.goBack() },
@@ -71,45 +85,31 @@ fun MainScreen(
     // --- Bottom Sheets ---
 
     if (showBookmarks) {
-        BookmarksSheet(
-            viewModel = viewModel,
-            onDismiss = { viewModel.toggleBookmarks() }
-        )
+        BookmarksSheet(viewModel = viewModel, onDismiss = { viewModel.toggleBookmarks() })
     }
-
     if (showHistory) {
-        HistorySheet(
-            viewModel = viewModel,
-            onDismiss = { viewModel.toggleHistory() }
-        )
+        HistorySheet(viewModel = viewModel, onDismiss = { viewModel.toggleHistory() })
     }
-
     if (showTabs) {
-        TabsSheet(
-            viewModel = viewModel,
-            onDismiss = { viewModel.toggleTabs() }
-        )
+        TabsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleTabs() })
     }
-
     if (showSettings) {
-        SettingsSheet(
-            viewModel = viewModel,
-            onDismiss = { viewModel.toggleSettings() }
-        )
+        SettingsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleSettings() })
     }
-
     if (showSearchEngineSheet) {
-        SearchEngineSheet(
-            viewModel = viewModel,
-            onDismiss = { viewModel.toggleSearchEngineSheet() }
-        )
+        SearchEngineSheet(viewModel = viewModel, onDismiss = { viewModel.toggleSearchEngineSheet() })
+    }
+    if (showDownloads) {
+        DownloadsSheet(onDismiss = { viewModel.toggleDownloads() })
     }
 
-    // Reading Mode (full screen overlay)
+    // Reading Mode overlay
     if (isReadingMode) {
-        ReadingModeScreen(
-            viewModel = viewModel,
-            onDismiss = { viewModel.toggleReadingMode() }
-        )
+        ReadingModeScreen(viewModel = viewModel, onDismiss = { viewModel.toggleReadingMode() })
+    }
+
+    // View Source overlay
+    if (showViewSource) {
+        ViewSourceScreen(viewModel = viewModel, onDismiss = { viewModel.closeViewSource() })
     }
 }

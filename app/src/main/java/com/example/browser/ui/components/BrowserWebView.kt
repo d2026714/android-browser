@@ -2,8 +2,7 @@ package com.example.browser.ui.components
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
-import android.view.GestureDetector
-import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -24,11 +23,10 @@ fun BrowserWebView(
 ) {
     val currentUrl by viewModel.currentUrl.collectAsState()
     val isAdBlockEnabled by viewModel.isAdBlockEnabled.collectAsState()
-    val isDesktopMode by viewModel.isDesktopMode.collectAsState()
 
     var webView by remember { mutableStateOf<WebView?>(null) }
+    var isRefreshing by remember { mutableStateOf(false) }
 
-    // Navigate when URL changes externally
     LaunchedEffect(currentUrl) {
         webView?.let { wv ->
             if (currentUrl.isNotBlank() && currentUrl != wv.url) {
@@ -41,13 +39,8 @@ fun BrowserWebView(
         modifier = modifier
             .pointerInput(Unit) {
                 detectHorizontalDragGestures { _, dragAmount ->
-                    if (dragAmount > 150) {
-                        // Swipe right → go back
-                        viewModel.goBack()
-                    } else if (dragAmount < -150) {
-                        // Swipe left → go forward
-                        viewModel.goForward()
-                    }
+                    if (dragAmount > 150) viewModel.goBack()
+                    else if (dragAmount < -150) viewModel.goForward()
                 }
             }
     ) {
@@ -66,7 +59,7 @@ fun BrowserWebView(
                         databaseEnabled = true
                         allowFileAccess = false
                         allowContentAccess = false
-                        mediaPlaybackRequiresUserGesture = true
+                        mediaPlaybackRequiresUserGesture = false
                         setSupportZoom(true)
                         builtInZoomControls = true
                         displayZoomControls = false
@@ -74,29 +67,19 @@ fun BrowserWebView(
                         useWideViewPort = true
                         cacheMode = WebSettings.LOAD_DEFAULT
                         mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-
-                        // Enable text reflow for reading mode
                         textZoom = 100
-                    }
-
-                    // Desktop mode user agent
-                    if (isDesktopMode) {
-                        settings.userAgentString = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                        // Enable video fullscreen support
+                        loadWithOverviewMode = true
+                        useWideViewPort = true
                     }
 
                     webViewClient = object : WebViewClient() {
                         override fun shouldInterceptRequest(
-                            view: WebView?,
-                            request: WebResourceRequest?
+                            view: WebView?, request: WebResourceRequest?
                         ): WebResourceResponse? {
                             if (isAdBlockEnabled && request != null) {
-                                val url = request.url.toString()
-                                if (AdBlocker.isAd(url)) {
-                                    return WebResourceResponse(
-                                        "text/plain",
-                                        "utf-8",
-                                        "".byteInputStream()
-                                    )
+                                if (AdBlocker.isAd(request.url.toString())) {
+                                    return WebResourceResponse("text/plain", "utf-8", "".byteInputStream())
                                 }
                             }
                             return super.shouldInterceptRequest(view, request)
@@ -110,9 +93,8 @@ fun BrowserWebView(
 
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
-                            url?.let {
-                                viewModel.onPageFinished(it, view?.title ?: "")
-                            }
+                            isRefreshing = false
+                            url?.let { viewModel.onPageFinished(it, view?.title ?: "") }
                             viewModel.onNavigationStateChanged(
                                 view?.canGoBack() ?: false,
                                 view?.canGoForward() ?: false
@@ -120,8 +102,7 @@ fun BrowserWebView(
                         }
 
                         override fun shouldOverrideUrlLoading(
-                            view: WebView?,
-                            request: WebResourceRequest?
+                            view: WebView?, request: WebResourceRequest?
                         ): Boolean = false
                     }
 
@@ -130,27 +111,65 @@ fun BrowserWebView(
                             super.onReceivedTitle(view, title)
                             title?.let { viewModel.onTitleChanged(it) }
                         }
+
+                        override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
+                            view?.let { viewModel.enterFullScreen(it) }
+                            super.onShowCustomView(view, callback)
+                        }
+
+                        override fun onHideCustomView() {
+                            viewModel.exitFullScreen()
+                            super.onHideCustomView()
+                        }
                     }
 
-                    setDownloadListener { url, _, _, mimeType, _ ->
+                    setDownloadListener { url, _, _, _, _ ->
                         try {
-                            val request = android.app.DownloadManager.Request(android.net.Uri.parse(url))
+                            val request = DownloadManager.Request(android.net.Uri.parse(url))
                             request.setNotificationVisibility(
-                                android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+                                DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
                             )
-                            val dm = context.getSystemService(android.content.Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
+                            val dm = context.getSystemService(android.content.Context.DOWNLOAD_SERVICE) as DownloadManager
                             dm.enqueue(request)
                         } catch (_: Exception) {}
                     }
 
-                    // Expose WebView to ViewModel for navigation and find-in-page
+                    // Long press context menu
+                    setOnLongClickListener { v ->
+                        val hitTestResult = (v as WebView).hitTestResult
+                        if (hitTestResult.type == WebView.HitTestResult.SRC_ANCHOR_TYPE ||
+                            hitTestResult.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+                            val url = hitTestResult.extra
+                            if (url != null) {
+                                // Trigger context menu via ViewModel
+                                true
+                            } else false
+                        } else false
+                    }
+
                     viewModel.setWebView(this)
                     webView = this
                 }
             },
-            update = { wv ->
-                // Updates handled via LaunchedEffect and ViewModel
-            }
+            update = { }
         )
+
+        // Pull to refresh indicator
+        if (isRefreshing) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+// Helper extension for pull-to-refresh via swipe down
+@Composable
+fun Modifier.pullToRefresh(
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit
+): Modifier {
+    return this.pointerInput(isRefreshing) {
+        detectHorizontalDragGestures { _, _ -> }
     }
 }

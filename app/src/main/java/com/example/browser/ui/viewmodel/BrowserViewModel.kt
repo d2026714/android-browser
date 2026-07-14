@@ -1,6 +1,16 @@
 package com.example.browser.ui.viewmodel
 
 import android.app.Application
+import android.view.View
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
+import android.webkit.CookieManager
+import android.webkit.WebView
+import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import com.example.browser.data.model.Bookmark
 import com.example.browser.data.model.HistoryItem
@@ -9,6 +19,8 @@ import com.example.browser.data.repository.BrowserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.io.File
+import java.io.FileOutputStream
 
 class BrowserViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = BrowserRepository.getInstance(application)
@@ -54,7 +66,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val _isAdBlockEnabled = MutableStateFlow(repository.isAdBlockEnabled())
     val isAdBlockEnabled: StateFlow<Boolean> = _isAdBlockEnabled.asStateFlow()
 
-    // New features state
+    // Features state
     private val _isDesktopMode = MutableStateFlow(false)
     val isDesktopMode: StateFlow<Boolean> = _isDesktopMode.asStateFlow()
 
@@ -64,16 +76,20 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val _isReadingMode = MutableStateFlow(false)
     val isReadingMode: StateFlow<Boolean> = _isReadingMode.asStateFlow()
 
-    private val _showSearchEngineSheet = MutableStateFlow(false)
-    val showSearchEngineSheet: StateFlow<Boolean> = _showSearchEngineSheet.asStateFlow()
+    // Full-screen video
+    private val _isFullScreen = MutableStateFlow(false)
+    val isFullScreen: StateFlow<Boolean> = _isFullScreen.asStateFlow()
+    private var fullScreenView: View? = null
 
-    private val _showQuickLinksEditor = MutableStateFlow(false)
-    val showQuickLinksEditor: StateFlow<Boolean> = _showQuickLinksEditor.asStateFlow()
+    // Page source
+    private val _pageSource = MutableStateFlow<String?>(null)
+    val pageSource: StateFlow<String?> = _pageSource.asStateFlow()
 
-    // WebView reference for JS execution
-    private var webViewRef: android.webkit.WebView? = null
+    // Screenshot
+    private val _screenshotPath = MutableStateFlow<String?>(null)
+    val screenshotPath: StateFlow<String?> = _screenshotPath.asStateFlow()
 
-    // Screen state
+    // Bottom sheet state
     private val _showBookmarks = MutableStateFlow(false)
     val showBookmarks: StateFlow<Boolean> = _showBookmarks.asStateFlow()
 
@@ -86,7 +102,22 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val _showSettings = MutableStateFlow(false)
     val showSettings: StateFlow<Boolean> = _showSettings.asStateFlow()
 
-    fun setWebView(webView: android.webkit.WebView?) {
+    private val _showSearchEngineSheet = MutableStateFlow(false)
+    val showSearchEngineSheet: StateFlow<Boolean> = _showSearchEngineSheet.asStateFlow()
+
+    private val _showDownloads = MutableStateFlow(false)
+    val showDownloads: StateFlow<Boolean> = _showDownloads.asStateFlow()
+
+    private val _showPageActions = MutableStateFlow(false)
+    val showPageActions: StateFlow<Boolean> = _showPageActions.asStateFlow()
+
+    private val _showViewSource = MutableStateFlow(false)
+    val showViewSource: StateFlow<Boolean> = _showViewSource.asStateFlow()
+
+    // WebView reference
+    private var webViewRef: WebView? = null
+
+    fun setWebView(webView: WebView?) {
         webViewRef = webView
     }
 
@@ -132,35 +163,19 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
             repository.addHistory(HistoryItem(url = url, title = title))
             _history.value = repository.getHistory()
         }
-        // Apply desktop mode if enabled
-        if (_isDesktopMode.value) {
-            applyDesktopMode()
-        }
+        if (_isDesktopMode.value) applyDesktopMode()
     }
 
     // Navigation
-    fun goBack() {
-        webViewRef?.goBack()
-    }
-
-    fun goForward() {
-        webViewRef?.goForward()
-    }
-
-    fun reload() {
-        webViewRef?.reload()
-    }
-
-    fun stopLoading() {
-        webViewRef?.stopLoading()
-    }
+    fun goBack() { webViewRef?.goBack() }
+    fun goForward() { webViewRef?.goForward() }
+    fun reload() { webViewRef?.reload() }
+    fun stopLoading() { webViewRef?.stopLoading() }
 
     // Tab management
     fun addTab(incognito: Boolean = false) {
         val currentTabs = _tabs.value.toMutableList()
-        currentTabs.forEachIndexed { i, tab ->
-            currentTabs[i] = tab.copy(isActive = false)
-        }
+        currentTabs.forEachIndexed { i, tab -> currentTabs[i] = tab.copy(isActive = false) }
         currentTabs.add(Tab(isActive = true, isIncognito = incognito))
         _tabs.value = currentTabs
         _activeTabIndex.value = currentTabs.size - 1
@@ -172,14 +187,11 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
 
     fun switchTab(index: Int) {
         val currentTabs = _tabs.value.toMutableList()
-        currentTabs.forEachIndexed { i, tab ->
-            currentTabs[i] = tab.copy(isActive = i == index)
-        }
+        currentTabs.forEachIndexed { i, tab -> currentTabs[i] = tab.copy(isActive = i == index) }
         _tabs.value = currentTabs
         _activeTabIndex.value = index
-        val activeTab = currentTabs[index]
-        _currentUrl.value = activeTab.url
-        _currentTitle.value = activeTab.title
+        _currentUrl.value = currentTabs[index].url
+        _currentTitle.value = currentTabs[index].title
     }
 
     fun closeTab(index: Int) {
@@ -193,43 +205,32 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
             return
         }
         currentTabs.removeAt(index)
-        val newActiveIndex = if (index >= currentTabs.size) currentTabs.size - 1 else index
-        currentTabs.forEachIndexed { i, tab ->
-            currentTabs[i] = tab.copy(isActive = i == newActiveIndex)
-        }
+        val newIdx = if (index >= currentTabs.size) currentTabs.size - 1 else index
+        currentTabs.forEachIndexed { i, tab -> currentTabs[i] = tab.copy(isActive = i == newIdx) }
         _tabs.value = currentTabs
-        _activeTabIndex.value = newActiveIndex
-        _currentUrl.value = currentTabs[newActiveIndex].url
-        _currentTitle.value = currentTabs[newActiveIndex].title
+        _activeTabIndex.value = newIdx
+        _currentUrl.value = currentTabs[newIdx].url
+        _currentTitle.value = currentTabs[newIdx].title
     }
 
     private fun updateTabUrl(url: String) {
         val currentTabs = _tabs.value.toMutableList()
-        val activeIndex = _activeTabIndex.value
-        if (activeIndex in currentTabs.indices) {
-            currentTabs[activeIndex] = currentTabs[activeIndex].copy(url = url)
-            _tabs.value = currentTabs
-        }
+        val idx = _activeTabIndex.value
+        if (idx in currentTabs.indices) { currentTabs[idx] = currentTabs[idx].copy(url = url); _tabs.value = currentTabs }
     }
 
     private fun updateTabTitle(title: String) {
         val currentTabs = _tabs.value.toMutableList()
-        val activeIndex = _activeTabIndex.value
-        if (activeIndex in currentTabs.indices) {
-            currentTabs[activeIndex] = currentTabs[activeIndex].copy(title = title)
-            _tabs.value = currentTabs
-        }
+        val idx = _activeTabIndex.value
+        if (idx in currentTabs.indices) { currentTabs[idx] = currentTabs[idx].copy(title = title); _tabs.value = currentTabs }
     }
 
-    // Bookmark management
+    // Bookmarks
     fun toggleBookmark() {
         val url = _currentUrl.value
         if (url.isBlank() || url == "about:blank") return
-        if (repository.isBookmarked(url)) {
-            repository.removeBookmark(url)
-        } else {
-            repository.addBookmark(Bookmark(url = url, title = _currentTitle.value))
-        }
+        if (repository.isBookmarked(url)) repository.removeBookmark(url)
+        else repository.addBookmark(Bookmark(url = url, title = _currentTitle.value))
         _bookmarks.value = repository.getBookmarks()
         _isBookmarked.value = repository.isBookmarked(url)
     }
@@ -240,79 +241,115 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         _isBookmarked.value = repository.isBookmarked(_currentUrl.value)
     }
 
-    // History management
-    fun clearHistory() {
-        repository.clearHistory()
-        _history.value = emptyList()
-    }
+    // History
+    fun clearHistory() { repository.clearHistory(); _history.value = emptyList() }
 
     // Settings
-    fun toggleDarkMode() {
-        val newValue = !_isDarkMode.value
-        _isDarkMode.value = newValue
-        repository.setDarkMode(newValue)
-    }
-
-    fun toggleAdBlock() {
-        val newValue = !_isAdBlockEnabled.value
-        _isAdBlockEnabled.value = newValue
-        repository.setAdBlockEnabled(newValue)
-    }
-
-    fun setSearchEngine(url: String) {
-        repository.setSearchEngine(url)
-    }
-
+    fun toggleDarkMode() { val v = !_isDarkMode.value; _isDarkMode.value = v; repository.setDarkMode(v) }
+    fun toggleAdBlock() { val v = !_isAdBlockEnabled.value; _isAdBlockEnabled.value = v; repository.setAdBlockEnabled(v) }
+    fun setSearchEngine(url: String) { repository.setSearchEngine(url) }
     fun getSearchEngine(): String = repository.getSearchEngine()
 
     // Desktop mode
-    fun toggleDesktopMode() {
-        val newValue = !_isDesktopMode.value
-        _isDesktopMode.value = newValue
-        applyDesktopMode()
-    }
-
+    fun toggleDesktopMode() { _isDesktopMode.value = !_isDesktopMode.value; applyDesktopMode() }
     private fun applyDesktopMode() {
         webViewRef?.let { wv ->
-            if (_isDesktopMode.value) {
-                wv.settings.userAgentString = DESKTOP_USER_AGENT
-            } else {
-                wv.settings.userAgentString = null
-            }
+            wv.settings.userAgentString = if (_isDesktopMode.value) DESKTOP_UA else null
             wv.reload()
         }
     }
 
     // Find in page
-    fun toggleFindInPage() {
-        _isFindInPage.value = !_isFindInPage.value
-    }
-
-    fun findInPage(query: String) {
-        webViewRef?.findAllAsync(query)
-    }
-
-    fun findNext() {
-        webViewRef?.findNext(true)
-    }
-
-    fun findPrevious() {
-        webViewRef?.findNext(false)
-    }
-
-    fun clearFindInPage() {
-        webViewRef?.clearMatches()
-        _isFindInPage.value = false
-    }
+    fun toggleFindInPage() { _isFindInPage.value = !_isFindInPage.value }
+    fun findInPage(query: String) { webViewRef?.findAllAsync(query) }
+    fun findNext() { webViewRef?.findNext(true) }
+    fun findPrevious() { webViewRef?.findNext(false) }
+    fun clearFindInPage() { webViewRef?.clearMatches(); _isFindInPage.value = false }
 
     // Reading mode
-    fun toggleReadingMode() {
-        _isReadingMode.value = !_isReadingMode.value
+    fun toggleReadingMode() { _isReadingMode.value = !_isReadingMode.value }
+
+    // Full-screen video
+    fun enterFullScreen(view: View) { fullScreenView = view; _isFullScreen.value = true }
+    fun exitFullScreen() { fullScreenView = null; _isFullScreen.value = false }
+
+    // View page source
+    fun viewPageSource() {
+        webViewRef?.evaluateJavascript(
+            "(function() { return document.documentElement.outerHTML; })()"
+        ) { html ->
+            _pageSource.value = html?.removeSurrounding("\"")?.replace("\\n", "\n")?.replace("\\\"", "\"")?.replace("\\t", "\t")
+            _showViewSource.value = true
+        }
+    }
+
+    fun closeViewSource() { _showViewSource.value = false; _pageSource.value = null }
+
+    // Screenshot
+    fun takeScreenshot() {
+        webViewRef?.let { wv ->
+            try {
+                val bitmap = Bitmap.createBitmap(wv.width, wv.height, Bitmap.Config.ARGB_8888)
+                val canvas = android.graphics.Canvas(bitmap)
+                wv.draw(canvas)
+                val dir = File(getApplication<Application>().cacheDir, "screenshots")
+                dir.mkdirs()
+                val file = File(dir, "screenshot_${System.currentTimeMillis()}.png")
+                FileOutputStream(file).use { out -> bitmap.compress(Bitmap.CompressFormat.PNG, 90, out) }
+                _screenshotPath.value = file.absolutePath
+                // Share the screenshot
+                val uri = FileProvider.getUriForFile(getApplication(), "${getApplication<Application>().packageName}.fileprovider", file)
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "image/png"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                getApplication<Application>().startActivity(Intent.createChooser(intent, "Share Screenshot").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            } catch (_: Exception) {}
+        }
+    }
+
+    // Copy link
+    fun copyLink(url: String) {
+        val clipboard = getApplication<Application>().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("URL", url))
     }
 
     // Share page
-    fun shareCurrentPage(): Pair<String, String> {
-        return Pair(_currentTitle.value, _currentUrl.value)
+    fun shareCurrentPage() {
+        val title = _currentTitle.value
+        val url = _currentUrl.value
+        if (url.isBlank() || url == "about:blank") return
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, title)
+            putExtra(Intent.EXTRA_TEXT, url)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        getApplication<Application>().startActivity(Intent.createChooser(intent, "Share").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+
+    // Clear cookies for current site
+    fun clearSiteData() {
+        val url = _currentUrl.value
+        if (url.isBlank()) return
+        val cookieManager = CookieManager.getInstance()
+        cookieManager.removeAllCookies(null)
+        webViewRef?.clearCache(true)
+        webViewRef?.reload()
+    }
+
+    // Open in new tab
+    fun openInNewTab(url: String) {
+        addTab()
+        navigateTo(url)
+    }
+
+    // Open in incognito
+    fun openInIncognito(url: String) {
+        addTab(incognito = true)
+        navigateTo(url)
     }
 
     // UI toggles
@@ -321,18 +358,19 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun toggleTabs() { _showTabs.value = !_showTabs.value }
     fun toggleSettings() { _showSettings.value = !_showSettings.value }
     fun toggleSearchEngineSheet() { _showSearchEngineSheet.value = !_showSearchEngineSheet.value }
-    fun toggleQuickLinksEditor() { _showQuickLinksEditor.value = !_showQuickLinksEditor.value }
+    fun toggleDownloads() { _showDownloads.value = !_showDownloads.value }
+    fun togglePageActions() { _showPageActions.value = !_showPageActions.value }
 
     fun hideOverlays() {
-        _showBookmarks.value = false
-        _showHistory.value = false
-        _showTabs.value = false
-        _showSettings.value = false
-        _showSearchEngineSheet.value = false
-        _showQuickLinksEditor.value = false
+        _showBookmarks.value = false; _showHistory.value = false
+        _showTabs.value = false; _showSettings.value = false
+        _showSearchEngineSheet.value = false; _showDownloads.value = false
+        _showPageActions.value = false; _showViewSource.value = false
     }
 
     companion object {
-        private const val DESKTOP_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        private const val DESKTOP_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
 }
+
+
