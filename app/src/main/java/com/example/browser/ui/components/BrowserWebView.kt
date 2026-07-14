@@ -4,6 +4,7 @@ import android.app.DownloadManager
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
@@ -133,7 +134,10 @@ fun BrowserWebView(
                             )
                             val dm = context.getSystemService(android.content.Context.DOWNLOAD_SERVICE) as DownloadManager
                             dm.enqueue(request)
-                        } catch (_: Exception) {}
+                            Log.d("BrowserWebView", "Download started: $url")
+                        } catch (e: Exception) {
+                            Log.e("BrowserWebView", "Download failed: $url", e)
+                        }
                     }
 
                     // Long press context menu
@@ -149,7 +153,7 @@ fun BrowserWebView(
                         } else false
                     }
 
-                    viewModel.setWebView(this)
+                    viewModel.setActiveWebView(this)
                     webView = this
                 }
             },

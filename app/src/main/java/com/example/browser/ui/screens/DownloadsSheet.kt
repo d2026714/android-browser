@@ -186,6 +186,8 @@ fun getDownloads(context: Context): List<DownloadItem> {
                 )
             }
         }
-    } catch (_: Exception) {}
+    } catch (e: Exception) {
+        android.util.Log.e("DownloadsSheet", "Failed to query downloads", e)
+    }
     return items.sortedByDescending { it.lastModified }
 }

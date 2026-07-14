@@ -100,7 +100,7 @@ fun generateQrCode(text: String): Bitmap? {
         }
 
         bitmap
-    } catch (_: Exception) { null }
+    } catch (e: Exception) { android.util.Log.e("QrCodeSheet", "QR generation failed", e); null }
 }
 
 private fun drawFinderPattern(canvas: android.graphics.Canvas, paint: android.graphics.Paint,

@@ -1,6 +1,7 @@
 package com.example.browser.ui.screens
 
 import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -9,19 +10,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.browser.data.repository.BrowserRepository
+import com.example.browser.ui.viewmodel.BrowserViewModel
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+private const val TAG = "BackupRestoreSheet"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BackupRestoreSheet(onDismiss: () -> Unit) {
+fun BackupRestoreSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
     val context = LocalContext.current
     var message by remember { mutableStateOf<String?>(null) }
     val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+
+    // Collect current data from ViewModel's flows
+    val bookmarks by viewModel.bookmarkManager.bookmarks.collectAsState(initial = emptyList())
+    val history by viewModel.bookmarkManager.history.collectAsState(initial = emptyList())
+    val readingList by viewModel.bookmarkManager.readingList.collectAsState(initial = emptyList())
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
@@ -38,10 +46,9 @@ fun BackupRestoreSheet(onDismiss: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = {
                         try {
-                            val repo = BrowserRepository.getInstance(context)
-                            val bk = repo.getBookmarks().map { mapOf("url" to it.url, "title" to it.title) }
-                            val hi = repo.getHistory().take(100).map { mapOf("url" to it.url, "title" to it.title) }
-                            val rl = repo.getReadingList().map { mapOf("url" to it.url, "title" to it.title) }
+                            val bk = bookmarks.map { mapOf("url" to it.url, "title" to it.title) }
+                            val hi = history.take(100).map { mapOf("url" to it.url, "title" to it.title) }
+                            val rl = readingList.map { mapOf("url" to it.url, "title" to it.title) }
                             val data = Json.encodeToString(mapOf("version" to 1, "timestamp" to System.currentTimeMillis(), "bookmarks" to bk, "history" to hi, "readingList" to rl))
                             val dir = File(context.cacheDir, "backups"); dir.mkdirs()
                             val file = File(dir, "browser_backup_${dateFormat.format(Date())}.json")
@@ -50,7 +57,11 @@ fun BackupRestoreSheet(onDismiss: () -> Unit) {
                             val intent = Intent(Intent.ACTION_SEND).apply { type = "application/json"; putExtra(Intent.EXTRA_STREAM, uri); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION) }
                             context.startActivity(Intent.createChooser(intent, "Save Backup").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                             message = "Backup created!"
-                        } catch (e: Exception) { message = "Error: ${e.message}" }
+                            Log.d(TAG, "Backup created: ${file.absolutePath}")
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Backup failed", e)
+                            message = "Error: ${e.message}"
+                        }
                     }) { Text("Create Backup") }
                 }
             }

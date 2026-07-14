@@ -68,7 +68,7 @@ fun MainScreen(viewModel: BrowserViewModel = viewModel()) {
     if (showQuickLinksEditor) QuickLinksEditorSheet(viewModel = viewModel, onDismiss = { viewModel.toggleQuickLinksEditor() })
     if (showQrCode) QrCodeSheet(viewModel = viewModel, onDismiss = { viewModel.toggleQrCode() })
     if (showPageInfo) PageInfoSheet(viewModel = viewModel, onDismiss = { viewModel.togglePageInfo() })
-    if (showBackupRestore) BackupRestoreSheet(onDismiss = { viewModel.toggleBackupRestore() })
+    if (showBackupRestore) BackupRestoreSheet(viewModel = viewModel, onDismiss = { viewModel.toggleBackupRestore() })
     if (showUserAgent) UserAgentSheet(viewModel = viewModel, onDismiss = { viewModel.toggleUserAgent() })
     if (showZoomControl) ZoomControlSheet(viewModel = viewModel, onDismiss = { viewModel.toggleZoomControl() })
     if (showCustomCss) CustomCssSheet(viewModel = viewModel, onDismiss = { viewModel.toggleCustomCssSheet() })

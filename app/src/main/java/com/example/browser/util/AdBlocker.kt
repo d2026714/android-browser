@@ -1,5 +1,9 @@
 package com.example.browser.util
 
+import android.util.Log
+
+private const val TAG = "AdBlocker"
+
 object AdBlocker {
     private val adDomains = setOf(
         "doubleclick.net",
@@ -43,13 +47,17 @@ object AdBlocker {
 
     fun isAd(url: String): Boolean {
         val lowerUrl = url.lowercase()
-        // Check domain blocklist
         for (domain in adDomains) {
-            if (lowerUrl.contains(domain)) return true
+            if (lowerUrl.contains(domain)) {
+                Log.v(TAG, "Blocked ad domain: $domain in $url")
+                return true
+            }
         }
-        // Check URL patterns
         for (pattern in adUrlPatterns) {
-            if (lowerUrl.contains(pattern)) return true
+            if (lowerUrl.contains(pattern)) {
+                Log.v(TAG, "Blocked ad pattern: $pattern in $url")
+                return true
+            }
         }
         return false
     }
