@@ -5,7 +5,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.browser.ui.viewmodel.BrowserViewModel
@@ -18,6 +17,7 @@ fun SettingsSheet(
 ) {
     val isDarkMode by viewModel.isDarkMode.collectAsState()
     val isAdBlockEnabled by viewModel.isAdBlockEnabled.collectAsState()
+    val isDesktopMode by viewModel.isDesktopMode.collectAsState()
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -67,16 +67,46 @@ fun SettingsSheet(
                 }
             )
 
+            // Desktop Mode
+            ListItem(
+                headlineContent = { Text("Desktop Mode") },
+                supportingContent = { Text("Request desktop version of websites") },
+                leadingContent = {
+                    Icon(
+                        imageVector = if (isDesktopMode) Icons.Default.Computer else Icons.Default.PhoneAndroid,
+                        contentDescription = null
+                    )
+                },
+                trailingContent = {
+                    Switch(
+                        checked = isDesktopMode,
+                        onCheckedChange = { viewModel.toggleDesktopMode() }
+                    )
+                }
+            )
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Search Engine
+            ListItem(
+                headlineContent = { Text("Search Engine") },
+                supportingContent = { Text("Choose your default search engine") },
+                leadingContent = {
+                    Icon(imageVector = Icons.Default.Search, contentDescription = null)
+                },
+                trailingContent = {
+                    Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
+                },
+                modifier = Modifier.let { mod ->
+                    mod
+                }
+            )
 
             // Bookmarks
             ListItem(
                 headlineContent = { Text("Bookmarks") },
                 leadingContent = {
                     Icon(imageVector = Icons.Default.Bookmarks, contentDescription = null)
-                },
-                modifier = Modifier.let { mod ->
-                    mod
                 },
                 trailingContent = {
                     Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
@@ -101,9 +131,6 @@ fun SettingsSheet(
                 headlineContent = { Text("New Tab") },
                 leadingContent = {
                     Icon(imageVector = Icons.Default.Tab, contentDescription = null)
-                },
-                modifier = Modifier.let { mod ->
-                    mod
                 }
             )
 
@@ -112,9 +139,6 @@ fun SettingsSheet(
                 headlineContent = { Text("New Incognito Tab") },
                 leadingContent = {
                     Icon(imageVector = Icons.Default.VisibilityOff, contentDescription = null)
-                },
-                modifier = Modifier.let { mod ->
-                    mod
                 }
             )
 
@@ -123,7 +147,7 @@ fun SettingsSheet(
             // About
             ListItem(
                 headlineContent = { Text("About") },
-                supportingContent = { Text("Android Browser v1.0.0") },
+                supportingContent = { Text("Android Browser v1.1.0") },
                 leadingContent = {
                     Icon(imageVector = Icons.Default.Info, contentDescription = null)
                 }

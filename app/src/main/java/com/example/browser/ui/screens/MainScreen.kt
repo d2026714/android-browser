@@ -1,6 +1,10 @@
 package com.example.browser.ui.screens
 
+import android.content.Intent
 import android.webkit.WebView
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -8,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.browser.ui.components.BrowserWebView
+import com.example.browser.ui.components.FindInPageBar
 import com.example.browser.ui.components.NavigationBar
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
@@ -20,12 +25,27 @@ fun MainScreen(
     val showHistory by viewModel.showHistory.collectAsState()
     val showTabs by viewModel.showTabs.collectAsState()
     val showSettings by viewModel.showSettings.collectAsState()
-
-    // WebView reference for navigation
-    var webView by remember { mutableStateOf<WebView?>(null) }
+    val isFindInPage by viewModel.isFindInPage.collectAsState()
+    val isReadingMode by viewModel.isReadingMode.collectAsState()
+    val showSearchEngineSheet by viewModel.showSearchEngineSheet.collectAsState()
+    val context = LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // WebView takes most of the screen
+        // Find in page bar (animated)
+        AnimatedVisibility(
+            visible = isFindInPage,
+            enter = slideInVertically { -it },
+            exit = slideOutVertically { -it }
+        ) {
+            FindInPageBar(
+                onQueryChanged = { viewModel.findInPage(it) },
+                onFindNext = { viewModel.findNext() },
+                onFindPrevious = { viewModel.findPrevious() },
+                onClose = { viewModel.clearFindInPage() }
+            )
+        }
+
+        // WebView or Home Screen
         Box(modifier = Modifier.weight(1f)) {
             if (currentUrl.isBlank() || currentUrl == "about:blank") {
                 HomeScreen(viewModel = viewModel)
@@ -40,11 +60,16 @@ fun MainScreen(
         // Navigation bar at the bottom
         NavigationBar(
             viewModel = viewModel,
+            onGoBack = { viewModel.goBack() },
+            onGoForward = { viewModel.goForward() },
+            onReload = { viewModel.reload() },
+            onStop = { viewModel.stopLoading() },
             modifier = Modifier.fillMaxWidth()
         )
     }
 
-    // Bottom sheets
+    // --- Bottom Sheets ---
+
     if (showBookmarks) {
         BookmarksSheet(
             viewModel = viewModel,
@@ -70,6 +95,21 @@ fun MainScreen(
         SettingsSheet(
             viewModel = viewModel,
             onDismiss = { viewModel.toggleSettings() }
+        )
+    }
+
+    if (showSearchEngineSheet) {
+        SearchEngineSheet(
+            viewModel = viewModel,
+            onDismiss = { viewModel.toggleSearchEngineSheet() }
+        )
+    }
+
+    // Reading Mode (full screen overlay)
+    if (isReadingMode) {
+        ReadingModeScreen(
+            viewModel = viewModel,
+            onDismiss = { viewModel.toggleReadingMode() }
         )
     }
 }

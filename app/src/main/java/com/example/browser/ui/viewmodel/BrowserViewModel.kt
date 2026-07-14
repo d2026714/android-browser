@@ -54,6 +54,25 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val _isAdBlockEnabled = MutableStateFlow(repository.isAdBlockEnabled())
     val isAdBlockEnabled: StateFlow<Boolean> = _isAdBlockEnabled.asStateFlow()
 
+    // New features state
+    private val _isDesktopMode = MutableStateFlow(false)
+    val isDesktopMode: StateFlow<Boolean> = _isDesktopMode.asStateFlow()
+
+    private val _isFindInPage = MutableStateFlow(false)
+    val isFindInPage: StateFlow<Boolean> = _isFindInPage.asStateFlow()
+
+    private val _isReadingMode = MutableStateFlow(false)
+    val isReadingMode: StateFlow<Boolean> = _isReadingMode.asStateFlow()
+
+    private val _showSearchEngineSheet = MutableStateFlow(false)
+    val showSearchEngineSheet: StateFlow<Boolean> = _showSearchEngineSheet.asStateFlow()
+
+    private val _showQuickLinksEditor = MutableStateFlow(false)
+    val showQuickLinksEditor: StateFlow<Boolean> = _showQuickLinksEditor.asStateFlow()
+
+    // WebView reference for JS execution
+    private var webViewRef: android.webkit.WebView? = null
+
     // Screen state
     private val _showBookmarks = MutableStateFlow(false)
     val showBookmarks: StateFlow<Boolean> = _showBookmarks.asStateFlow()
@@ -66,6 +85,10 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
 
     private val _showSettings = MutableStateFlow(false)
     val showSettings: StateFlow<Boolean> = _showSettings.asStateFlow()
+
+    fun setWebView(webView: android.webkit.WebView?) {
+        webViewRef = webView
+    }
 
     fun navigateTo(url: String) {
         val finalUrl = if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("about:")) {
@@ -109,6 +132,27 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
             repository.addHistory(HistoryItem(url = url, title = title))
             _history.value = repository.getHistory()
         }
+        // Apply desktop mode if enabled
+        if (_isDesktopMode.value) {
+            applyDesktopMode()
+        }
+    }
+
+    // Navigation
+    fun goBack() {
+        webViewRef?.goBack()
+    }
+
+    fun goForward() {
+        webViewRef?.goForward()
+    }
+
+    fun reload() {
+        webViewRef?.reload()
+    }
+
+    fun stopLoading() {
+        webViewRef?.stopLoading()
     }
 
     // Tab management
@@ -141,7 +185,6 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun closeTab(index: Int) {
         val currentTabs = _tabs.value.toMutableList()
         if (currentTabs.size <= 1) {
-            // Don't close the last tab, reset it instead
             currentTabs[0] = Tab(isActive = true)
             _tabs.value = currentTabs
             _activeTabIndex.value = 0
@@ -216,16 +259,80 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         repository.setAdBlockEnabled(newValue)
     }
 
+    fun setSearchEngine(url: String) {
+        repository.setSearchEngine(url)
+    }
+
+    fun getSearchEngine(): String = repository.getSearchEngine()
+
+    // Desktop mode
+    fun toggleDesktopMode() {
+        val newValue = !_isDesktopMode.value
+        _isDesktopMode.value = newValue
+        applyDesktopMode()
+    }
+
+    private fun applyDesktopMode() {
+        webViewRef?.let { wv ->
+            if (_isDesktopMode.value) {
+                wv.settings.userAgentString = DESKTOP_USER_AGENT
+            } else {
+                wv.settings.userAgentString = null
+            }
+            wv.reload()
+        }
+    }
+
+    // Find in page
+    fun toggleFindInPage() {
+        _isFindInPage.value = !_isFindInPage.value
+    }
+
+    fun findInPage(query: String) {
+        webViewRef?.findAllAsync(query)
+    }
+
+    fun findNext() {
+        webViewRef?.findNext(true)
+    }
+
+    fun findPrevious() {
+        webViewRef?.findNext(false)
+    }
+
+    fun clearFindInPage() {
+        webViewRef?.clearMatches()
+        _isFindInPage.value = false
+    }
+
+    // Reading mode
+    fun toggleReadingMode() {
+        _isReadingMode.value = !_isReadingMode.value
+    }
+
+    // Share page
+    fun shareCurrentPage(): Pair<String, String> {
+        return Pair(_currentTitle.value, _currentUrl.value)
+    }
+
     // UI toggles
     fun toggleBookmarks() { _showBookmarks.value = !_showBookmarks.value }
     fun toggleHistory() { _showHistory.value = !_showHistory.value }
     fun toggleTabs() { _showTabs.value = !_showTabs.value }
     fun toggleSettings() { _showSettings.value = !_showSettings.value }
+    fun toggleSearchEngineSheet() { _showSearchEngineSheet.value = !_showSearchEngineSheet.value }
+    fun toggleQuickLinksEditor() { _showQuickLinksEditor.value = !_showQuickLinksEditor.value }
 
     fun hideOverlays() {
         _showBookmarks.value = false
         _showHistory.value = false
         _showTabs.value = false
         _showSettings.value = false
+        _showSearchEngineSheet.value = false
+        _showQuickLinksEditor.value = false
+    }
+
+    companion object {
+        private const val DESKTOP_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
 }

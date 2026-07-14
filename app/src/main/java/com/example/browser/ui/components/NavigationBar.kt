@@ -28,6 +28,10 @@ import com.example.browser.ui.viewmodel.BrowserViewModel
 @Composable
 fun NavigationBar(
     viewModel: BrowserViewModel,
+    onGoBack: () -> Unit,
+    onGoForward: () -> Unit,
+    onReload: () -> Unit,
+    onStop: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currentUrl by viewModel.currentUrl.collectAsState()
@@ -36,12 +40,12 @@ fun NavigationBar(
     val canGoForward by viewModel.canGoForward.collectAsState()
     val isBookmarked by viewModel.isBookmarked.collectAsState()
     val tabs by viewModel.tabs.collectAsState()
+    val isDesktopMode by viewModel.isDesktopMode.collectAsState()
 
     var urlText by remember { mutableStateOf("") }
     var isEditing by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    // Sync URL text with current URL when not editing
     LaunchedEffect(currentUrl) {
         if (!isEditing) {
             urlText = if (currentUrl == "about:blank") "" else currentUrl
@@ -56,7 +60,6 @@ fun NavigationBar(
                 .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Security icon
             if (currentUrl.startsWith("https://")) {
                 Icon(
                     imageVector = Icons.Default.Lock,
@@ -64,9 +67,15 @@ fun NavigationBar(
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(18.dp).padding(end = 4.dp)
                 )
+            } else if (currentUrl.startsWith("http://")) {
+                Icon(
+                    imageVector = Icons.Default.LockOpen,
+                    contentDescription = "Not secure",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(18.dp).padding(end = 4.dp)
+                )
             }
 
-            // URL input
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -104,16 +113,12 @@ fun NavigationBar(
                     ),
                     onFocusChanged = { focusState ->
                         isEditing = focusState.isFocused
-                        if (focusState.isFocused) {
-                            // Select all text when focused
-                        }
                     }
                 )
             }
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            // Bookmark button
             IconButton(
                 onClick = { viewModel.toggleBookmark() },
                 modifier = Modifier.size(36.dp)
@@ -122,7 +127,7 @@ fun NavigationBar(
                     imageVector = if (isBookmarked) Icons.Default.Star else Icons.Default.StarBorder,
                     contentDescription = "Bookmark",
                     tint = if (isBookmarked) MaterialTheme.colorScheme.primary
-                           else MaterialTheme.colorScheme.onSurface,
+                    else MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -139,48 +144,32 @@ fun NavigationBar(
         ) {
             // Back
             IconButton(
-                onClick = { /* Handled by WebView in MainScreen */ },
+                onClick = onGoBack,
                 enabled = canGoBack,
                 modifier = Modifier.size(40.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    modifier = Modifier.size(22.dp)
-                )
+                Icon(Icons.Default.ArrowBack, "Back", modifier = Modifier.size(22.dp))
             }
 
             // Forward
             IconButton(
-                onClick = { /* Handled by WebView in MainScreen */ },
+                onClick = onGoForward,
                 enabled = canGoForward,
                 modifier = Modifier.size(40.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = "Forward",
-                    modifier = Modifier.size(22.dp)
-                )
+                Icon(Icons.Default.ArrowForward, "Forward", modifier = Modifier.size(22.dp))
             }
 
             // Reload/Stop
             IconButton(
-                onClick = { /* Handled by WebView in MainScreen */ },
+                onClick = { if (isLoading) onStop() else onReload() },
                 modifier = Modifier.size(40.dp)
             ) {
                 AnimatedVisibility(visible = isLoading, enter = fadeIn(), exit = fadeOut()) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Stop",
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Icon(Icons.Default.Close, "Stop", modifier = Modifier.size(22.dp))
                 }
                 AnimatedVisibility(visible = !isLoading, enter = fadeIn(), exit = fadeOut()) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Reload",
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Icon(Icons.Default.Refresh, "Reload", modifier = Modifier.size(22.dp))
                 }
             }
 
@@ -189,20 +178,14 @@ fun NavigationBar(
                 onClick = { viewModel.navigateTo("about:blank") },
                 modifier = Modifier.size(40.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Home",
-                    modifier = Modifier.size(22.dp)
-                )
+                Icon(Icons.Default.Home, "Home", modifier = Modifier.size(22.dp))
             }
 
             // Tabs
             BadgedBox(
                 badge = {
                     if (tabs.size > 1) {
-                        Badge {
-                            Text("${tabs.size}")
-                        }
+                        Badge { Text("${tabs.size}") }
                     }
                 }
             ) {
@@ -210,24 +193,82 @@ fun NavigationBar(
                     onClick = { viewModel.toggleTabs() },
                     modifier = Modifier.size(40.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Tab,
-                        contentDescription = "Tabs",
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Icon(Icons.Default.Tab, "Tabs", modifier = Modifier.size(22.dp))
                 }
             }
 
-            // Menu
-            IconButton(
-                onClick = { viewModel.toggleSettings() },
-                modifier = Modifier.size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Menu",
-                    modifier = Modifier.size(22.dp)
-                )
+            // Menu (overflow)
+            Box {
+                var expanded by remember { mutableStateOf(false) }
+
+                IconButton(
+                    onClick = { expanded = true },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(Icons.Default.MoreVert, "Menu", modifier = Modifier.size(22.dp))
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Bookmarks") },
+                        onClick = { expanded = false; viewModel.toggleBookmarks() },
+                        leadingIcon = { Icon(Icons.Default.Bookmarks, null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("History") },
+                        onClick = { expanded = false; viewModel.toggleHistory() },
+                        leadingIcon = { Icon(Icons.Default.History, null) }
+                    )
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text("Find in Page") },
+                        onClick = { expanded = false; viewModel.toggleFindInPage() },
+                        leadingIcon = { Icon(Icons.Default.FindInPage, null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Reading Mode") },
+                        onClick = { expanded = false; viewModel.toggleReadingMode() },
+                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.MenuBook, null) }
+                    )
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = {
+                            Text(if (isDesktopMode) "Mobile Site" else "Desktop Site")
+                        },
+                        onClick = { expanded = false; viewModel.toggleDesktopMode() },
+                        leadingIcon = {
+                            Icon(
+                                if (isDesktopMode) Icons.Default.PhoneAndroid else Icons.Default.Computer,
+                                null
+                            )
+                        }
+                    )
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text("Share") },
+                        onClick = { expanded = false; /* handled by caller */ },
+                        leadingIcon = { Icon(Icons.Default.Share, null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("New Tab") },
+                        onClick = { expanded = false; viewModel.addTab() },
+                        leadingIcon = { Icon(Icons.Default.Add, null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("New Incognito") },
+                        onClick = { expanded = false; viewModel.addTab(incognito = true) },
+                        leadingIcon = { Icon(Icons.Default.VisibilityOff, null) }
+                    )
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text("Settings") },
+                        onClick = { expanded = false; viewModel.toggleSettings() },
+                        leadingIcon = { Icon(Icons.Default.Settings, null) }
+                    )
+                }
             }
         }
     }
