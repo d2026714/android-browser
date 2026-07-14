@@ -15,9 +15,7 @@ import com.example.browser.ui.components.NavigationBar
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 @Composable
-fun MainScreen(
-    viewModel: BrowserViewModel = viewModel()
-) {
+fun MainScreen(viewModel: BrowserViewModel = viewModel()) {
     val currentUrl by viewModel.currentUrl.collectAsState()
     val showBookmarks by viewModel.showBookmarks.collectAsState()
     val showHistory by viewModel.showHistory.collectAsState()
@@ -28,23 +26,20 @@ fun MainScreen(
     val showSearchEngineSheet by viewModel.showSearchEngineSheet.collectAsState()
     val showDownloads by viewModel.showDownloads.collectAsState()
     val showViewSource by viewModel.showViewSource.collectAsState()
+    val showReadingList by viewModel.showReadingList.collectAsState()
+    val showTabGroups by viewModel.showTabGroups.collectAsState()
+    val showQuickLinksEditor by viewModel.showQuickLinksEditor.collectAsState()
+    val showQrCode by viewModel.showQrCode.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Find in page bar
-        AnimatedVisibility(
-            visible = isFindInPage,
-            enter = slideInVertically { -it },
-            exit = slideOutVertically { -it }
-        ) {
+        AnimatedVisibility(visible = isFindInPage, enter = slideInVertically { -it }, exit = slideOutVertically { -it }) {
             FindInPageBar(
                 onQueryChanged = { viewModel.findInPage(it) },
                 onFindNext = { viewModel.findNext() },
                 onFindPrevious = { viewModel.findPrevious() },
-                onClose = { viewModel.clearFindInPage() }
-            )
+                onClose = { viewModel.clearFindInPage() })
         }
 
-        // WebView or Home Screen
         Box(modifier = Modifier.weight(1f)) {
             if (currentUrl.isBlank() || currentUrl == "about:blank") {
                 HomeScreen(viewModel = viewModel)
@@ -53,45 +48,23 @@ fun MainScreen(
             }
         }
 
-        // Navigation bar
-        NavigationBar(
-            viewModel = viewModel,
-            onGoBack = { viewModel.goBack() },
-            onGoForward = { viewModel.goForward() },
-            onReload = { viewModel.reload() },
-            onStop = { viewModel.stopLoading() },
-            modifier = Modifier.fillMaxWidth()
-        )
+        NavigationBar(viewModel = viewModel,
+            onGoBack = { viewModel.goBack() }, onGoForward = { viewModel.goForward() },
+            onReload = { viewModel.reload() }, onStop = { viewModel.stopLoading() },
+            modifier = Modifier.fillMaxWidth())
     }
 
-    // --- Bottom Sheets ---
-
-    if (showBookmarks) {
-        BookmarksSheet(viewModel = viewModel, onDismiss = { viewModel.toggleBookmarks() })
-    }
-    if (showHistory) {
-        HistorySheet(viewModel = viewModel, onDismiss = { viewModel.toggleHistory() })
-    }
-    if (showTabs) {
-        TabsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleTabs() })
-    }
-    if (showSettings) {
-        SettingsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleSettings() })
-    }
-    if (showSearchEngineSheet) {
-        SearchEngineSheet(viewModel = viewModel, onDismiss = { viewModel.toggleSearchEngineSheet() })
-    }
-    if (showDownloads) {
-        DownloadsSheet(onDismiss = { viewModel.toggleDownloads() })
-    }
-
-    // Reading Mode overlay
-    if (isReadingMode) {
-        ReadingModeScreen(viewModel = viewModel, onDismiss = { viewModel.toggleReadingMode() })
-    }
-
-    // View Source overlay
-    if (showViewSource) {
-        ViewSourceScreen(viewModel = viewModel, onDismiss = { viewModel.closeViewSource() })
-    }
+    // Bottom sheets
+    if (showBookmarks) BookmarksSheet(viewModel = viewModel, onDismiss = { viewModel.toggleBookmarks() })
+    if (showHistory) HistorySheet(viewModel = viewModel, onDismiss = { viewModel.toggleHistory() })
+    if (showTabs) TabsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleTabs() })
+    if (showSettings) SettingsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleSettings() })
+    if (showSearchEngineSheet) SearchEngineSheet(viewModel = viewModel, onDismiss = { viewModel.toggleSearchEngineSheet() })
+    if (showDownloads) DownloadsSheet(onDismiss = { viewModel.toggleDownloads() })
+    if (showReadingList) ReadingListSheet(viewModel = viewModel, onDismiss = { viewModel.toggleReadingList() })
+    if (showTabGroups) TabGroupsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleTabGroups() })
+    if (showQuickLinksEditor) QuickLinksEditorSheet(viewModel = viewModel, onDismiss = { viewModel.toggleQuickLinksEditor() })
+    if (showQrCode) QrCodeSheet(viewModel = viewModel, onDismiss = { viewModel.toggleQrCode() })
+    if (isReadingMode) ReadingModeScreen(viewModel = viewModel, onDismiss = { viewModel.toggleReadingMode() })
+    if (showViewSource) ViewSourceScreen(viewModel = viewModel, onDismiss = { viewModel.closeViewSource() })
 }
