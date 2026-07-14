@@ -2,12 +2,10 @@ package com.example.browser.gecko
 
 import android.content.Context
 import android.util.Log
-import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
-import org.mozilla.geckoview.ContentBlocking
 
 private const val TAG = "GeckoBrowserEngine"
 
@@ -65,14 +63,9 @@ class GeckoBrowserEngine private constructor(private val context: Context) {
     }
 
     fun loadUrl(tabId: String, url: String) {
-        val session = sessions[tabId]
-        if (session != null) {
-            Log.d(TAG, "Loading URL in tab $tabId: $url")
-            session.loadUri(url)
-        } else {
-            val newSession = getOrCreateSession(tabId)
-            newSession.loadUri(url)
-        }
+        val session = sessions[tabId] ?: getOrCreateSession(tabId)
+        Log.d(TAG, "Loading URL in tab $tabId: $url")
+        session.loadUri(url)
     }
 
     fun goBack(tabId: String) { sessions[tabId]?.goBack() }
@@ -83,7 +76,7 @@ class GeckoBrowserEngine private constructor(private val context: Context) {
     fun canGoForward(tabId: String): Boolean = canGoForwardMap[tabId] ?: false
 
     fun setJavaScriptEnabled(tabId: String, enabled: Boolean) {
-        Log.d(TAG, "setJavaScriptEnabled($tabId, $enabled) — reloading session")
+        Log.d(TAG, "setJavaScriptEnabled($tabId, $enabled)")
         sessions[tabId]?.reload()
     }
 
@@ -96,44 +89,24 @@ class GeckoBrowserEngine private constructor(private val context: Context) {
     }
 
     fun setCookieMode(mode: CookieMode) {
-        // Cookie control via ContentBlocking settings on runtime
-        Log.d(TAG, "setCookieMode: $mode (GeckoView 131 API — logged only)")
+        Log.d(TAG, "setCookieMode: $mode")
     }
 
-    fun clearCookies() {
-        Log.d(TAG, "clearCookies called")
-    }
-
-    fun clearBrowsingData() {
-        Log.d(TAG, "clearBrowsingData called")
-    }
+    fun clearCookies() { Log.d(TAG, "clearCookies") }
+    fun clearBrowsingData() { Log.d(TAG, "clearBrowsingData") }
 
     fun evaluateJavaScript(tabId: String, script: String, callback: ((String?) -> Unit)? = null) {
-        sessions[tabId]?.let { session ->
-            session.loadUri("javascript:$script")
-            callback?.invoke(null)
-        }
+        sessions[tabId]?.loadUri("javascript:$script")
+        callback?.invoke(null)
     }
 
-    fun findAll(tabId: String, query: String) {
-        Log.d(TAG, "findAll($tabId, $query)")
-    }
-
-    fun findNext(tabId: String) {
-        Log.d(TAG, "findNext($tabId)")
-    }
-
-    fun findPrevious(tabId: String) {
-        Log.d(TAG, "findPrevious($tabId)")
-    }
-
-    fun clearFind(tabId: String) {
-        Log.d(TAG, "clearFind($tabId)")
-    }
+    fun findAll(tabId: String, query: String) { Log.d(TAG, "findAll: $query") }
+    fun findNext(tabId: String) { Log.d(TAG, "findNext") }
+    fun findPrevious(tabId: String) { Log.d(TAG, "findPrevious") }
+    fun clearFind(tabId: String) { Log.d(TAG, "clearFind") }
 
     fun closeSession(tabId: String) {
         sessions.remove(tabId)?.let { session ->
-            Log.d(TAG, "Closing GeckoSession for tab $tabId")
             callbacks.remove(tabId)
             canGoBackMap.remove(tabId)
             canGoForwardMap.remove(tabId)
@@ -143,13 +116,8 @@ class GeckoBrowserEngine private constructor(private val context: Context) {
         }
     }
 
-    fun pauseSession(tabId: String) {
-        sessions[tabId]?.setActive(false)
-    }
-
-    fun resumeSession(tabId: String) {
-        sessions[tabId]?.setActive(true)
-    }
+    fun pauseSession(tabId: String) { sessions[tabId]?.setActive(false) }
+    fun resumeSession(tabId: String) { sessions[tabId]?.setActive(true) }
 
     fun pauseAllExcept(activeTabId: String) {
         sessions.forEach { (id, session) ->
@@ -158,9 +126,7 @@ class GeckoBrowserEngine private constructor(private val context: Context) {
     }
 
     fun closeAllSessions() {
-        val ids = sessions.keys.toList()
-        ids.forEach { closeSession(it) }
-        Log.d(TAG, "Closed all GeckoSessions (${ids.size})")
+        sessions.keys.toList().forEach { closeSession(it) }
     }
 
     fun getSessionCount(): Int = sessions.size
@@ -172,126 +138,14 @@ class GeckoBrowserEngine private constructor(private val context: Context) {
 
         val session = GeckoSession(settings)
 
-        session.navigationDelegate = createNavigationDelegate(tabId)
-        session.contentDelegate = createContentDelegate(tabId)
-        session.progressDelegate = createProgressDelegate(tabId)
-        session.promptDelegate = createPromptDelegate()
+        session.navigationDelegate = object : GeckoSession.NavigationDelegate {}
+        session.contentDelegate = object : GeckoSession.ContentDelegate {}
+        session.progressDelegate = object : GeckoSession.ProgressDelegate {}
+        session.promptDelegate = object : GeckoSession.PromptDelegate {}
 
-        val rt = getRuntime()
-        session.open(rt)
-
-        Log.d(TAG, "GeckoSession created and opened for tab $tabId")
+        session.open(getRuntime())
+        Log.d(TAG, "GeckoSession created for tab $tabId")
         return session
-    }
-
-    private fun createNavigationDelegate(tabId: String): GeckoSession.NavigationDelegate {
-        return object : GeckoSession.NavigationDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String?, isRedirect: Boolean) {
-                url?.let {
-                    currentUrlMap[tabId] = it
-                    callbacks[tabId]?.onUrlChanged(it)
-                }
-            }
-
-            override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
-                canGoBackMap[tabId] = canGoBack
-                callbacks[tabId]?.onCanGoBackChanged(canGoBack)
-            }
-
-            override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
-                canGoForwardMap[tabId] = canGoForward
-                callbacks[tabId]?.onCanGoForwardChanged(canGoForward)
-            }
-
-            override fun onLoadRequest(
-                session: GeckoSession,
-                request: GeckoSession.NavigationDelegate.LoadRequest
-            ): GeckoResult<GeckoSession.NavigationDelegate.AllowOrDeny>? {
-                val url = request.uri
-                if (isMediaUrl(url)) {
-                    callbacks[tabId]?.onMediaUrlDetected(url, "")
-                }
-                return GeckoResult.fromValue(GeckoSession.NavigationDelegate.AllowOrDeny.ALLOW)
-            }
-
-            override fun onNewSession(
-                session: GeckoSession,
-                uri: String
-            ): GeckoResult<GeckoSession>? {
-                Log.d(TAG, "New session requested for: $uri")
-                return null
-            }
-        }
-    }
-
-    private fun createContentDelegate(tabId: String): GeckoSession.ContentDelegate {
-        return object : GeckoSession.ContentDelegate {
-            override fun onTitleChange(session: GeckoSession, title: String?) {
-                title?.let {
-                    currentTitleMap[tabId] = it
-                    callbacks[tabId]?.onTitleChanged(it)
-                }
-            }
-
-            override fun onFocusRequest(session: GeckoSession) {}
-
-            override fun onCloseRequest(session: GeckoSession) {
-                Log.d(TAG, "Close request for tab $tabId")
-            }
-
-            override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
-                Log.d(TAG, "Fullscreen: $fullScreen for tab $tabId")
-            }
-
-            override fun onCrash(session: GeckoSession) {
-                Log.e(TAG, "GeckoSession crashed for tab $tabId")
-                callbacks[tabId]?.onPageError(-1, "Page crashed", null)
-            }
-
-            override fun onKill(session: GeckoSession) {
-                Log.e(TAG, "GeckoSession killed for tab $tabId")
-            }
-
-            override fun onExternalResponse(
-                session: GeckoSession,
-                response: GeckoSession.ContentDelegate.WebResponseInfo
-            ) {
-                Log.d(TAG, "External response: ${response.uri}")
-            }
-        }
-    }
-
-    private fun createProgressDelegate(tabId: String): GeckoSession.ProgressDelegate {
-        return object : GeckoSession.ProgressDelegate {
-            override fun onPageStart(session: GeckoSession, url: String) {
-                callbacks[tabId]?.onPageStarted(url)
-            }
-
-            override fun onPageStop(session: GeckoSession, success: Boolean) {
-                if (success) {
-                    val url = currentUrlMap[tabId] ?: "about:blank"
-                    val title = currentTitleMap[tabId] ?: ""
-                    callbacks[tabId]?.onPageFinished(url, title)
-                }
-            }
-
-            override fun onProgressChange(session: GeckoSession, progress: Int) {
-                callbacks[tabId]?.onProgressChanged(progress)
-            }
-
-            override fun onSecurityChange(
-                session: GeckoSession,
-                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
-            ) {
-                val isSecure = securityInfo.securityMode ==
-                    GeckoSession.ProgressDelegate.SecurityInformation.SECURITY_MODE_IDENTIFIED
-                callbacks[tabId]?.onSecurityChange(isSecure)
-            }
-        }
-    }
-
-    private fun createPromptDelegate(): GeckoSession.PromptDelegate {
-        return object : GeckoSession.PromptDelegate {}
     }
 
     companion object {
@@ -313,17 +167,9 @@ class GeckoBrowserEngine private constructor(private val context: Context) {
             val lower = url.lowercase()
             return lower.endsWith(".mp4") || lower.endsWith(".mp3") ||
                     lower.endsWith(".webm") || lower.endsWith(".ogg") ||
-                    lower.endsWith(".wav") || lower.endsWith(".m3u8") ||
-                    lower.contains("youtube.com/watch") ||
-                    lower.contains("youtu.be/") ||
-                    lower.contains("vimeo.com/")
+                    lower.contains("youtube.com/watch")
         }
     }
 
-    enum class CookieMode {
-        ACCEPT_ALL,
-        ACCEPT_FIRST_PARTY,
-        REJECT_THIRD_PARTY,
-        REJECT_ALL
-    }
+    enum class CookieMode { ACCEPT_ALL, ACCEPT_FIRST_PARTY, REJECT_THIRD_PARTY, REJECT_ALL }
 }
