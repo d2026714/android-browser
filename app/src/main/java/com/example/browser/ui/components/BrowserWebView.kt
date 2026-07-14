@@ -6,8 +6,6 @@ import android.graphics.Bitmap
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.net.http.SslError
-import android.webkit.SslErrorHandler
 import android.webkit.*
 import android.widget.FrameLayout
 
