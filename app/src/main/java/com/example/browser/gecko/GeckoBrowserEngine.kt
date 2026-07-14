@@ -186,7 +186,7 @@ class GeckoBrowserEngine private constructor(private val context: Context) {
 
     private fun createNavigationDelegate(tabId: String): GeckoSession.NavigationDelegate {
         return object : GeckoSession.NavigationDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(session: GeckoSession, url: String?, isRedirect: Boolean) {
                 url?.let {
                     currentUrlMap[tabId] = it
                     callbacks[tabId]?.onUrlChanged(it)
@@ -206,12 +206,12 @@ class GeckoBrowserEngine private constructor(private val context: Context) {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: GeckoSession.NavigationDelegate.LoadRequest
-            ): GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<GeckoSession.NavigationDelegate.AllowOrDeny>? {
                 val url = request.uri
                 if (isMediaUrl(url)) {
                     callbacks[tabId]?.onMediaUrlDetected(url, "")
                 }
-                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+                return GeckoResult.fromValue(GeckoSession.NavigationDelegate.AllowOrDeny.ALLOW)
             }
 
             override fun onNewSession(
@@ -254,7 +254,7 @@ class GeckoBrowserEngine private constructor(private val context: Context) {
 
             override fun onExternalResponse(
                 session: GeckoSession,
-                response: WebResponseInfo
+                response: GeckoSession.ContentDelegate.WebResponseInfo
             ) {
                 Log.d(TAG, "External response: ${response.uri}")
             }
@@ -281,10 +281,10 @@ class GeckoBrowserEngine private constructor(private val context: Context) {
 
             override fun onSecurityChange(
                 session: GeckoSession,
-                securityInfo: SecurityInformation
+                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
             ) {
                 val isSecure = securityInfo.securityMode ==
-                    SecurityInformation.SECURITY_MODE_IDENTIFIED
+                    GeckoSession.ProgressDelegate.SecurityInformation.SECURITY_MODE_IDENTIFIED
                 callbacks[tabId]?.onSecurityChange(isSecure)
             }
         }
