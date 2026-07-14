@@ -2,11 +2,13 @@ package com.example.browser.ui.viewmodel
 
 import android.app.Application
 import android.content.ClipData
+import android.net.http.SslError
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.net.http.SslError
 import android.util.Log
 import android.view.View
 import android.webkit.*

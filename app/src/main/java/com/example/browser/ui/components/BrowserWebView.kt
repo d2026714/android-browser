@@ -98,33 +98,8 @@ fun BrowserWebView(
         }
     }
 
-    var isPullingToRefresh by remember { mutableStateOf(false) }
-
     Box(
         modifier = modifier
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-                    var dragX = 0f
-                    var dragY = 0f
-                    drag(down.id) { change ->
-                        dragX += change.position.x - change.previousPosition.x
-                        dragY += change.position.y - change.previousPosition.y
-                        change.consume()
-                    }
-                    when {
-                        dragX > 150 -> viewModel.goBack()
-                        dragX < -150 -> viewModel.goForward()
-                        dragY > 100 -> {
-                            val wv = viewModel.getActiveWebView()
-                            if (wv != null && !wv.canScrollVertically(-1)) {
-                                isPullingToRefresh = true
-                                wv.reload()
-                            }
-                        }
-                    }
-                }
-            }
     ) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
@@ -153,7 +128,7 @@ fun BrowserWebView(
         // Page loading progress bar
         if (progress in 1..99) {
             LinearProgressIndicator(
-                progress = { progress / 100f },
+                progress = progress / 100f,
                 modifier = Modifier.fillMaxWidth(),
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
