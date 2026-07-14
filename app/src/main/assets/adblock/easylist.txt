@@ -1,0 +1,173 @@
+[Adblock Plus 2.0]
+! Title: EasyList (Bundled)
+! Last modified: 2026-07-15
+! Homepage: https://easylist.to/
+!
+! ---------- General blocking rules ----------
+!
+/ads/*
+/ad/*
+/banner/*
+/popup/*
+/advert/*
+/advertising/*
+/adservice.*
+/adserver.*
+/adsense.*
+/affiliate/*
+/tracking/*
+/analytics/*
+/beacon/*
+/telemetry/*
+! Google ads
+/pagead/*
+/google_ads*
+/googad.*
+/ads?*google*
+/ad?*google*
+! Social trackers
+/facebook.com/tr/*
+/connect.facebook.net/*
+/analytics.twitter.com/*
+/ads.linkedin.com/*
+! Common ad domains
+||doubleclick.net^
+||googlesyndication.com^
+||googleadservices.com^
+||google-analytics.com^
+||adservice.google.com^
+||pagead2.googlesyndication.com^
+||tpc.googlesyndication.com^
+||www.googleadservices.com^
+||ads.yahoo.com^
+||ad.doubleclick.net^
+||static.criteo.net^
+||cdn.taboola.com^
+||cdn.revjet.com^
+||ads-twitter.com^
+||ads.linkedin.com^
+||connect.facebook.net^
+||analytics.twitter.com^
+||ads.tiktok.com^
+||ads.reddit.com^
+||amazon-adsystem.com^
+||media.net^
+||outbrain.com^
+||revcontent.com^
+||mgid.com^
+||popads.net^
+||popcash.net^
+||propellerads.com^
+||adsterra.com^
+||hilltopads.com^
+||clickadu.com^
+||juicyads.com^
+||exoclick.com^
+||trafficjunky.com^
+||adcolony.com^
+||applovin.com^
+||unity3d.com/ads^
+||mopub.com^
+||chartboost.com^
+||vungle.com^
+||tapjoy.com^
+||ironsrc.com^
+||smaato.com^
+||inmobi.com^
+||startapp.com^
+||bidvertiser.com^
+||chitika.com^
+||kontera.com^
+||intellitxt.com^
+||adbrite.com^
+||casalemedia.com^
+||openx.net^
+||rubiconproject.com^
+||pubmatic.com^
+||appnexus.com^
+||adsrvr.org^
+||adform.net^
+||smartadserver.com^
+||yieldmo.com^
+||serving-sys.com^
+||emediate.eu^
+||adtech.de^
+||adition.com^
+||mathtag.com^
+||tribalfusion.com^
+||contextweb.com^
+||sharethrough.com^
+||districtm.io^
+||indexww.com^
+||media6degrees.com^
+||turn.com^
+||exelator.com^
+||bluekai.com^
+||demdex.net^
+||everesttech.net^
+||adsrvr.org^
+||rlcdn.com^
+||crwdcntrl.net^
+||agkn.com^
+||adsymptotic.com^
+||mfadsrvr.com^
+||bidswitch.net^
+||rubiconproject.com^
+||casalemedia.com^
+||contextweb.com^
+||pubmatic.com^
+||openx.net^
+||appnexus.com^
+||adnxs.com^
+! Tracking pixels
+/1x1.gif
+/pixel.gif
+/tracking.gif
+/beacon.gif
+/pixel?
+/track?
+/collect?
+! Anti-adblock detectors
+/adblock-detect/*
+/adblock-detection/*
+/anti-adblock/*
+/fuckadblock.js*
+/blockadblock.js*
+! Malware/scam domains
+||malware-sites.example.com^
+! ---------- Specific blocking rules ----------
+!
+! YouTube ads
+||youtube.com/api/stats/ads^
+||youtube.com/get_video_info^*adformat=
+||youtube.com/pagead/*
+||yt3.ggpht.com/a/*
+||s.youtube.com/api/stats/*
+! Facebook ads
+||facebook.com/ads/*
+||facebook.com/adsmanager/*
+||facebook.com/tr/*
+! Twitter/X ads
+||twitter.com/i/promoted/*
+||analytics.twitter.com/*
+! Reddit ads
+||reddit.com/api/v1/me/ad_
+||reddit.com/promoted/*
+! TikTok ads
+||ads.tiktok.com/*
+||analytics.tiktok.com/*
+! Amazon ads
+||amazon.com/gp/ads/*
+||amazon-adsystem.com/*
+! Generic ad patterns
+-banner-ad.
+-ads/ads.
+_ad_wrapper.
+_adserver.
+_adsense.
+_adtech.
+_advert.
+_analytics.
+_beacon.
+_pixel.
+_tracking.

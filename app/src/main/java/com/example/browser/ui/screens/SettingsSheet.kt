@@ -69,6 +69,16 @@ fun SettingsSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
+            // Developer
+            Text("Developer", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 8.dp))
+            ListItem(headlineContent = { Text("Developer Tools") }, leadingContent = { Icon(Icons.Default.Code, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
+            ListItem(headlineContent = { Text("User Scripts") }, leadingContent = { Icon(Icons.Default.Code, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
+            ListItem(headlineContent = { Text("Privacy Report") }, leadingContent = { Icon(Icons.Default.Security, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
+            ListItem(headlineContent = { Text("Traffic Stats") }, leadingContent = { Icon(Icons.Default.DataUsage, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
+            ListItem(headlineContent = { Text("Proxy Settings") }, leadingContent = { Icon(Icons.Default.VpnKey, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
             // Tools
             Text("Tools", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 8.dp))
             ListItem(headlineContent = { Text("Search Engine") }, leadingContent = { Icon(Icons.Default.Search, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })

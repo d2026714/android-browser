@@ -18,6 +18,13 @@ import com.example.browser.data.model.*
 import com.example.browser.manager.BookmarkManager
 import com.example.browser.manager.SettingsManager
 import com.example.browser.manager.TabManager
+import com.example.browser.adblock.AdBlockEngine
+import com.example.browser.adblock.AdBlockStats
+import com.example.browser.privacy.PrivacyReport
+import com.example.browser.traffic.TrafficStats
+import com.example.browser.offline.OfflinePageManager
+import com.example.browser.userscript.UserScriptManager
+import com.example.browser.password.PasswordManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -146,6 +153,13 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val _showZoomControl = MutableStateFlow(false); val showZoomControl: StateFlow<Boolean> = _showZoomControl.asStateFlow()
     private val _showCustomCss = MutableStateFlow(false); val showCustomCss: StateFlow<Boolean> = _showCustomCss.asStateFlow()
     private val _showBookmarkFolders = MutableStateFlow(false); val showBookmarkFolders: StateFlow<Boolean> = _showBookmarkFolders.asStateFlow()
+    private val _showDevTools = MutableStateFlow(false); val showDevTools: StateFlow<Boolean> = _showDevTools.asStateFlow()
+    private val _showPasswordSheet = MutableStateFlow(false); val showPasswordSheet: StateFlow<Boolean> = _showPasswordSheet.asStateFlow()
+    private val _showProxySheet = MutableStateFlow(false); val showProxySheet: StateFlow<Boolean> = _showProxySheet.asStateFlow()
+    private val _showPrivacyReport = MutableStateFlow(false); val showPrivacyReport: StateFlow<Boolean> = _showPrivacyReport.asStateFlow()
+    private val _showTrafficStats = MutableStateFlow(false); val showTrafficStats: StateFlow<Boolean> = _showTrafficStats.asStateFlow()
+    private val _showUserScripts = MutableStateFlow(false); val showUserScripts: StateFlow<Boolean> = _showUserScripts.asStateFlow()
+    private val _showOfflinePages = MutableStateFlow(false); val showOfflinePages: StateFlow<Boolean> = _showOfflinePages.asStateFlow()
 
     private var activeWebView: WebView? = null
 
@@ -595,6 +609,13 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun toggleZoomControl() { _showZoomControl.value = !_showZoomControl.value }
     fun toggleCustomCssSheet() { _showCustomCss.value = !_showCustomCss.value }
     fun toggleBookmarkFolders() { _showBookmarkFolders.value = !_showBookmarkFolders.value }
+    fun toggleDevTools() { _showDevTools.value = !_showDevTools.value }
+    fun togglePasswordSheet() { _showPasswordSheet.value = !_showPasswordSheet.value }
+    fun toggleProxySheet() { _showProxySheet.value = !_showProxySheet.value }
+    fun togglePrivacyReport() { _showPrivacyReport.value = !_showPrivacyReport.value }
+    fun toggleTrafficStats() { _showTrafficStats.value = !_showTrafficStats.value }
+    fun toggleUserScripts() { _showUserScripts.value = !_showUserScripts.value }
+    fun toggleOfflinePages() { _showOfflinePages.value = !_showOfflinePages.value }
 
     fun hideOverlays() {
         _showBookmarks.value = false; _showHistory.value = false; _showTabs.value = false
@@ -603,6 +624,9 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         _showQuickLinksEditor.value = false; _showQrCode.value = false; _showPageInfo.value = false
         _showBackupRestore.value = false; _showUserAgent.value = false; _showZoomControl.value = false
         _showCustomCss.value = false; _showBookmarkFolders.value = false
+        _showDevTools.value = false; _showPasswordSheet.value = false; _showProxySheet.value = false
+        _showPrivacyReport.value = false; _showTrafficStats.value = false; _showUserScripts.value = false
+        _showOfflinePages.value = false
     }
 
     override fun onCleared() {

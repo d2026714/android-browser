@@ -37,6 +37,13 @@ fun MainScreen(viewModel: BrowserViewModel) {
     val pageError by viewModel.pageError.collectAsState()
     val longPressUrl by viewModel.longPressUrl.collectAsState()
     val showBookmarkFolders by viewModel.showBookmarkFolders.collectAsState()
+    val showDevTools by viewModel.showDevTools.collectAsState()
+    val showPasswordSheet by viewModel.showPasswordSheet.collectAsState()
+    val showProxySheet by viewModel.showProxySheet.collectAsState()
+    val showPrivacyReport by viewModel.showPrivacyReport.collectAsState()
+    val showTrafficStats by viewModel.showTrafficStats.collectAsState()
+    val showUserScripts by viewModel.showUserScripts.collectAsState()
+    val showOfflinePages by viewModel.showOfflinePages.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -110,4 +117,11 @@ fun MainScreen(viewModel: BrowserViewModel) {
     if (isReadingMode) ReadingModeScreen(viewModel = viewModel, onDismiss = { viewModel.toggleReadingMode() })
     if (showViewSource) ViewSourceScreen(viewModel = viewModel, onDismiss = { viewModel.closeViewSource() })
     if (showBookmarkFolders) BookmarkFoldersSheet(viewModel = viewModel, onDismiss = { viewModel.toggleBookmarkFolders() })
+    if (showDevTools) DevToolsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleDevTools() })
+    if (showPasswordSheet) PasswordSheet(viewModel = viewModel, onDismiss = { viewModel.togglePasswordSheet() })
+    if (showProxySheet) ProxySheet(viewModel = viewModel, onDismiss = { viewModel.toggleProxySheet() })
+    if (showPrivacyReport) PrivacyReportSheet(viewModel = viewModel, onDismiss = { viewModel.togglePrivacyReport() })
+    if (showTrafficStats) TrafficStatsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleTrafficStats() })
+    if (showUserScripts) UserScriptsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleUserScripts() })
+    if (showOfflinePages) OfflinePagesSheet(viewModel = viewModel, onDismiss = { viewModel.toggleOfflinePages() })
 }

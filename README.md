@@ -13,13 +13,13 @@ A lightweight, modern Android browser built with **Kotlin**, **Jetpack Compose**
 - 🔖 Bookmarks + Folders | 📜 History with search | 📚 Reading List | 📑 Tab Groups | ⚡ Custom Quick Links
 
 ### Privacy & Security
-- 🚫 Ad blocker | 🔒 HTTPS + SSL error handling | 🍪 Cookie control (all/1st-party/none) | ⚡ JavaScript toggle | 🛡️ Zero tracking | 🌐 DNS-over-HTTPS
+- 🚫 Ad blocker (bundled EasyList) | 🔒 HTTPS + SSL error handling | 🍪 Cookie control (all/1st-party/none) | ⚡ JavaScript toggle | 🛡️ Zero tracking | 🌐 DNS-over-HTTPS | 🔐 Password Manager (AES-256 encrypted) | 🌐 Proxy Support (HTTP/SOCKS5) | 🛡️ Privacy Report (grade system)
 
 ### Display
 - 📖 Reading mode | 🌙 Dark + AMOLED | 🖥️ Desktop mode | 🌙 Blue light filter | 🎭 Custom User Agent | 🎨 Custom CSS | 🔍 Zoom control
 
 ### Tools
-- 🔎 Find in page | 📄 View source | 📸 Screenshot | 📤 Share | 📥 Downloads | 🌐 Translate | 📱 QR code | 📊 Page info | 📋 Copy link | 🖨️ Print | 💾 Backup/restore
+- 🔎 Find in page | 📄 View source | 📸 Screenshot | 📤 Share | 📥 Downloads | 🌐 Translate (100+ languages) | 📱 QR code | 📊 Page info | 📋 Copy link | 🖨️ Print | 💾 Backup/restore | 🛠️ Developer Tools (console, DOM tree, page source) | 📊 Traffic Statistics | 🧩 User Scripts (Tampermonkey-style) | 📦 Offline Pages | 📄 PDF Viewer
 
 ### Power
 - 🔃 Swipe gestures + Pull to refresh | 📉 Data saver | 🎬 Full-screen video | ⌨️ Keyboard shortcuts | ♿ Accessibility | 🕸️ WebView pool (tabs persist state) | 💾 Tab state persistence
@@ -85,6 +85,16 @@ Kotlin · Jetpack Compose · Material 3 · MVVM · Room · WebView · KSP · API
 - ⬇️ Pull-to-refresh gesture
 - ♿ Accessibility content descriptions on all interactive elements
 - 🔄 SP→Room data migration (seamless upgrade from v1.x)
+- 🛠️ Developer Tools (console, DOM tree, page source)
+- 🔐 Password Manager (AES-256 encrypted)
+- 🌐 Proxy Support (HTTP/SOCKS5)
+- 🛡️ Privacy Report (grade system)
+- 📊 Traffic Statistics
+- 🧩 User Scripts (Tampermonkey-style)
+- 📦 Offline Pages
+- 📄 PDF Viewer
+- 🌐 Translator (100+ languages)
+- 🚫 Advanced Ad Block (bundled EasyList)
 
 ### v1.4.0
 - Blue light filter, data saver, JavaScript toggle, custom UA/CSS, zoom, print, backup/restore
