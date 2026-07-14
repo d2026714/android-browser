@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -38,7 +39,7 @@ fun MainScreen(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Icon(
-                    androidx.compose.material.icons.Icons.Default.FullscreenExit,
+                    androidx.compose.material.icons.Icons.Default.Close,
                     "Exit Fullscreen",
                     tint = MaterialTheme.colorScheme.onSurface
                 )

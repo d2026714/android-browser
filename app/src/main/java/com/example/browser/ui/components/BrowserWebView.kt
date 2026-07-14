@@ -1,5 +1,7 @@
 package com.example.browser.ui.components
 
+import android.app.DownloadManager
+
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.view.View

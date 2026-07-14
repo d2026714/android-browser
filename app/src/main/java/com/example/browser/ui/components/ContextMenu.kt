@@ -134,7 +134,7 @@ fun PageActionsSheet(
                 }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             ListItem(
                 headlineContent = { Text("Screenshot") },
@@ -154,7 +154,7 @@ fun PageActionsSheet(
                 leadingContent = { Icon(Icons.Default.Share, null) }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             ListItem(
                 headlineContent = { Text("Clear Cookies & Data") },
