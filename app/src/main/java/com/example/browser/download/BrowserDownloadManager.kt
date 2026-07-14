@@ -302,7 +302,7 @@ class BrowserDownloadManager(private val context: Context) {
                     RandomAccessFile(file, "rw").use { raf ->
                         raf.seek(downloadedBytes)
                         val source: BufferedSource = body.source()
-                        val sink = raf.channel.sink().buffer()
+                        val sink = okio.buffer(raf.channel.sink())
                         val buffer = okio.Buffer()
                         var lastUpdateTime = 0L
 

@@ -249,7 +249,7 @@ private fun DownloadItemCard(
             if (status == STATUS_DOWNLOADING || status == STATUS_PAUSED) {
                 Spacer(modifier = Modifier.height(8.dp))
                 LinearProgressIndicator(
-                    progress = { progress },
+                    progress = progress,
                     modifier = Modifier.fillMaxWidth(),
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )

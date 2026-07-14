@@ -20,7 +20,7 @@ fun LongPressMenuSheet(viewModel: BrowserViewModel) {
         ListItem(
             headlineContent = { Text(url, maxLines = 2) },
         )
-        HorizontalDivider()
+        Divider()
         ListItem(
             headlineContent = { Text("Open in New Tab") },
             modifier = Modifier.clickable {
@@ -68,7 +68,7 @@ fun TextSelectionMenuSheet(viewModel: BrowserViewModel) {
                 )
             },
         )
-        HorizontalDivider()
+        Divider()
         ListItem(
             headlineContent = { Text("Translate Selected Text") },
             leadingContent = { Icon(Icons.Default.Translate, null) },

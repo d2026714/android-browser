@@ -271,9 +271,7 @@ private fun configureWebView(
         val hitTestResult = (v as WebView).hitTestResult
         when (hitTestResult.type) {
             WebView.HitTestResult.SRC_ANCHOR_TYPE,
-            WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE,
-            WebView.HitTestResult.VIDEO_TYPE,
-            WebView.HitTestResult.AUDIO_TYPE -> {
+            WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE -> {
                 val url = hitTestResult.extra
                 if (url != null) {
                     viewModel.onLongPressUrl(url)
@@ -309,7 +307,7 @@ private fun extractDownloadFileName(url: String, contentDisposition: String?): S
         val patterns = listOf(
             Regex("filename\*=UTF-8''(.+)", RegexOption.IGNORE_CASE),
             Regex("filename=\"([^\"]+)\"", RegexOption.IGNORE_CASE),
-            Regex("filename=([^;\s]+)", RegexOption.IGNORE_CASE)
+            Regex("filename=([^;\\s]+)", RegexOption.IGNORE_CASE)
         )
         for (pattern in patterns) {
             val match = pattern.find(contentDisposition)

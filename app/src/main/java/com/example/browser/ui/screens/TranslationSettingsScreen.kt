@@ -180,7 +180,7 @@ fun TranslationSettingsScreen(
                     style = MaterialTheme.typography.bodySmall
                 )
                 LinearProgressIndicator(
-                    progress = { progress.progress },
+                    progress = progress.progress,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 )
             }
