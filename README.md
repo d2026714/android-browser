@@ -1,100 +1,66 @@
 # 🌐 Android Browser
 
-A lightweight, modern Android browser built with **Kotlin**, **Jetpack Compose**, and **WebView**.
-
 [![Build APK](https://github.com/d2026714/android-browser/actions/workflows/build.yml/badge.svg)](https://github.com/d2026714/android-browser/actions/workflows/build.yml)
 
-## ✨ Features (v1.3.0)
+A lightweight, modern Android browser built with **Kotlin**, **Jetpack Compose**, and **WebView**. **40+ features**, zero dependencies on third-party services.
 
-### Core Browsing
-- 🌐 Full browsing with back/forward/reload
-- 📑 Multi-tab with tab counter badge
-- 🥷 Incognito mode
-- 🔍 Smart URL/search bar with suggestions
+## ✨ Features (v1.4.0)
 
-### Content & Organization
-- 🔖 Bookmarks with folder support
-- 📜 History (browse/clear)
-- 📚 Reading List (save for later)
-- 📑 Tab Groups (organize tabs)
-- ⚡ Customizable Quick Links (edit/add/remove)
+### Core
+- 🌐 Browsing (back/forward/reload) | 📑 Multi-tab + badge | 🥷 Incognito | 🔍 Smart search bar
 
-### Privacy & Security
-- 🚫 Built-in ad & tracker blocker
-- 🔒 HTTPS/HTTP security indicator
-- 🍪 Clear cookies & site data
-- 🛡️ Zero analytics, zero telemetry
+### Content
+- 🔖 Bookmarks | 📜 History | 📚 Reading List | 📑 Tab Groups | ⚡ Custom Quick Links
 
-### Reading & Display
-- 📖 Reading mode with adjustable font
-- 🌙 Dark mode + AMOLED pure black
-- 🖥️ Desktop/mobile mode toggle
-- 🔍 Search suggestions toggle
+### Privacy
+- 🚫 Ad blocker | 🔒 HTTPS indicator | 🍪 Clear cookies | ⚡ JavaScript toggle | 🛡️ Zero tracking
+
+### Display
+- 📖 Reading mode | 🌙 Dark + AMOLED | 🖥️ Desktop mode | 🌙 Blue light filter | 🎭 Custom User Agent | 🎨 Custom CSS | 🔍 Zoom control
 
 ### Tools
-- 🔎 Find in page
-- 📄 View page source code
-- 📸 Screenshot capture & share
-- 📤 Share page via system share
-- 📥 Download manager with progress
-- 🌐 Translate page (Google Translate)
-- 📱 QR code generator for current page
-- 👆 Swipe navigation gestures
+- 🔎 Find in page | 📄 View source | 📸 Screenshot | 📤 Share | 📥 Downloads | 🌐 Translate | 📱 QR code | 📊 Page info | 📋 Copy link | 🖨️ Print | 💾 Backup/restore
+
+### Power
+- 🔃 Swipe gestures | 📉 Data saver | 🎬 Full-screen video | 🚀 GitHub Actions CI
 
 ## 📦 Download
 
-### From GitHub Actions
-1. Go to [Actions](https://github.com/d2026714/android-browser/actions)
-2. Click the latest ✅ build
-3. Download **debug-apk** from Artifacts
+**[Actions → Latest ✅ → debug-apk](https://github.com/d2026714/android-browser/actions)**
 
-### Build Locally
 ```bash
-git clone https://github.com/d2026714/android-browser.git
-cd android-browser
-./gradlew assembleDebug
+git clone https://github.com/d2026714/android-browser.git && cd android-browser && ./gradlew assembleDebug
 ```
 
-## 🛠️ Tech Stack
+## 🛠️ Tech
 
-- **Kotlin** + **Jetpack Compose** + **Material 3**
-- **MVVM** (ViewModel + StateFlow)
-- **WebView** with custom ad blocking
-- **Min SDK**: Android 8.0 (API 26)
-- **Target SDK**: Android 14 (API 34)
+Kotlin · Jetpack Compose · Material 3 · MVVM · WebView · API 26-34
 
 ## 📋 Changelog
 
+### v1.4.0
+- 🌙 Blue light filter with intensity slider
+- 📉 Data saver (block images, use cache)
+- ⚡ JavaScript on/off toggle
+- 🎭 Custom User Agent (8 presets + custom)
+- 🎨 Custom CSS injection (dark reader, readability presets)
+- 🔍 Zoom control with slider and presets
+- 📊 Page info sheet
+- 📋 Copy link to clipboard
+- 🖨️ Print page support
+- 💾 Backup & restore (export/import JSON)
+- ⚙️ Settings reorganized with categories
+
 ### v1.3.0
-- 📚 Reading List (save articles for later)
-- 📑 Tab Groups (organize tabs)
-- ✏️ Custom Quick Links editor
-- 📱 QR code generator
-- 🌐 Translate page via Google Translate
-- 🌙 AMOLED pure black mode
-- 🔍 Search suggestions toggle
-- ⚙️ Reorganized settings with categories
+- Reading List, Tab Groups, Quick Links Editor, QR Code, Translate, AMOLED
 
 ### v1.2.0
-- 📥 Download manager UI
-- 📄 View page source
-- 📸 Screenshot & share
-- 🍪 Clear cookies & data
-- 🎬 Full-screen video
+- Downloads, View Source, Screenshot, Clear Cookies, Full-screen Video
 
 ### v1.1.0
-- 📖 Reading mode
-- 👆 Swipe navigation
-- 🖥️ Desktop mode
-- 🔎 Find in page
+- Reading Mode, Swipe Gestures, Desktop Mode, Find in Page
 
 ### v1.0.0
 - Initial release
 
-## 📄 License
-
-MIT License
-
-## 🤝 Contributing
-
-Contributions welcome! Open issues and PRs.
+## 📄 MIT License
