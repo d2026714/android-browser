@@ -76,9 +76,9 @@ class MediaPlaybackManager(private val context: Context) {
         val p = getPlayer()
         val mediaItem = if (mimeType != null) {
             val contentType = when {
-                mimeType.startsWith("video/") -> C.WINDOW_TYPE_DEFAULT
-                mimeType.startsWith("audio/") -> C.WINDOW_TYPE_DEFAULT
-                else -> C.WINDOW_TYPE_DEFAULT
+                mimeType.startsWith("video/") -> C.CONTENT_TYPE_MOVIE
+                mimeType.startsWith("audio/") -> C.CONTENT_TYPE_MUSIC
+                else -> C.CONTENT_TYPE_UNKNOWN
             }
             MediaItem.Builder()
                 .setUri(url)

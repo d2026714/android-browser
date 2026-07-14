@@ -86,4 +86,7 @@ dependencies {
 
     // ML Kit Translation (offline)
     implementation("com.google.mlkit:translate:17.0.2")
+
+    // OkHttp (download manager)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
