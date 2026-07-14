@@ -1,7 +1,7 @@
 package com.example.browser.ui.components
 
-import android.webkit.SslError
-import android.webkit.SslErrorHandler
+import android.net.http.SslError
+import android.net.http.SslErrorHandler
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import com.example.browser.ui.viewmodel.BrowserViewModel

@@ -25,7 +25,7 @@ fun TabGroupsSheet(
     viewModel: BrowserViewModel,
     onDismiss: () -> Unit
 ) {
-    val tabGroups by viewModel.tabGroups.collectAsState()
+    val tabGroups by viewModel.tabGroups.collectAsState(initial = emptyList())
     val tabs by viewModel.tabs.collectAsState()
     var showNewGroupDialog by remember { mutableStateOf(false) }
     var newGroupName by remember { mutableStateOf("") }

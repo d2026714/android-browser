@@ -6,12 +6,14 @@ import android.graphics.Bitmap
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.SslError
-import android.webkit.SslErrorHandler
+import android.net.http.SslError
+import android.net.http.SslErrorHandler
 import android.webkit.*
 import android.widget.FrameLayout
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -102,18 +104,24 @@ fun BrowserWebView(
     Box(
         modifier = modifier
             .pointerInput(Unit) {
-                detectHorizontalDragGestures { _, dragAmount ->
-                    if (dragAmount > 150) viewModel.goBack()
-                    else if (dragAmount < -150) viewModel.goForward()
-                }
-            }
-            .pointerInput(Unit) {
-                detectVerticalDragGestures { _, dragAmount ->
-                    if (dragAmount > 100) {
-                        val wv = viewModel.getActiveWebView()
-                        if (wv != null && !wv.canScrollVertically(-1)) {
-                            isPullingToRefresh = true
-                            wv.reload()
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    var dragAmount = Offset.Zero
+                    val up = drag(down.id) { change ->
+                        dragAmount += change.position - change.previousPosition
+                        change.consume()
+                    }
+                    if (up != null) {
+                        when {
+                            dragAmount.x > 150 -> viewModel.goBack()
+                            dragAmount.x < -150 -> viewModel.goForward()
+                            dragAmount.y > 100 -> {
+                                val wv = viewModel.getActiveWebView()
+                                if (wv != null && !wv.canScrollVertically(-1)) {
+                                    isPullingToRefresh = true
+                                    wv.reload()
+                                }
+                            }
                         }
                     }
                 }

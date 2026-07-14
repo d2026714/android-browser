@@ -23,7 +23,7 @@ fun ReadingListSheet(
     viewModel: BrowserViewModel,
     onDismiss: () -> Unit
 ) {
-    val readingList by viewModel.readingList.collectAsState()
+    val readingList by viewModel.readingList.collectAsState(initial = emptyList())
     val dateFormat = remember { SimpleDateFormat("MM/dd HH:mm", Locale.getDefault()) }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {

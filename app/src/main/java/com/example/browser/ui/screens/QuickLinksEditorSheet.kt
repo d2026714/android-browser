@@ -20,7 +20,7 @@ fun QuickLinksEditorSheet(
     viewModel: BrowserViewModel,
     onDismiss: () -> Unit
 ) {
-    val quickLinks by viewModel.quickLinks.collectAsState()
+    val quickLinks by viewModel.quickLinks.collectAsState(initial = emptyList())
     var showAddDialog by remember { mutableStateOf(false) }
     var editingLink by remember { mutableStateOf<QuickLink?>(null) }
     var newTitle by remember { mutableStateOf("") }
