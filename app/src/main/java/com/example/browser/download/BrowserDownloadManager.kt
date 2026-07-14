@@ -307,7 +307,7 @@ class BrowserDownloadManager(private val context: Context) {
                             if (pauseFlags[entity.id] == true || !isActive) break
 
                             val bytesRead = source.read(byteArray)
-                            if (bytesRead == -1L) break
+                            if (bytesRead == -1) break
 
                             bos.write(byteArray, 0, bytesRead)
                             downloadedBytes += bytesRead
@@ -343,7 +343,7 @@ class BrowserDownloadManager(private val context: Context) {
                         if (pauseFlags[entity.id] == true || !isActive) break
 
                         val bytesRead = source.read(byteArray)
-                        if (bytesRead == -1L) break
+                        if (bytesRead == -1) break
 
                         bos.write(byteArray, 0, bytesRead)
                         downloadedBytes += bytesRead
@@ -440,6 +440,6 @@ class BrowserDownloadManager(private val context: Context) {
 
     fun destroy() {
         scope.cancel()
-        httpClient.dispatcher().executorService().shutdown()
+        httpClient.dispatcher.executorService.shutdown()
     }
 }
