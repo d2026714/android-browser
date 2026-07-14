@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="640dp"
+    android:viewportWidth="360"
+    android:viewportHeight="640">
+    <!-- Deep blue background -->
+    <path
+        android:fillColor="#FF0D47A1"
+        android:pathData="M0,0 L360,0 L360,640 L0,640 Z" />
+    <!-- Gradient overlay -->
+    <path
+        android:fillColor="#201565C0"
+        android:pathData="M0,0 L360,0 L360,200 L0,200 Z" />
+    <!-- Abstract circles -->
+    <path
+        android:fillColor="#3042A5F5"
+        android:pathData="M-50,200 A100,100 0 1,1 -50,200.01" />
+    <path
+        android:fillColor="#2542A5F5"
+        android:pathData="M400,400 A120,120 0 1,1 400,400.01" />
+    <path
+        android:fillColor="#2029B6F6"
+        android:pathData="M180,320 A150,150 0 1,1 180,320.01" />
+    <!-- Flowing curves -->
+    <path
+        android:fillColor="#3029B6F6"
+        android:pathData="M0,300 Q90,250 180,300 Q270,350 360,300 L360,400 Q270,450 180,400 Q90,350 0,400 Z" />
+    <path
+        android:fillColor="#2029B6F6"
+        android:pathData="M0,420 Q120,370 240,430 Q320,470 360,420 L360,520 Q280,570 180,510 Q80,450 0,520 Z" />
+    <!-- Geometric accents -->
+    <path
+        android:fillColor="#4029B6F6"
+        android:pathData="M60,100 L100,80 L140,100 L120,140 L80,140 Z" />
+    <path
+        android:fillColor="#3029B6F6"
+        android:pathData="M250,500 L290,480 L330,500 L310,540 L270,540 Z" />
+    <!-- Grid dots -->
+    <path android:fillColor="#20FFFFFF" android:pathData="M40,50 L42,50 L42,52 L40,52 Z" />
+    <path android:fillColor="#20FFFFFF" android:pathData="M100,50 L102,50 L102,52 L100,52 Z" />
+    <path android:fillColor="#20FFFFFF" android:pathData="M160,50 L162,50 L162,52 L160,52 Z" />
+    <path android:fillColor="#20FFFFFF" android:pathData="M220,50 L222,50 L222,52 L220,52 Z" />
+    <path android:fillColor="#20FFFFFF" android:pathData="M280,50 L282,50 L282,52 L280,52 Z" />
+    <path android:fillColor="#20FFFFFF" android:pathData="M340,50 L342,50 L342,52 L340,52 Z" />
+    <path android:fillColor="#20FFFFFF" android:pathData="M40,590 L42,590 L42,592 L40,592 Z" />
+    <path android:fillColor="#20FFFFFF" android:pathData="M100,590 L102,590 L102,592 L100,592 Z" />
+    <path android:fillColor="#20FFFFFF" android:pathData="M160,590 L162,590 L162,592 L160,592 Z" />
+    <path android:fillColor="#20FFFFFF" android:pathData="M220,590 L222,590 L222,592 L220,592 Z" />
+    <path android:fillColor="#20FFFFFF" android:pathData="M280,590 L282,590 L282,592 L280,592 Z" />
+    <path android:fillColor="#20FFFFFF" android:pathData="M340,590 L342,590 L342,592 L340,592 Z" />
+    <!-- Light streaks -->
+    <path
+        android:fillColor="#15FFFFFF"
+        android:pathData="M0,250 L360,200 L360,220 L0,270 Z" />
+    <path
+        android:fillColor="#10FFFFFF"
+        android:pathData="M0,450 L360,400 L360,415 L0,465 Z" />
+</vector>

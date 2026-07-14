@@ -13,3 +13,5 @@ local.properties
 *.aab
 *.jks
 *.keystore
+app-debug.zip
+app-release-unsigned.zip

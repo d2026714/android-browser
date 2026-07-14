@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="640dp"
+    android:viewportWidth="360"
+    android:viewportHeight="640">
+    <!-- Deep space background -->
+    <path
+        android:fillColor="#FF0A0E27"
+        android:pathData="M0,0 L360,0 L360,640 L0,640 Z" />
+    <!-- Aurora band 1 (green) -->
+    <path
+        android:fillColor="#4069F0AE"
+        android:pathData="M0,100 Q60,80 120,120 Q180,160 240,100 Q300,40 360,100 L360,160 Q300,100 240,160 Q180,220 120,180 Q60,140 0,160 Z" />
+    <path
+        android:fillColor="#6069F0AE"
+        android:pathData="M0,120 Q80,100 160,140 Q240,180 320,120 L360,130 L360,170 Q300,130 240,180 Q160,230 80,170 Q0,130 0,170 Z" />
+    <!-- Aurora band 2 (blue-green) -->
+    <path
+        android:fillColor="#4000E5FF"
+        android:pathData="M0,180 Q90,150 180,200 Q270,250 360,190 L360,240 Q270,300 180,250 Q90,200 0,240 Z" />
+    <path
+        android:fillColor="#5000E5FF"
+        android:pathData="M0,200 Q100,170 200,220 Q300,270 360,210 L360,250 Q280,310 200,260 Q100,210 0,260 Z" />
+    <!-- Aurora band 3 (purple) -->
+    <path
+        android:fillColor="#30D500F9"
+        android:pathData="M0,260 Q120,230 240,280 Q300,300 360,270 L360,320 Q300,360 240,340 Q120,290 0,320 Z" />
+    <!-- Stars -->
+    <path android:fillColor="#FFFFFF" android:pathData="M50,30 L52,30 L52,32 L50,32 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M180,20 L182,20 L182,22 L180,22 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M300,50 L302,50 L302,52 L300,52 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M120,60 L122,60 L122,62 L120,62 Z" />
+    <path android:fillColor="#80FFFFFF" android:pathData="M250,35 L251,35 L251,36 L250,36 Z" />
+    <path android:fillColor="#80FFFFFF" android:pathData="M40,90 L41,90 L41,91 L40,91 Z" />
+    <path android:fillColor="#80FFFFFF" android:pathData="M320,100 L321,100 L321,101 L320,101 Z" />
+    <path android:fillColor="#C0FFFFFF" android:pathData="M200,70 L201,70 L201,71 L200,71 Z" />
+    <path android:fillColor="#C0FFFFFF" android:pathData="M80,140 L81,140 L81,141 L80,141 Z" />
+    <!-- Snow ground -->
+    <path
+        android:fillColor="#FF1A237E"
+        android:pathData="M0,500 Q60,480 120,510 Q180,540 240,500 Q300,460 360,510 L360,640 L0,640 Z" />
+    <path
+        android:fillColor="#FF0D1B2A"
+        android:pathData="M0,540 Q90,520 180,550 Q270,580 360,540 L360,640 L0,640 Z" />
+    <!-- Trees silhouette -->
+    <path
+        android:fillColor="#FF0D1B2A"
+        android:pathData="M40,500 L55,440 L70,500 Z" />
+    <path
+        android:fillColor="#FF0D1B2A"
+        android:pathData="M100,510 L120,430 L140,510 Z" />
+    <path
+        android:fillColor="#FF0D1B2A"
+        android:pathData="M260,490 L275,420 L290,490 Z" />
+    <path
+        android:fillColor="#FF0D1B2A"
+        android:pathData="M310,510 L325,450 L340,510 Z" />
+</vector>

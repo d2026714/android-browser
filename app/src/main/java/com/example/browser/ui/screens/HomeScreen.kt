@@ -1,5 +1,7 @@
 package com.example.browser.ui.screens
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,28 +16,42 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.browser.R
+import com.example.browser.manager.SettingsManager
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
 data class QuickLink(
     val title: String,
     val url: String,
-    val icon: ImageVector
+    @DrawableRes val iconRes: Int
 )
 
 val defaultQuickLinks = listOf(
-    QuickLink("Google", "https://www.google.com", Icons.Default.Search),
-    QuickLink("YouTube", "https://www.youtube.com", Icons.Default.PlayArrow),
-    QuickLink("Wikipedia", "https://www.wikipedia.org", Icons.Default.MenuBook),
-    QuickLink("GitHub", "https://github.com", Icons.Default.Code),
-    QuickLink("Reddit", "https://www.reddit.com", Icons.Default.Forum),
-    QuickLink("Twitter", "https://twitter.com", Icons.Default.Tag),
-    QuickLink("Amazon", "https://www.amazon.com", Icons.Default.ShoppingCart),
-    QuickLink("Netflix", "https://www.netflix.com", Icons.Default.Movie),
+    QuickLink("Google", "https://www.google.com", R.drawable.ic_brand_google),
+    QuickLink("YouTube", "https://www.youtube.com", R.drawable.ic_brand_youtube),
+    QuickLink("Wikipedia", "https://www.wikipedia.org", R.drawable.ic_brand_wikipedia),
+    QuickLink("GitHub", "https://github.com", R.drawable.ic_brand_github),
+    QuickLink("Reddit", "https://www.reddit.com", R.drawable.ic_brand_reddit),
+    QuickLink("Twitter", "https://twitter.com", R.drawable.ic_brand_twitter),
+    QuickLink("Amazon", "https://www.amazon.com", R.drawable.ic_brand_amazon),
+    QuickLink("Netflix", "https://www.netflix.com", R.drawable.ic_brand_netflix),
 )
+
+private fun getWallpaperResId(key: String): Int? = when (key) {
+    SettingsManager.WALLPAPER_DEFAULT -> R.drawable.wallpaper_geometric_blue
+    "night_mountain" -> R.drawable.wallpaper_night_mountain
+    "sunset_ocean" -> R.drawable.wallpaper_sunset_ocean
+    "forest" -> R.drawable.wallpaper_forest
+    "aurora" -> R.drawable.wallpaper_aurora
+    "abstract_waves" -> R.drawable.wallpaper_abstract_waves
+    else -> null
+}
 
 @Composable
 fun HomeScreen(
@@ -43,86 +59,127 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     var searchText by remember { mutableStateOf("") }
+    val wallpaperKey by viewModel.wallpaper.collectAsState()
+    val wallpaperResId = getWallpaperResId(wallpaperKey)
+    val hasWallpaper = wallpaperResId != null
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(48.dp))
+    val textColor = if (hasWallpaper) Color.White else MaterialTheme.colorScheme.onBackground
 
-        // Browser logo/title
-        Text(
-            text = "🌐",
-            fontSize = 48.sp
-        )
-        Text(
-            text = "Android Browser",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Search bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Search icon",
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                modifier = Modifier.size(20.dp)
+    Box(modifier = modifier.fillMaxSize()) {
+        // Background
+        if (wallpaperResId != null) {
+            Image(
+                painter = painterResource(id = wallpaperResId),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            TextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                modifier = Modifier.weight(1f),
-                placeholder = {
-                    Text("Search or enter URL", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
-                    unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
-                    focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                    unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
-                ),
-                singleLine = true
+            // Dark scrim for text readability
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.35f))
             )
-            if (searchText.isNotBlank()) {
-                IconButton(onClick = {
-                    viewModel.navigateTo(searchText)
-                    searchText = ""
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowForward,
-                        contentDescription = "Go",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+            )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Quick links grid
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(4),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            items(defaultQuickLinks) { link ->
-                QuickLinkItem(link = link) {
-                    viewModel.navigateTo(link.url)
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Browser logo/title
+            Text(
+                text = "🌐",
+                fontSize = 48.sp
+            )
+            Text(
+                text = "Android Browser",
+                style = MaterialTheme.typography.headlineMedium,
+                color = textColor,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Search bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        if (hasWallpaper) Color.White.copy(alpha = 0.2f)
+                        else MaterialTheme.colorScheme.surfaceVariant
+                    )
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search icon",
+                    tint = if (hasWallpaper) Color.White.copy(alpha = 0.7f)
+                           else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                TextField(
+                    value = searchText,
+                    onValueChange = { searchText = it },
+                    modifier = Modifier.weight(1f),
+                    placeholder = {
+                        Text(
+                            "Search or enter URL",
+                            color = if (hasWallpaper) Color.White.copy(alpha = 0.6f)
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor = if (hasWallpaper) Color.White else MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = if (hasWallpaper) Color.White else MaterialTheme.colorScheme.onSurface
+                    ),
+                    singleLine = true
+                )
+                if (searchText.isNotBlank()) {
+                    IconButton(onClick = {
+                        viewModel.navigateTo(searchText)
+                        searchText = ""
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = "Go",
+                            tint = if (hasWallpaper) Color.White else MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Quick links grid
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(4),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(defaultQuickLinks) { link ->
+                    QuickLinkItem(
+                        link = link,
+                        hasWallpaper = hasWallpaper
+                    ) {
+                        viewModel.navigateTo(link.url)
+                    }
                 }
             }
         }
@@ -132,6 +189,7 @@ fun HomeScreen(
 @Composable
 fun QuickLinkItem(
     link: QuickLink,
+    hasWallpaper: Boolean = false,
     onClick: () -> Unit
 ) {
     Column(
@@ -142,21 +200,24 @@ fun QuickLinkItem(
             modifier = Modifier
                 .size(48.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer),
+                .background(
+                    if (hasWallpaper) Color.White.copy(alpha = 0.2f)
+                    else Color.White
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = link.icon,
+                painter = painterResource(id = link.iconRes),
                 contentDescription = link.title,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(24.dp)
+                tint = Color.Unspecified,
+                modifier = Modifier.size(32.dp)
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = link.title,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = if (hasWallpaper) Color.White else MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,
             maxLines = 1
         )

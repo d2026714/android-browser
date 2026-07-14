@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="640dp"
+    android:viewportWidth="360"
+    android:viewportHeight="640">
+    <!-- Sky gradient background -->
+    <path
+        android:fillColor="#FF1A237E"
+        android:pathData="M0,0 L360,0 L360,640 L0,640 Z" />
+    <!-- Upper sky -->
+    <path
+        android:fillColor="#FF283593"
+        android:pathData="M0,0 L360,0 L360,200 L0,200 Z" />
+    <!-- Stars -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,50 L52,50 L52,52 L50,52 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M150,30 L152,30 L152,32 L150,32 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M250,60 L252,60 L252,62 L250,62 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M300,20 L302,20 L302,22 L300,22 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M100,80 L102,80 L102,82 L100,82 Z" />
+    <path
+        android:fillColor="#80FFFFFF"
+        android:pathData="M200,45 L201,45 L201,46 L200,46 Z" />
+    <path
+        android:fillColor="#80FFFFFF"
+        android:pathData="M320,70 L321,70 L321,71 L320,71 Z" />
+    <path
+        android:fillColor="#80FFFFFF"
+        android:pathData="M80,110 L81,110 L81,111 L80,111 Z" />
+    <!-- Moon -->
+    <path
+        android:fillColor="#FFFFF9C4"
+        android:pathData="M280,80 A30,30 0 1,1 280,80.01" />
+    <path
+        android:fillColor="#FF283593"
+        android:pathData="M290,70 A25,25 0 1,1 290,70.01" />
+    <!-- Mountains back -->
+    <path
+        android:fillColor="#FF1B2631"
+        android:pathData="M0,400 L60,280 L120,350 L180,250 L240,320 L300,260 L360,340 L360,640 L0,640 Z" />
+    <!-- Mountains front -->
+    <path
+        android:fillColor="#FF0D1117"
+        android:pathData="M0,480 L80,380 L160,430 L220,360 L280,420 L360,370 L360,640 L0,640 Z" />
+    <!-- Water reflection -->
+    <path
+        android:fillColor="#FF1A237E"
+        android:pathData="M0,520 L360,520 L360,640 L0,640 Z" />
+    <path
+        android:fillColor="#40FFFFFF"
+        android:pathData="M40,540 L80,540 L80,542 L40,542 Z" />
+    <path
+        android:fillColor="#40FFFFFF"
+        android:pathData="M150,555 L200,555 L200,557 L150,557 Z" />
+    <path
+        android:fillColor="#40FFFFFF"
+        android:pathData="M250,545 L310,545 L310,547 L250,547 Z" />
+    <path
+        android:fillColor="#30FFFFFF"
+        android:pathData="M100,570 L140,570 L140,572 L100,572 Z" />
+    <path
+        android:fillColor="#30FFFFFF"
+        android:pathData="M200,580 L260,580 L260,582 L200,582 Z" />
+</vector>

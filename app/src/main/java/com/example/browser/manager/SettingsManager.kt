@@ -32,7 +32,10 @@ class SettingsManager(
         const val KEY_SEARCH_SUGGESTIONS = "search_suggestions"
         const val KEY_DOH = "dns_over_https"
         const val KEY_COOKIE_MODE = "cookie_mode" // "all", "first_party", "none"
+        const val KEY_WALLPAPER = "wallpaper"
         const val DEFAULT_SEARCH_ENGINE = "https://www.google.com/search?q="
+        const val WALLPAPER_NONE = "none"
+        const val WALLPAPER_DEFAULT = "default"
 
         private val DEFAULT_QUICK_LINKS = listOf(
             QuickLinkEntity(id = "g", title = "Google", url = "https://www.google.com", icon = "search", position = 0),
@@ -68,6 +71,9 @@ class SettingsManager(
     private val _cookieMode = MutableStateFlow("all")
     val cookieMode: StateFlow<String> = _cookieMode.asStateFlow()
 
+    private val _wallpaper = MutableStateFlow(WALLPAPER_NONE)
+    val wallpaper: StateFlow<String> = _wallpaper.asStateFlow()
+
     init {
         // Load settings from DB
         scope.launch {
@@ -79,6 +85,7 @@ class SettingsManager(
                 _searchEngine.value = settingsDao.getValue(KEY_SEARCH_ENGINE) ?: DEFAULT_SEARCH_ENGINE
                 _isDohEnabled.value = settingsDao.getValue(KEY_DOH)?.toBoolean() ?: false
                 _cookieMode.value = settingsDao.getValue(KEY_COOKIE_MODE) ?: "all"
+                _wallpaper.value = settingsDao.getValue(KEY_WALLPAPER) ?: WALLPAPER_NONE
                 Log.d(TAG, "Settings loaded from DB")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load settings", e)
@@ -133,6 +140,18 @@ class SettingsManager(
                 Log.d(TAG, "Cookie mode set to: $mode")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to set cookie mode", e)
+            }
+        }
+    }
+
+    fun setWallpaper(wallpaper: String) {
+        _wallpaper.value = wallpaper
+        scope.launch {
+            try {
+                settingsDao.setValue(SettingsEntity(KEY_WALLPAPER, wallpaper))
+                Log.d(TAG, "Wallpaper set to: $wallpaper")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to set wallpaper", e)
             }
         }
     }

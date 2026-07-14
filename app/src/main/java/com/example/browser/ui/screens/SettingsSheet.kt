@@ -1,5 +1,6 @@
 package com.example.browser.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -30,6 +31,7 @@ fun SettingsSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
 
             // Appearance
             Text("Appearance", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 8.dp))
+            ListItem(headlineContent = { Text("Wallpaper") }, supportingContent = { Text("Customize new tab background") }, leadingContent = { Icon(Icons.Default.Wallpaper, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) }, modifier = Modifier.clickable { viewModel.toggleWallpaperPicker() })
             ListItem(headlineContent = { Text("Dark Mode") }, leadingContent = { Icon(if (isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode, null) }, trailingContent = { Switch(checked = isDarkMode, onCheckedChange = { viewModel.toggleDarkMode() }) })
             ListItem(headlineContent = { Text("AMOLED Black") }, supportingContent = { Text("Pure black for OLED") }, leadingContent = { Icon(Icons.Default.Contrast, null) }, trailingContent = { Switch(checked = isAmoledDark, onCheckedChange = { viewModel.toggleAmoledDark() }) })
             ListItem(headlineContent = { Text("Blue Light Filter") }, supportingContent = { Text("Reduce eye strain at night") }, leadingContent = { Icon(Icons.Default.NightsStay, null) }, trailingContent = { Switch(checked = isBlueLightFilter, onCheckedChange = { viewModel.toggleBlueLightFilter() }) })

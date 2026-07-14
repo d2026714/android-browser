@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="640dp"
+    android:viewportWidth="360"
+    android:viewportHeight="640">
+    <!-- Sky -->
+    <path
+        android:fillColor="#FF81C784"
+        android:pathData="M0,0 L360,0 L360,180 L0,180 Z" />
+    <path
+        android:fillColor="#FF66BB6A"
+        android:pathData="M0,180 L360,180 L360,300 L0,300 Z" />
+    <!-- Distant trees -->
+    <path
+        android:fillColor="#FF2E7D32"
+        android:pathData="M30,300 L50,200 L70,300 Z" />
+    <path
+        android:fillColor="#FF2E7D32"
+        android:pathData="M90,300 L115,180 L140,300 Z" />
+    <path
+        android:fillColor="#FF2E7D32"
+        android:pathData="M160,300 L185,190 L210,300 Z" />
+    <path
+        android:fillColor="#FF2E7D32"
+        android:pathData="M230,300 L260,170 L290,300 Z" />
+    <path
+        android:fillColor="#FF2E7D32"
+        android:pathData="M300,300 L320,210 L340,300 Z" />
+    <!-- Mid trees -->
+    <path
+        android:fillColor="#FF388E3C"
+        android:pathData="M0,350 L30,250 L60,350 Z" />
+    <path
+        android:fillColor="#FF388E3C"
+        android:pathData="M70,350 L100,230 L130,350 Z" />
+    <path
+        android:fillColor="#FF388E3C"
+        android:pathData="M140,350 L170,240 L200,350 Z" />
+    <path
+        android:fillColor="#FF388E3C"
+        android:pathData="M210,350 L245,220 L280,350 Z" />
+    <path
+        android:fillColor="#FF388E3C"
+        android:pathData="M290,350 L320,260 L350,350 Z" />
+    <!-- Ground -->
+    <path
+        android:fillColor="#FF4CAF50"
+        android:pathData="M0,350 Q90,340 180,355 Q270,370 360,350 L360,640 L0,640 Z" />
+    <path
+        android:fillColor="#FF43A047"
+        android:pathData="M0,400 Q90,390 180,405 Q270,420 360,400 L360,640 L0,640 Z" />
+    <path
+        android:fillColor="#FF388E3C"
+        android:pathData="M0,460 Q90,450 180,465 Q270,480 360,460 L360,640 L0,640 Z" />
+    <!-- Path -->
+    <path
+        android:fillColor="#FF8D6E63"
+        android:pathData="M150,640 Q160,600 170,560 Q180,520 190,480 Q200,440 220,400 Q240,360 280,340 L290,340 Q250,360 230,400 Q210,440 200,480 Q190,520 180,560 Q170,600 160,640 Z" />
+    <!-- Light rays -->
+    <path
+        android:fillColor="#20FFFFFF"
+        android:pathData="M100,0 L120,0 L200,400 L160,400 Z" />
+    <path
+        android:fillColor="#15FFFFFF"
+        android:pathData="M200,0 L220,0 L280,400 L240,400 Z" />
+</vector>

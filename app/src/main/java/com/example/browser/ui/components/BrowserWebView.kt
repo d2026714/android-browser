@@ -26,7 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.browser.manager.TabManager
 import com.example.browser.ui.viewmodel.BrowserViewModel
-import com.example.browser.util.AdBlocker
+import com.example.browser.adblock.AdBlockEngine
 
 private const val TAG = "BrowserWebView"
 
@@ -160,12 +160,16 @@ private fun configureWebView(
         textZoom = 100
     }
 
+    // Initialize AdBlockEngine and preload rules in background
+    val adBlockEngine = AdBlockEngine.getInstance(wv.context)
+    Thread { adBlockEngine.loadFilters() }.start()
+
     wv.webViewClient = object : WebViewClient() {
         override fun shouldInterceptRequest(
             view: WebView?, request: WebResourceRequest?
         ): WebResourceResponse? {
             if (isAdBlockEnabled && request != null) {
-                if (AdBlocker.isAd(request.url.toString())) {
+                if (adBlockEngine.isAd(request.url.toString())) {
                     return WebResourceResponse("text/plain", "utf-8", "".byteInputStream())
                 }
             }

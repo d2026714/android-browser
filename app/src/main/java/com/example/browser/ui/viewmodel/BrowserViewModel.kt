@@ -81,6 +81,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     val isSearchSuggestions = settingsManager.isSearchSuggestions
     val isDohEnabled = settingsManager.isDohEnabled
     val cookieMode = settingsManager.cookieMode
+    val wallpaper = settingsManager.wallpaper
 
     // --- URL bar state ---
     private val _currentUrl = MutableStateFlow("")
@@ -162,6 +163,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val _showPrivacyReport = MutableStateFlow(false); val showPrivacyReport: StateFlow<Boolean> = _showPrivacyReport.asStateFlow()
     private val _showTrafficStats = MutableStateFlow(false); val showTrafficStats: StateFlow<Boolean> = _showTrafficStats.asStateFlow()
     private val _showUserScripts = MutableStateFlow(false); val showUserScripts: StateFlow<Boolean> = _showUserScripts.asStateFlow()
+    private val _showWallpaperPicker = MutableStateFlow(false); val showWallpaperPicker: StateFlow<Boolean> = _showWallpaperPicker.asStateFlow()
     private val _showOfflinePages = MutableStateFlow(false); val showOfflinePages: StateFlow<Boolean> = _showOfflinePages.asStateFlow()
 
     private var activeWebView: WebView? = null
@@ -353,6 +355,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun setSearchEngine(url: String) = settingsManager.setSearchEngine(url)
     fun getSearchEngine(): String = settingsManager.searchEngine.value
     fun setCookieMode(mode: String) = settingsManager.setCookieMode(mode)
+    fun setWallpaper(wallpaper: String) = settingsManager.setWallpaper(wallpaper)
 
     fun addQuickLink(link: QuickLink) = settingsManager.addQuickLink(link)
     fun removeQuickLink(id: String) = settingsManager.removeQuickLink(id)
@@ -618,6 +621,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun togglePrivacyReport() { _showPrivacyReport.value = !_showPrivacyReport.value }
     fun toggleTrafficStats() { _showTrafficStats.value = !_showTrafficStats.value }
     fun toggleUserScripts() { _showUserScripts.value = !_showUserScripts.value }
+    fun toggleWallpaperPicker() { _showWallpaperPicker.value = !_showWallpaperPicker.value }
     fun toggleOfflinePages() { _showOfflinePages.value = !_showOfflinePages.value }
 
     fun hideOverlays() {
@@ -629,7 +633,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         _showCustomCss.value = false; _showBookmarkFolders.value = false
         _showDevTools.value = false; _showPasswordSheet.value = false; _showProxySheet.value = false
         _showPrivacyReport.value = false; _showTrafficStats.value = false; _showUserScripts.value = false
-        _showOfflinePages.value = false
+        _showWallpaperPicker.value = false; _showOfflinePages.value = false
     }
 
     override fun onCleared() {

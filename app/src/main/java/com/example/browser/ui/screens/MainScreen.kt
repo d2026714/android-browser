@@ -37,6 +37,7 @@ fun MainScreen(viewModel: BrowserViewModel) {
     val pageError by viewModel.pageError.collectAsState()
     val longPressUrl by viewModel.longPressUrl.collectAsState()
     val showBookmarkFolders by viewModel.showBookmarkFolders.collectAsState()
+    val showWallpaperPicker by viewModel.showWallpaperPicker.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -101,4 +102,5 @@ fun MainScreen(viewModel: BrowserViewModel) {
     if (isReadingMode) ReadingModeScreen(viewModel = viewModel, onDismiss = { viewModel.toggleReadingMode() })
     if (showViewSource) ViewSourceScreen(viewModel = viewModel, onDismiss = { viewModel.closeViewSource() })
     if (showBookmarkFolders) BookmarkFoldersSheet(viewModel = viewModel, onDismiss = { viewModel.toggleBookmarkFolders() })
+    if (showWallpaperPicker) WallpaperPickerSheet(viewModel = viewModel, onDismiss = { viewModel.toggleWallpaperPicker() })
 }
