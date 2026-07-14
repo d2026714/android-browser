@@ -278,7 +278,6 @@
     <string name="new_tab_group">新建标签页分组</string>
     <string name="group_name">分组名称</string>
     <string name="create">创建</string>
-    <string name="cancel">取消</string>
 
     <!-- QuickLinksEditorSheet -->
     <string name="add">添加</string>
