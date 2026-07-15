@@ -27,11 +27,7 @@ import com.example.browser.manager.TabManager
 import com.example.browser.gecko.GeckoBrowserEngine
 import com.example.browser.adblock.AdBlockEngine
 import com.example.browser.adblock.AdBlockStats
-import com.example.browser.privacy.PrivacyReport
-import com.example.browser.traffic.TrafficStats
 import com.example.browser.offline.OfflinePageManager
-import com.example.browser.userscript.UserScriptManager
-import com.example.browser.password.PasswordManager
 import com.example.browser.download.BrowserDownloadManager
 import com.example.browser.player.MediaPlaybackManager
 import com.example.browser.translator.TranslationManager
@@ -107,7 +103,6 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     val isAmoledDark = settingsManager.isAmoledDark
     val isAdBlockEnabled = settingsManager.isAdBlockEnabled
     val isSearchSuggestions = settingsManager.isSearchSuggestions
-    val isDohEnabled = settingsManager.isDohEnabled
     val cookieMode = settingsManager.cookieMode
     val wallpaper = settingsManager.wallpaper
 
@@ -143,8 +138,6 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     val isFindInPage: StateFlow<Boolean> = _isFindInPage.asStateFlow()
     private val _isReadingMode = MutableStateFlow(false)
     val isReadingMode: StateFlow<Boolean> = _isReadingMode.asStateFlow()
-    private val _pageSource = MutableStateFlow<String?>(null)
-    val pageSource: StateFlow<String?> = _pageSource.asStateFlow()
     private val _isBlueLightFilter = MutableStateFlow(false)
     val isBlueLightFilter: StateFlow<Boolean> = _isBlueLightFilter.asStateFlow()
     private val _blueLightIntensity = MutableStateFlow(0.4f)
@@ -153,12 +146,6 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     val isJavaScriptEnabled: StateFlow<Boolean> = _isJavaScriptEnabled.asStateFlow()
     private val _isDataSaver = MutableStateFlow(false)
     val isDataSaver: StateFlow<Boolean> = _isDataSaver.asStateFlow()
-    private val _customCss = MutableStateFlow("")
-    val customCss: StateFlow<String> = _customCss.asStateFlow()
-    private val _isCustomCssEnabled = MutableStateFlow(false)
-    val isCustomCssEnabled: StateFlow<Boolean> = _isCustomCssEnabled.asStateFlow()
-    private val _userAgent = MutableStateFlow<String?>(null)
-    val userAgent: StateFlow<String?> = _userAgent.asStateFlow()
     private val _pageProgress = MutableStateFlow(0)
     val pageProgress: StateFlow<Int> = _pageProgress.asStateFlow()
 
@@ -189,23 +176,11 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val _showSettings = MutableStateFlow(false); val showSettings: StateFlow<Boolean> = _showSettings.asStateFlow()
     private val _showSearchEngineSheet = MutableStateFlow(false); val showSearchEngineSheet: StateFlow<Boolean> = _showSearchEngineSheet.asStateFlow()
     private val _showDownloads = MutableStateFlow(false); val showDownloads: StateFlow<Boolean> = _showDownloads.asStateFlow()
-    private val _showViewSource = MutableStateFlow(false); val showViewSource: StateFlow<Boolean> = _showViewSource.asStateFlow()
-    private val _showReadingList = MutableStateFlow(false); val showReadingList: StateFlow<Boolean> = _showReadingList.asStateFlow()
-    private val _showTabGroups = MutableStateFlow(false); val showTabGroups: StateFlow<Boolean> = _showTabGroups.asStateFlow()
     private val _showQuickLinksEditor = MutableStateFlow(false); val showQuickLinksEditor: StateFlow<Boolean> = _showQuickLinksEditor.asStateFlow()
-    private val _showQrCode = MutableStateFlow(false); val showQrCode: StateFlow<Boolean> = _showQrCode.asStateFlow()
     private val _showPageInfo = MutableStateFlow(false); val showPageInfo: StateFlow<Boolean> = _showPageInfo.asStateFlow()
     private val _showBackupRestore = MutableStateFlow(false); val showBackupRestore: StateFlow<Boolean> = _showBackupRestore.asStateFlow()
-    private val _showUserAgent = MutableStateFlow(false); val showUserAgent: StateFlow<Boolean> = _showUserAgent.asStateFlow()
     private val _showZoomControl = MutableStateFlow(false); val showZoomControl: StateFlow<Boolean> = _showZoomControl.asStateFlow()
-    private val _showCustomCss = MutableStateFlow(false); val showCustomCss: StateFlow<Boolean> = _showCustomCss.asStateFlow()
     private val _showBookmarkFolders = MutableStateFlow(false); val showBookmarkFolders: StateFlow<Boolean> = _showBookmarkFolders.asStateFlow()
-    private val _showDevTools = MutableStateFlow(false); val showDevTools: StateFlow<Boolean> = _showDevTools.asStateFlow()
-    private val _showPasswordSheet = MutableStateFlow(false); val showPasswordSheet: StateFlow<Boolean> = _showPasswordSheet.asStateFlow()
-    private val _showProxySheet = MutableStateFlow(false); val showProxySheet: StateFlow<Boolean> = _showProxySheet.asStateFlow()
-    private val _showPrivacyReport = MutableStateFlow(false); val showPrivacyReport: StateFlow<Boolean> = _showPrivacyReport.asStateFlow()
-    private val _showTrafficStats = MutableStateFlow(false); val showTrafficStats: StateFlow<Boolean> = _showTrafficStats.asStateFlow()
-    private val _showUserScripts = MutableStateFlow(false); val showUserScripts: StateFlow<Boolean> = _showUserScripts.asStateFlow()
     private val _showWallpaperPicker = MutableStateFlow(false); val showWallpaperPicker: StateFlow<Boolean> = _showWallpaperPicker.asStateFlow()
     private val _showOfflinePages = MutableStateFlow(false); val showOfflinePages: StateFlow<Boolean> = _showOfflinePages.asStateFlow()
     private val _showNoteEditor = MutableStateFlow(false); val showNoteEditor: StateFlow<Boolean> = _showNoteEditor.asStateFlow()
@@ -329,9 +304,6 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         }
 
         if (_isDesktopMode.value) applyDesktopMode()
-        if (_isCustomCssEnabled.value && _customCss.value.isNotBlank()) {
-            injectCustomCss(_customCss.value)
-        }
     }
 
     fun onPageError(errorCode: Int, description: String, url: String?) {
@@ -444,14 +416,6 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun removeFromReadingList(url: String) = bookmarkManager.removeFromReadingList(url)
-    fun markReadingItemRead(url: String) = bookmarkManager.markReadingItemRead(url)
-
-    fun addTabGroup(name: String) {
-        val tabIds = tabManager.tabs.value.filter { it.url != "about:blank" }.map { it.id }
-        bookmarkManager.addTabGroup(name, tabIds)
-    }
-
-    fun removeTabGroup(id: String) = bookmarkManager.removeTabGroup(id)
 
     fun addBookmarkFolder(name: String) = bookmarkManager.addBookmarkFolder(name)
     fun removeBookmarkFolder(id: String) = bookmarkManager.removeBookmarkFolder(id)
@@ -462,7 +426,6 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun toggleAmoledDark() = settingsManager.toggleAmoledDark()
     fun toggleAdBlock() = settingsManager.toggleAdBlock()
     fun toggleSearchSuggestions() = settingsManager.toggleSearchSuggestions()
-    fun toggleDoh() = settingsManager.toggleDoh()
     fun setSearchEngine(url: String) = settingsManager.setSearchEngine(url)
     fun getSearchEngine(): String = settingsManager.searchEngine.value
     fun setCookieMode(mode: String) = settingsManager.setCookieMode(mode)
@@ -514,11 +477,10 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
             }
         } else {
             activeWebView?.let { wv ->
-                val ua = _userAgent.value
                 wv.settings.userAgentString = if (_isDesktopMode.value) {
-                    ua ?: DESKTOP_UA
+                    DESKTOP_UA
                 } else {
-                    ua
+                    null
                 }
                 wv.reload()
             }
@@ -619,34 +581,6 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
 
     fun enterFullScreen(view: View) {}
     fun exitFullScreen() {}
-
-    // --- View page source ---
-
-    fun viewPageSource() {
-        if (useGeckoView) {
-            activeGeckoSessionId?.let { tabId ->
-                geckoEngine.evaluateJavaScript(tabId,
-                    "(function(){return document.documentElement.outerHTML;})()"
-                ) { html ->
-                    _pageSource.value = html?.removeSurrounding("\"")
-                        ?.replace("\\n", "\n")
-                        ?.replace("\\\"", "\"")
-                        ?.replace("\\t", "\t")
-                    _showViewSource.value = true
-                }
-            }
-        } else {
-            activeWebView?.evaluateJavascript("(function(){return document.documentElement.outerHTML;})()") { html ->
-                _pageSource.value = html?.removeSurrounding("\"")
-                    ?.replace("\\n", "\n")
-                    ?.replace("\\\"", "\"")
-                    ?.replace("\\t", "\t")
-                _showViewSource.value = true
-            }
-        }
-    }
-
-    fun closeViewSource() { _showViewSource.value = false; _pageSource.value = null }
 
     // --- Screenshot ---
 
@@ -787,29 +721,10 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    // --- User agent ---
-
-    fun setUserAgent(ua: String?) {
-        _userAgent.value = ua
-        if (useGeckoView) {
-            // GeckoView: set via session settings and reload
-            activeGeckoSessionId?.let { tabId ->
-                val session = geckoEngine.getSession(tabId)
-                session?.settings?.userAgentOverride = ua
-                geckoEngine.reload(tabId)
-            }
-        } else {
-            activeWebView?.settings?.userAgentString = ua
-            activeWebView?.reload()
-        }
-    }
-
     // --- Zoom ---
 
     fun setZoomLevel(level: Int) {
         if (useGeckoView) {
-            // GeckoView uses zoom scale, not text zoom
-            // We'll evaluate JS to set zoom via CSS transform
             activeGeckoSessionId?.let { tabId ->
                 val scale = level / 100.0
                 geckoEngine.evaluateJavaScript(tabId,
@@ -818,46 +733,6 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
             }
         } else {
             activeWebView?.settings?.textZoom = level
-        }
-    }
-
-    // --- Custom CSS ---
-
-    fun getCustomCss(): String = _customCss.value
-    fun isCustomCssEnabled(): Boolean = _isCustomCssEnabled.value
-
-    fun setCustomCss(css: String) {
-        _customCss.value = css
-        if (_isCustomCssEnabled.value) activeWebView?.reload()
-    }
-
-    fun toggleCustomCss() {
-        _isCustomCssEnabled.value = !_isCustomCssEnabled.value
-        activeWebView?.reload()
-    }
-
-    private fun injectCustomCss(css: String) {
-        val escaped = css.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n")
-        val script = "(function(){var s=document.createElement('style');s.textContent='$escaped';document.head.appendChild(s);})()"
-        if (useGeckoView) {
-            activeGeckoSessionId?.let { geckoEngine.evaluateJavaScript(it, script) }
-        } else {
-            activeWebView?.evaluateJavascript(script, null)
-        }
-    }
-
-    // --- Print ---
-
-    fun printPage() {
-        activeWebView?.let { wv ->
-            try {
-                val printManager = getApplication<Application>().getSystemService(Context.PRINT_SERVICE) as android.print.PrintManager
-                val printAdapter = wv.createPrintDocumentAdapter("Browser Page")
-                printManager.print("Browser Page", printAdapter, android.print.PrintAttributes.Builder().build())
-                Log.d(TAG, "Print initiated")
-            } catch (e: Exception) {
-                Log.e(TAG, "Print failed", e)
-            }
         }
     }
 
@@ -892,22 +767,11 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun toggleSettings() { _showSettings.value = !_showSettings.value }
     fun toggleSearchEngineSheet() { _showSearchEngineSheet.value = !_showSearchEngineSheet.value }
     fun toggleDownloads() { _showDownloads.value = !_showDownloads.value }
-    fun toggleReadingList() { _showReadingList.value = !_showReadingList.value }
-    fun toggleTabGroups() { _showTabGroups.value = !_showTabGroups.value }
     fun toggleQuickLinksEditor() { _showQuickLinksEditor.value = !_showQuickLinksEditor.value }
-    fun toggleQrCode() { _showQrCode.value = !_showQrCode.value }
     fun togglePageInfo() { _showPageInfo.value = !_showPageInfo.value }
     fun toggleBackupRestore() { _showBackupRestore.value = !_showBackupRestore.value }
-    fun toggleUserAgent() { _showUserAgent.value = !_showUserAgent.value }
     fun toggleZoomControl() { _showZoomControl.value = !_showZoomControl.value }
-    fun toggleCustomCssSheet() { _showCustomCss.value = !_showCustomCss.value }
     fun toggleBookmarkFolders() { _showBookmarkFolders.value = !_showBookmarkFolders.value }
-    fun toggleDevTools() { _showDevTools.value = !_showDevTools.value }
-    fun togglePasswordSheet() { _showPasswordSheet.value = !_showPasswordSheet.value }
-    fun toggleProxySheet() { _showProxySheet.value = !_showProxySheet.value }
-    fun togglePrivacyReport() { _showPrivacyReport.value = !_showPrivacyReport.value }
-    fun toggleTrafficStats() { _showTrafficStats.value = !_showTrafficStats.value }
-    fun toggleUserScripts() { _showUserScripts.value = !_showUserScripts.value }
     fun toggleWallpaperPicker() { _showWallpaperPicker.value = !_showWallpaperPicker.value }
     fun toggleOfflinePages() { _showOfflinePages.value = !_showOfflinePages.value }
     fun toggleNoteEditor() { _showNoteEditor.value = !_showNoteEditor.value }
@@ -982,12 +846,9 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun hideOverlays() {
         _showBookmarks.value = false; _showHistory.value = false; _showTabs.value = false
         _showSettings.value = false; _showSearchEngineSheet.value = false; _showDownloads.value = false
-        _showViewSource.value = false; _showReadingList.value = false; _showTabGroups.value = false
-        _showQuickLinksEditor.value = false; _showQrCode.value = false; _showPageInfo.value = false
-        _showBackupRestore.value = false; _showUserAgent.value = false; _showZoomControl.value = false
-        _showCustomCss.value = false; _showBookmarkFolders.value = false
-        _showDevTools.value = false; _showPasswordSheet.value = false; _showProxySheet.value = false
-        _showPrivacyReport.value = false; _showTrafficStats.value = false; _showUserScripts.value = false
+        _showQuickLinksEditor.value = false; _showPageInfo.value = false
+        _showBackupRestore.value = false; _showZoomControl.value = false
+        _showBookmarkFolders.value = false
         _showWallpaperPicker.value = false; _showOfflinePages.value = false
         _showNoteEditor.value = false; _showNotesList.value = false
         _showTranslateScreen.value = false; _showTranslationSettings.value = false

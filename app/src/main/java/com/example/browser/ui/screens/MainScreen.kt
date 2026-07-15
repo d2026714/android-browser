@@ -3,15 +3,33 @@ package com.example.browser.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.example.browser.ui.components.*
 import com.example.browser.gecko.GeckoBrowserView
 import com.example.browser.player.PlayerScreen
 import com.example.browser.ui.viewmodel.BrowserViewModel
+
+@Composable
+fun BlueLightFilterOverlay(
+    intensity: Float,
+    enabled: Boolean
+) {
+    if (enabled && intensity > 0f) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFFF8C00).copy(alpha = intensity * 0.3f))
+                .zIndex(0.5f)
+        )
+    }
+}
 
 @Composable
 fun MainScreen(viewModel: BrowserViewModel) {
@@ -24,16 +42,10 @@ fun MainScreen(viewModel: BrowserViewModel) {
     val isReadingMode by viewModel.isReadingMode.collectAsState()
     val showSearchEngineSheet by viewModel.showSearchEngineSheet.collectAsState()
     val showDownloads by viewModel.showDownloads.collectAsState()
-    val showViewSource by viewModel.showViewSource.collectAsState()
-    val showReadingList by viewModel.showReadingList.collectAsState()
-    val showTabGroups by viewModel.showTabGroups.collectAsState()
     val showQuickLinksEditor by viewModel.showQuickLinksEditor.collectAsState()
-    val showQrCode by viewModel.showQrCode.collectAsState()
     val showPageInfo by viewModel.showPageInfo.collectAsState()
     val showBackupRestore by viewModel.showBackupRestore.collectAsState()
-    val showUserAgent by viewModel.showUserAgent.collectAsState()
     val showZoomControl by viewModel.showZoomControl.collectAsState()
-    val showCustomCss by viewModel.showCustomCss.collectAsState()
     val isBlueLightFilter by viewModel.isBlueLightFilter.collectAsState()
     val blueLightIntensity by viewModel.blueLightIntensity.collectAsState()
     val pageError by viewModel.pageError.collectAsState()
@@ -117,17 +129,11 @@ fun MainScreen(viewModel: BrowserViewModel) {
         onDismiss = { viewModel.toggleDownloads() },
         downloadManager = viewModel.downloadManager
     )
-    if (showReadingList) ReadingListSheet(viewModel = viewModel, onDismiss = { viewModel.toggleReadingList() })
-    if (showTabGroups) TabGroupsSheet(viewModel = viewModel, onDismiss = { viewModel.toggleTabGroups() })
     if (showQuickLinksEditor) QuickLinksEditorSheet(viewModel = viewModel, onDismiss = { viewModel.toggleQuickLinksEditor() })
-    if (showQrCode) QrCodeSheet(viewModel = viewModel, onDismiss = { viewModel.toggleQrCode() })
     if (showPageInfo) PageInfoSheet(viewModel = viewModel, onDismiss = { viewModel.togglePageInfo() })
     if (showBackupRestore) BackupRestoreSheet(viewModel = viewModel, onDismiss = { viewModel.toggleBackupRestore() })
-    if (showUserAgent) UserAgentSheet(viewModel = viewModel, onDismiss = { viewModel.toggleUserAgent() })
     if (showZoomControl) ZoomControlSheet(viewModel = viewModel, onDismiss = { viewModel.toggleZoomControl() })
-    if (showCustomCss) CustomCssSheet(viewModel = viewModel, onDismiss = { viewModel.toggleCustomCssSheet() })
     if (isReadingMode) ReadingModeScreen(viewModel = viewModel, onDismiss = { viewModel.toggleReadingMode() })
-    if (showViewSource) ViewSourceScreen(viewModel = viewModel, onDismiss = { viewModel.closeViewSource() })
     if (showBookmarkFolders) BookmarkFoldersSheet(viewModel = viewModel, onDismiss = { viewModel.toggleBookmarkFolders() })
     if (showWallpaperPicker) WallpaperPickerSheet(viewModel = viewModel, onDismiss = { viewModel.toggleWallpaperPicker() })
     if (showTranslateScreen) TranslateScreen(viewModel = viewModel, onDismiss = { viewModel.toggleTranslateScreen() })
