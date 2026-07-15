@@ -20,3 +20,4 @@ debug-apk.zip
 *.apk
 AndroidBrowser-v2.1.0-debug.zip
 *.zip
+.git-token
