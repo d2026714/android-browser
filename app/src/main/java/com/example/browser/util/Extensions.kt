@@ -1,31 +1,16 @@
 package com.example.browser.util
 
-import android.content.Context
-import android.widget.Toast
+import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-fun Context.toast(message: String) {
-    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-}
+fun Long.toFormattedDate(): String =
+    SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(this))
 
-fun Long.toFormattedDate(): String {
-    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-    return sdf.format(Date(this))
-}
-
-fun String.isValidUrl(): Boolean {
-    return this.startsWith("http://") || this.startsWith("https://")
-}
-
-fun String.toSearchUrl(engine: String = "https://www.google.com/search?q="): String {
-    return if (this.isValidUrl()) {
-        this
-    } else {
-        "$engine${java.net.URLEncoder.encode(this, "UTF-8")}"
-    }
-}
+fun String.toSearchUrl(engine: String): String =
+    if (startsWith("http://") || startsWith("https://")) this
+    else "$engine${URLEncoder.encode(this, "UTF-8")}"
 
 enum class SearchEngine(val displayName: String, val baseUrl: String) {
     GOOGLE("Google", "https://www.google.com/search?q="),

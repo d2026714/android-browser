@@ -2,11 +2,7 @@ package com.example.browser.web
 
 import android.graphics.Bitmap
 import android.net.http.SslError
-import android.webkit.SslErrorHandler
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
 
 class BrowserWebViewClient(
     private val onPageStarted: ((String?) -> Unit)? = null,
@@ -15,13 +11,8 @@ class BrowserWebViewClient(
     private var adBlockEnabled: Boolean = true,
 ) : WebViewClient() {
 
-    fun setAdBlockEnabled(enabled: Boolean) {
-        adBlockEnabled = enabled
-    }
-
     override fun shouldInterceptRequest(
-        view: WebView?,
-        request: WebResourceRequest?,
+        view: WebView?, request: WebResourceRequest?,
     ): WebResourceResponse? {
         val url = request?.url?.toString() ?: return null
         if (adBlockEnabled && AdBlocker.isAd(url)) {
@@ -41,19 +32,17 @@ class BrowserWebViewClient(
     }
 
     override fun onReceivedError(
-        view: WebView?,
-        request: WebResourceRequest?,
-        error: android.webkit.WebResourceError?,
+        view: WebView?, request: WebResourceRequest?, error: WebResourceError?,
     ) {
         super.onReceivedError(view, request, error)
         if (request?.isForMainFrame == true) {
-            val description = error?.description?.toString() ?: "未知错误"
-            onReceivedError?.invoke(description)
+            onReceivedError?.invoke(error?.description?.toString() ?: "未知错误")
         }
     }
 
     override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: SslError?) {
-        // Cancel SSL errors by default for safety
         handler?.cancel()
     }
+
+    fun setAdBlockEnabled(enabled: Boolean) { adBlockEnabled = enabled }
 }

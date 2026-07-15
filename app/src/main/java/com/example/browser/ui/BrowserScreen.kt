@@ -9,142 +9,65 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.browser.ui.components.BottomTabBar
-import com.example.browser.ui.components.ErrorPage
-import com.example.browser.ui.components.FindInPageBar
-import com.example.browser.ui.components.TopNavBar
-import com.example.browser.ui.components.WebViewContent
+import com.example.browser.ui.components.*
 import com.example.browser.web.DownloadHandler
 
 @Composable
 fun BrowserScreen(
-    viewModel: BrowserViewModel,
-    onNavigateToBookmarks: () -> Unit,
-    onNavigateToHistory: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onNavigateToBookshelf: () -> Unit,
-    onNavigateToReader: () -> Unit,
+    vm: BrowserViewModel,
+    onBookmarks: () -> Unit, onHistory: () -> Unit, onSettings: () -> Unit,
+    onBookshelf: () -> Unit, onReader: () -> Unit,
 ) {
-    val tabs by viewModel.tabs.collectAsState()
-    val activeTabIndex by viewModel.activeTabIndex.collectAsState()
-    val showHome by viewModel.showHome.collectAsState()
-    val showFindBar by viewModel.showFindBar.collectAsState()
-    val adBlockEnabled by viewModel.adBlockEnabled.collectAsState()
-    val fontSize by viewModel.fontSize.collectAsState()
-    val isExtracting by viewModel.isExtracting.collectAsState()
-    val context = LocalContext.current
+    val tabs by vm.tabs.collectAsState()
+    val idx by vm.activeIndex.collectAsState()
+    val home by vm.showHome.collectAsState()
+    val findBar by vm.showFindBar.collectAsState()
+    val adBlock by vm.adBlock.collectAsState()
+    val fs by vm.fontSize.collectAsState()
+    val extracting by vm.isExtracting.collectAsState()
+    val ctx = LocalContext.current
+    val dl = remember { DownloadHandler(ctx) }
 
-    // Download handler
-    val downloadHandler = remember { DownloadHandler(context) }
-
-    if (showHome) {
-        HomeScreen(
-            viewModel = viewModel,
-            onNavigateToBookmarks = onNavigateToBookmarks,
-            onNavigateToHistory = onNavigateToHistory,
-            onNavigateToSettings = onNavigateToSettings,
-            onNavigateToBookshelf = onNavigateToBookshelf,
-        )
+    if (home) {
+        HomeScreen(vm, onBookmarks, onHistory, onSettings, onBookshelf)
     } else {
-        val activeTab = tabs.getOrNull(activeTabIndex)
-
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Top navigation bar
+        val tab = tabs.getOrNull(idx)
+        Column(Modifier.fillMaxSize()) {
             TopNavBar(
-                url = activeTab?.url ?: "",
-                isLoading = activeTab?.isLoading ?: false,
-                progress = activeTab?.progress ?: 0,
-                canGoBack = activeTab?.canGoBack ?: false,
-                canGoForward = activeTab?.canGoForward ?: false,
-                onBack = { viewModel.goBack() },
-                onForward = { viewModel.goForward() },
-                onReload = { viewModel.reload() },
-                onStop = { viewModel.stopLoading() },
+                url = tab?.url ?: "", isLoading = tab?.isLoading ?: false, progress = tab?.progress ?: 0,
+                canGoBack = tab?.canGoBack ?: false, canGoForward = tab?.canGoForward ?: false,
+                onBack = { vm.goBack() }, onForward = { vm.goForward() },
+                onReload = { vm.reload() }, onStop = { vm.stopLoading() },
                 onShare = {
-                    val url = activeTab?.url ?: return@TopNavBar
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        putExtra(Intent.EXTRA_TEXT, url)
-                        type = "text/plain"
-                    }
-                    context.startActivity(Intent.createChooser(intent, "分享页面"))
-                },
-                onBookmark = { viewModel.toggleBookmark() },
-                onFind = { viewModel.showFind() },
-                onMenu = { onNavigateToSettings() },
-            )
+                    val u = tab?.url ?: return@TopNavBar
+                    ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply { putExtra(Intent.EXTRA_TEXT, u); type = "text/plain" }, "分享"))
+                }, onBookmark = { vm.toggleBookmark() }, onFind = { vm.showFind() }, onMenu = { onSettings() })
 
-            // WebView content or error page
-            Box(modifier = Modifier.weight(1f)) {
-                if (activeTab?.hasError == true) {
-                    ErrorPage(
-                        errorMessage = "无法加载页面",
-                        onRetry = { viewModel.reload() },
-                    )
-                } else {
-                    WebViewContent(
-                        tabs = tabs,
-                        activeTabIndex = activeTabIndex,
-                        viewModel = viewModel,
-                        adBlockEnabled = adBlockEnabled,
-                        fontSize = fontSize,
-                        downloadHandler = downloadHandler,
-                        onError = { _, _ -> },
-                    )
+            Box(Modifier.weight(1f)) {
+                if (tab?.hasError == true) ErrorPage("无法加载页面") { vm.reload() }
+                else WebViewContent(
+                    url = tab?.url ?: "", isLoading = tab?.isLoading ?: false,
+                    adBlockEnabled = adBlock, fontSize = fs, downloadHandler = dl,
+                    onPageStarted = { vm.updateTab(idx, isLoading = true, url = it, hasError = false) },
+                    onPageFinished = { vm.updateTab(idx, isLoading = false, title = it ?: "") },
+                    onProgressChanged = { vm.updateTab(idx, progress = it) },
+                    onError = { vm.updateTab(idx, hasError = true, isLoading = false) },
+                    onWebViewCreated = { vm.setWebView(idx, it) })
+            }
+
+            FindInPageBar(findBar, { vm.findAll(it) }, { vm.findNext() }, { vm.findPrev() }, { vm.clearFind(); vm.hideFind() })
+
+            if (tab?.url?.isNotEmpty() == true) {
+                SmallFloatingActionButton(onClick = { vm.extractContent(); onReader() },
+                    Modifier.padding(8.dp), containerColor = MaterialTheme.colorScheme.secondaryContainer) {
+                    if (extracting) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                    else Icon(Icons.Default.AutoStories, "阅读模式", Modifier.size(20.dp))
                 }
             }
 
-            // Find in page bar
-            FindInPageBar(
-                visible = showFindBar,
-                onSearch = { query -> viewModel.findAll(query) },
-                onNext = { viewModel.findNext() },
-                onPrevious = { viewModel.findPrevious() },
-                onClose = {
-                    viewModel.clearFindMatches()
-                    viewModel.hideFind()
-                },
-            )
-
-            // Bottom bar with reader mode button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                // Reader mode FAB
-                if (!showHome && activeTab?.url?.isNotEmpty() == true) {
-                    SmallFloatingActionButton(
-                        onClick = {
-                            viewModel.extractReaderContent()
-                            onNavigateToReader()
-                        },
-                        modifier = Modifier.padding(8.dp),
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    ) {
-                        if (isExtracting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                            )
-                        } else {
-                            Icon(
-                                Icons.Default.AutoStories,
-                                contentDescription = "阅读模式",
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Bottom tab bar
-            BottomTabBar(
-                tabs = tabs,
-                activeTabIndex = activeTabIndex,
-                onTabClick = { viewModel.switchTab(it) },
-                onAddTab = { viewModel.addTab() },
-                onCloseTab = { viewModel.closeTab(it) },
-                onHome = { viewModel.goHome() },
-            )
+            BottomTabBar(tabs.map { TabInfo(it.title, it.url) }, idx,
+                onTabClick = { vm.switchTab(it) }, onAddTab = { vm.addTab() },
+                onCloseTab = { vm.closeTab(it) }, onHome = { vm.goHome() })
         }
     }
 }

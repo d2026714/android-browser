@@ -27,290 +27,107 @@ import androidx.compose.ui.unit.sp
 import com.example.browser.util.SearchEngine
 import com.example.browser.util.toSearchUrl
 
-data class QuickLink(
-    val name: String,
-    val url: String,
-    val color: Color,
-    val initial: String,
-)
-
-val defaultQuickLinks = listOf(
-    QuickLink("百度", "https://www.baidu.com", Color(0xFF2932E1), "百"),
-    QuickLink("微博", "https://weibo.com", Color(0xFFE6162D), "微"),
-    QuickLink("知乎", "https://www.zhihu.com", Color(0xFF0066FF), "知"),
-    QuickLink("B站", "https://www.bilibili.com", Color(0xFFFB7299), "B"),
-    QuickLink("起点", "https://www.qidian.com", Color(0xFFE4393C), "起"),
-    QuickLink("番茄", "https://fanqienovel.com", Color(0xFFFF6B6B), "番"),
-    QuickLink("GitHub", "https://github.com", Color(0xFF24292E), "G"),
-    QuickLink("Google", "https://www.google.com", Color(0xFF4285F4), "G"),
+private data class QL(val name: String, val url: String, val color: Color, val ch: String)
+private val links = listOf(
+    QL("百度", "https://www.baidu.com", Color(0xFF2932E1), "百"),
+    QL("微博", "https://weibo.com", Color(0xFFE6162D), "微"),
+    QL("知乎", "https://www.zhihu.com", Color(0xFF0066FF), "知"),
+    QL("B站", "https://www.bilibili.com", Color(0xFFFB7299), "B"),
+    QL("起点", "https://www.qidian.com", Color(0xFFE4393C), "起"),
+    QL("番茄", "https://fanqienovel.com", Color(0xFFFF6B6B), "番"),
+    QL("GitHub", "https://github.com", Color(0xFF24292E), "G"),
+    QL("Google", "https://www.google.com", Color(0xFF4285F4), "G"),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: BrowserViewModel,
-    onNavigateToBookmarks: () -> Unit,
-    onNavigateToHistory: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onNavigateToBookshelf: () -> Unit,
+    vm: BrowserViewModel,
+    onBookmarks: () -> Unit, onHistory: () -> Unit, onSettings: () -> Unit, onBookshelf: () -> Unit,
 ) {
-    val searchEngine by viewModel.searchEngine.collectAsState()
-    val suggestions by viewModel.suggestions.collectAsState()
-    var searchText by remember { mutableStateOf("") }
-    var showSuggestions by remember { mutableStateOf(false) }
+    val engine by vm.searchEngine.collectAsState()
+    val suggs by vm.suggestions.collectAsState()
+    var text by remember { mutableStateOf("") }
+    var showSugg by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Spacer(modifier = Modifier.height(80.dp))
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally) {
 
-        // App title
-        Text(
-            text = "浏览器",
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.Light,
-            ),
-            color = MaterialTheme.colorScheme.primary,
-        )
+        Spacer(Modifier.height(80.dp))
+        Text("浏览器", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Light),
+            color = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(32.dp))
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Search bar with suggestions
+        // Search bar
         Column {
-            Surface(
-                shape = RoundedCornerShape(28.dp),
-                tonalElevation = 2.dp,
-                shadowElevation = 4.dp,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                OutlinedTextField(
-                    value = searchText,
-                    onValueChange = {
-                        searchText = it
-                        if (it.isNotBlank()) {
-                            viewModel.updateSuggestions(it)
-                            showSuggestions = true
-                        } else {
-                            showSuggestions = false
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("搜索或输入网址") },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchText.isNotEmpty()) {
-                            IconButton(onClick = {
-                                searchText = ""
-                                showSuggestions = false
-                                viewModel.clearSuggestions()
-                            }) {
-                                Icon(Icons.Default.Close, contentDescription = "清除")
-                            }
-                        }
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(28.dp),
+            Surface(RoundedCornerShape(28.dp), tonalElevation = 2.dp, shadowElevation = 4.dp, modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(text, {
+                    text = it
+                    if (it.isNotBlank()) { vm.updateSuggestions(it); showSugg = true } else showSugg = false
+                }, Modifier.fillMaxWidth(), placeholder = { Text("搜索或输入网址") },
+                    leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    trailingIcon = { if (text.isNotEmpty()) IconButton(onClick = { text = ""; showSugg = false; vm.clearSuggestions() }) { Icon(Icons.Default.Close, "清除") } },
+                    singleLine = true, shape = RoundedCornerShape(28.dp),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-                    keyboardActions = KeyboardActions(
-                        onGo = {
-                            if (searchText.isNotBlank()) {
-                                viewModel.loadUrl(searchText.toSearchUrl(searchEngine.baseUrl))
-                                showSuggestions = false
-                            }
-                        },
-                    ),
-                )
+                    keyboardActions = KeyboardActions(onGo = { if (text.isNotBlank()) { vm.loadUrl(text.toSearchUrl(engine.baseUrl)); showSugg = false } }))
             }
-
-            // Suggestions dropdown
-            if (showSuggestions && suggestions.isNotEmpty()) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    tonalElevation = 4.dp,
-                    shadowElevation = 8.dp,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    LazyColumn(
-                        modifier = Modifier.heightIn(max = 200.dp),
-                    ) {
-                        items(suggestions.take(6)) { suggestion ->
-                            ListItem(
-                                headlineContent = {
-                                    Text(suggestion, style = MaterialTheme.typography.bodyMedium)
-                                },
-                                leadingContent = {
-                                    Icon(
-                                        Icons.Default.Search,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                },
-                                modifier = Modifier.clickable {
-                                    searchText = suggestion
-                                    viewModel.loadUrl(suggestion.toSearchUrl(searchEngine.baseUrl))
-                                    showSuggestions = false
-                                },
-                            )
+            if (showSugg && suggs.isNotEmpty()) {
+                Surface(RoundedCornerShape(12.dp), tonalElevation = 4.dp, shadowElevation = 8.dp, modifier = Modifier.fillMaxWidth()) {
+                    LazyColumn(Modifier.heightIn(max = 200.dp)) {
+                        items(suggs.take(6)) { s ->
+                            ListItem(headlineContent = { Text(s) }, leadingContent = {
+                                Icon(Icons.Default.Search, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }, modifier = Modifier.clickable { text = s; vm.loadUrl(s.toSearchUrl(engine.baseUrl)); showSugg = false })
                         }
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Search engine chips
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            SearchEngine.entries.forEach { engine ->
-                val isSelected = searchEngine == engine
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { viewModel.setSearchEngine(engine) },
-                    label = { Text(engine.displayName, fontSize = 11.sp) },
-                    modifier = Modifier.padding(horizontal = 3.dp),
-                )
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            SearchEngine.entries.forEach { e ->
+                FilterChip(engine == e, { vm.setEngine(e) }, label = { Text(e.displayName, fontSize = 11.sp) },
+                    modifier = Modifier.padding(horizontal = 3.dp))
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(Modifier.height(32.dp))
+        Text("快捷访问", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
 
-        // Quick links
-        Text(
-            text = "快捷访问",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp),
-        )
-
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(4),
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            items(defaultQuickLinks) { link ->
-                QuickLinkItem(link = link) {
-                    viewModel.loadUrl(link.url)
+        LazyVerticalGrid(GridCells.Fixed(4), Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            items(links) { l ->
+                Column(horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { vm.loadUrl(l.url) }.padding(4.dp)) {
+                    Box(Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(l.color), contentAlignment = Alignment.Center) {
+                        Text(l.ch, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(l.name, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 1)
                 }
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Bottom shortcuts
-        Surface(
-            tonalElevation = 1.dp,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                BottomShortcut(
-                    icon = Icons.Default.Bookmark,
-                    label = "书签",
-                    onClick = onNavigateToBookmarks,
-                )
-                BottomShortcut(
-                    icon = Icons.Default.History,
-                    label = "历史",
-                    onClick = onNavigateToHistory,
-                )
-                BottomShortcut(
-                    icon = Icons.Default.MenuBook,
-                    label = "书架",
-                    onClick = onNavigateToBookshelf,
-                )
-                BottomShortcut(
-                    icon = Icons.Default.Settings,
-                    label = "设置",
-                    onClick = onNavigateToSettings,
-                )
+        Spacer(Modifier.weight(1f))
+        Surface(tonalElevation = 1.dp, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                listOf(Icons.Default.Bookmark to "书签" to onBookmarks,
+                    Icons.Default.History to "历史" to onHistory,
+                    Icons.Default.MenuBook to "书架" to onBookshelf,
+                    Icons.Default.Settings to "设置" to onSettings,
+                ).forEach { (pair, action) ->
+                    val (icon, label) = pair
+                    Column(horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClick = action).padding(horizontal = 16.dp, vertical = 10.dp)) {
+                        Icon(icon, label, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.onSurface)
+                        Spacer(Modifier.height(4.dp))
+                        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-    }
-}
-
-@Composable
-private fun QuickLinkItem(link: QuickLink, onClick: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(4.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(link.color),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = link.initial,
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-            )
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = link.name,
-            style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-    }
-}
-
-@Composable
-private fun BottomShortcut(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    onClick: () -> Unit,
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-    ) {
-        Icon(
-            icon,
-            contentDescription = label,
-            modifier = Modifier.size(22.dp),
-            tint = MaterialTheme.colorScheme.onSurface,
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Spacer(Modifier.height(16.dp))
     }
 }

@@ -9,102 +9,56 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.browser.ui.TabState
-import com.example.browser.ui.BrowserViewModel
 import com.example.browser.web.BrowserWebViewClient
 import com.example.browser.web.DownloadHandler
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun WebViewContent(
-    tabs: List<TabState>,
-    activeTabIndex: Int,
-    viewModel: BrowserViewModel,
+    url: String,
+    isLoading: Boolean,
     adBlockEnabled: Boolean,
     fontSize: Int,
     downloadHandler: DownloadHandler,
-    onError: (Int, String) -> Unit,
-) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        tabs.forEachIndexed { index, tab ->
-            if (index == activeTabIndex) {
-                WebViewContainer(
-                    tab = tab,
-                    index = index,
-                    viewModel = viewModel,
-                    adBlockEnabled = adBlockEnabled,
-                    fontSize = fontSize,
-                    downloadHandler = downloadHandler,
-                    onError = { desc -> onError(index, desc) },
-                )
-            }
-        }
-    }
-}
-
-@SuppressLint("SetJavaScriptEnabled")
-@Composable
-private fun WebViewContainer(
-    tab: TabState,
-    index: Int,
-    viewModel: BrowserViewModel,
-    adBlockEnabled: Boolean,
-    fontSize: Int,
-    downloadHandler: DownloadHandler,
+    onPageStarted: (String?) -> Unit,
+    onPageFinished: (String?) -> Unit,
+    onProgressChanged: (Int) -> Unit,
     onError: (String) -> Unit,
+    onWebViewCreated: (WebView) -> Unit,
 ) {
-    AndroidView(
-        factory = { ctx ->
-            WebView(ctx).apply {
-                settings.apply {
-                    javaScriptEnabled = true
-                    domStorageEnabled = true
-                    builtInZoomControls = true
-                    displayZoomControls = false
-                    loadWithOverviewMode = true
-                    useWideViewPort = true
-                    mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-                    textZoom = fontSize
-                    cacheMode = WebSettings.LOAD_DEFAULT
-                    databaseEnabled = true
-                    // Support file uploads
-                    allowFileAccess = true
-                    allowContentAccess = true
-                }
-
-                val client = BrowserWebViewClient(
-                    onPageStarted = { url ->
-                        viewModel.updateTabState(index, isLoading = true, url = url, hasError = false)
-                    },
-                    onPageFinished = { url ->
-                        viewModel.updateTabState(index, isLoading = false)
-                        val title = this.title ?: url ?: ""
-                        viewModel.updateTabState(index, title = title)
-                    },
-                    onReceivedError = { desc ->
-                        viewModel.updateTabState(index, hasError = true, isLoading = false)
-                        onError(desc)
-                    },
-                    adBlockEnabled = adBlockEnabled,
-                )
-                webViewClient = client
-
-                webChromeClient = object : WebChromeClient() {
-                    override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                        viewModel.updateTabState(index, progress = newProgress)
+    Box(Modifier.fillMaxSize()) {
+        AndroidView(
+            factory = { ctx ->
+                WebView(ctx).apply {
+                    settings.apply {
+                        javaScriptEnabled = true
+                        domStorageEnabled = true
+                        builtInZoomControls = true
+                        displayZoomControls = false
+                        loadWithOverviewMode = true
+                        useWideViewPort = true
+                        mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                        textZoom = fontSize
+                        cacheMode = WebSettings.LOAD_DEFAULT
+                        databaseEnabled = true
                     }
+                    webViewClient = BrowserWebViewClient(
+                        onPageStarted = onPageStarted,
+                        onPageFinished = onPageFinished,
+                        onReceivedError = onError,
+                        adBlockEnabled = adBlockEnabled,
+                    )
+                    webChromeClient = object : WebChromeClient() {
+                        override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                            onProgressChanged(newProgress)
+                        }
+                    }
+                    downloadHandler.attachTo(this)
+                    onWebViewCreated(this)
+                    if (url.isNotEmpty()) loadUrl(url)
                 }
-
-                // Register download handler
-                downloadHandler.registerDownloadListener(this)
-
-                viewModel.setWebView(index, this)
-
-                if (tab.url.isNotEmpty()) {
-                    loadUrl(tab.url)
-                }
-            }
-        },
-        modifier = Modifier.fillMaxSize(),
-    )
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
 }

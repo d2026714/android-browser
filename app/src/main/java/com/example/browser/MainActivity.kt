@@ -20,15 +20,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val viewModel: BrowserViewModel = viewModel()
-            val darkMode by viewModel.darkMode.collectAsState()
-
-            BrowserTheme(darkTheme = darkMode) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
-                ) {
-                    MainScreen(viewModel = viewModel)
+            val vm: BrowserViewModel = viewModel()
+            val dark by vm.darkMode.collectAsState()
+            BrowserTheme(darkTheme = dark) {
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                    MainScreen(vm)
                 }
             }
         }
