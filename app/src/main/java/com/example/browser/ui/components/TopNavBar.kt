@@ -3,8 +3,6 @@ package com.example.browser.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,13 +37,13 @@ fun TopNavBar(
         ) {
             IconButton(onClick = onBack, enabled = canGoBack) {
                 Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
+                    Icons.Default.ArrowBack,
                     contentDescription = "后退",
                 )
             }
             IconButton(onClick = onForward, enabled = canGoForward) {
                 Icon(
-                    Icons.AutoMirrored.Filled.ArrowForward,
+                    Icons.Default.ArrowForward,
                     contentDescription = "前进",
                 )
             }
@@ -92,7 +90,7 @@ fun TopNavBar(
         // Progress bar
         if (isLoading) {
             LinearProgressIndicator(
-                progress = { progress / 100f },
+                progress = progress / 100f,
                 modifier = Modifier.fillMaxWidth().height(2.dp),
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
