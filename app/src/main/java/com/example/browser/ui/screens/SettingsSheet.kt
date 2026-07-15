@@ -25,6 +25,8 @@ fun SettingsSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
     val isJavaScriptEnabled by viewModel.isJavaScriptEnabled.collectAsState()
     val isDataSaver by viewModel.isDataSaver.collectAsState()
     val cookieMode by viewModel.cookieMode.collectAsState()
+    val isFullScreen by viewModel.isFullScreen.collectAsState()
+    val textZoom by viewModel.textZoom.collectAsState()
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
@@ -40,6 +42,7 @@ fun SettingsSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
                 Slider(value = blueLightIntensity, onValueChange = { viewModel.setBlueLightIntensity(it) }, valueRange = 0.1f..0.8f, modifier = Modifier.padding(horizontal = 16.dp))
             }
             ListItem(headlineContent = { Text(stringResource(R.string.desktop_mode)) }, leadingContent = { Icon(if (isDesktopMode) Icons.Default.Computer else Icons.Default.PhoneAndroid, null) }, trailingContent = { Switch(checked = isDesktopMode, onCheckedChange = { viewModel.toggleDesktopMode() }) })
+            ListItem(headlineContent = { Text("Full screen") }, supportingContent = { Text("Hide status bar") }, leadingContent = { Icon(Icons.Default.Fullscreen, null) }, trailingContent = { Switch(checked = isFullScreen, onCheckedChange = { viewModel.toggleFullScreen() }) })
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -76,6 +79,14 @@ fun SettingsSheet(viewModel: BrowserViewModel, onDismiss: () -> Unit) {
             ListItem(headlineContent = { Text(stringResource(R.string.search_engine)) }, leadingContent = { Icon(Icons.Default.Search, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
             ListItem(headlineContent = { Text(stringResource(R.string.quick_links)) }, supportingContent = { Text(stringResource(R.string.edit_home_page_shortcuts)) }, leadingContent = { Icon(Icons.Default.GridView, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
             ListItem(headlineContent = { Text(stringResource(R.string.zoom_control)) }, leadingContent = { Icon(Icons.Default.ZoomIn, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
+            ListItem(headlineContent = { Text("Font size") }, supportingContent = { Text("Text zoom: $textZoom%") }, leadingContent = { Icon(Icons.Default.FormatSize, null) })
+            Slider(
+                value = textZoom.toFloat(),
+                onValueChange = { viewModel.setTextZoom(it.toInt()) },
+                valueRange = 50f..200f,
+                steps = 6,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
             ListItem(headlineContent = { Text(stringResource(R.string.backup_restore)) }, leadingContent = { Icon(Icons.Default.Backup, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) })
             ListItem(headlineContent = { Text(stringResource(R.string.offline_translation)) }, supportingContent = { Text(stringResource(R.string.download_language_models)) }, leadingContent = { Icon(Icons.Default.Translate, null) }, trailingContent = { Icon(Icons.Default.ChevronRight, null) }, modifier = Modifier.clickable { viewModel.toggleTranslationSettings() })
 

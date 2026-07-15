@@ -23,4 +23,13 @@ interface HistoryDao {
 
     @Query("SELECT COUNT(*) FROM history")
     suspend fun count(): Int
+
+    @Query("SELECT url, title, COUNT(*) as visitCount FROM history GROUP BY url ORDER BY visitCount DESC LIMIT :limit")
+    suspend fun getTopSites(limit: Int = 10): List<TopSite>
 }
+
+data class TopSite(
+    val url: String,
+    val title: String,
+    val visitCount: Int
+)

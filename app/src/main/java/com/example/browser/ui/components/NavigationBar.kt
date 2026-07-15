@@ -207,6 +207,8 @@ fun NavigationBar(
                     Divider(modifier = Modifier)
                     DropdownMenuItem(text = { Text(stringResource(R.string.screenshot)) }, onClick = { expanded = false; viewModel.takeScreenshot() }, leadingIcon = { Icon(Icons.Default.CameraAlt, null) })
                     DropdownMenuItem(text = { Text(stringResource(R.string.share)) }, onClick = { expanded = false; viewModel.shareCurrentPage() }, leadingIcon = { Icon(Icons.Default.Share, null) })
+                    DropdownMenuItem(text = { Text("Copy link") }, onClick = { expanded = false; viewModel.copyLink(viewModel.currentUrl.value) }, leadingIcon = { Icon(Icons.Default.ContentCopy, null) })
+                    DropdownMenuItem(text = { Text("Open in other app") }, onClick = { expanded = false; viewModel.openInOtherApps() }, leadingIcon = { Icon(Icons.Default.OpenInNew, null) })
                     Divider(modifier = Modifier)
                     DropdownMenuItem(text = { Text(stringResource(R.string.new_tab)) }, onClick = { expanded = false; viewModel.addTab() }, leadingIcon = { Icon(Icons.Default.Add, null) })
                     DropdownMenuItem(text = { Text(stringResource(R.string.new_incognito)) }, onClick = { expanded = false; viewModel.addTab(incognito = true) }, leadingIcon = { Icon(Icons.Default.VisibilityOff, null) })

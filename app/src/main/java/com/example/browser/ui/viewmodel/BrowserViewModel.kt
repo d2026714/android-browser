@@ -106,6 +106,18 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     val cookieMode = settingsManager.cookieMode
     val wallpaper = settingsManager.wallpaper
 
+    // --- Top sites (frequently visited) ---
+    private val _topSites = MutableStateFlow<List<com.example.browser.data.local.dao.TopSite>>(emptyList())
+    val topSites: StateFlow<List<com.example.browser.data.local.dao.TopSite>> = _topSites.asStateFlow()
+
+    // --- Text zoom ---
+    private val _textZoom = MutableStateFlow(100)
+    val textZoom: StateFlow<Int> = _textZoom.asStateFlow()
+
+    // --- Full-screen mode ---
+    private val _isFullScreen = MutableStateFlow(false)
+    val isFullScreen: StateFlow<Boolean> = _isFullScreen.asStateFlow()
+
     // --- URL bar state ---
     private val _currentUrl = MutableStateFlow("")
     val currentUrl: StateFlow<String> = _currentUrl.asStateFlow()
@@ -207,6 +219,15 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
                     flowOf(emptyList())
                 }
             }.collect { _notesForCurrentUrl.value = it }
+        }
+
+        // Load top sites
+        viewModelScope.launch {
+            try {
+                _topSites.value = bookmarkManager.getTopSites()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to load top sites", e)
+            }
         }
     }
 
@@ -733,6 +754,56 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
             }
         } else {
             activeWebView?.settings?.textZoom = level
+        }
+    }
+
+    // --- Text zoom (font size) ---
+
+    fun setTextZoom(zoom: Int) {
+        val clamped = zoom.coerceIn(50, 200)
+        _textZoom.value = clamped
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { tabId ->
+                val scale = clamped / 100.0
+                geckoEngine.evaluateJavaScript(tabId,
+                    "document.body.style.fontSize='${scale}em'"
+                )
+            }
+        } else {
+            activeWebView?.settings?.textZoom = clamped
+        }
+        settingsManager.setTextZoom(clamped)
+    }
+
+    // --- Full-screen mode ---
+
+    fun toggleFullScreen() {
+        _isFullScreen.value = !_isFullScreen.value
+    }
+
+    // --- Open in other apps ---
+
+    fun openInOtherApps() {
+        val url = _currentUrl.value
+        if (url.isBlank() || url == "about:blank") return
+        try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            getApplication<Application>().startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "No app to handle URL: $url", e)
+        }
+    }
+
+    // --- Refresh top sites ---
+
+    fun refreshTopSites() {
+        viewModelScope.launch {
+            try {
+                _topSites.value = bookmarkManager.getTopSites()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to refresh top sites", e)
+            }
         }
     }
 

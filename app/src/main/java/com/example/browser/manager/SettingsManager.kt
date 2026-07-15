@@ -33,6 +33,7 @@ class SettingsManager(
         const val KEY_DOH = "dns_over_https"
         const val KEY_COOKIE_MODE = "cookie_mode" // "all", "first_party", "none"
         const val KEY_WALLPAPER = "wallpaper"
+        const val KEY_TEXT_ZOOM = "text_zoom"
         const val DEFAULT_SEARCH_ENGINE = "https://www.google.com/search?q="
         const val WALLPAPER_NONE = "none"
         const val WALLPAPER_DEFAULT = "default"
@@ -74,6 +75,9 @@ class SettingsManager(
     private val _wallpaper = MutableStateFlow(WALLPAPER_NONE)
     val wallpaper: StateFlow<String> = _wallpaper.asStateFlow()
 
+    private val _textZoom = MutableStateFlow(100)
+    val textZoom: StateFlow<Int> = _textZoom.asStateFlow()
+
     init {
         // Load settings from DB
         scope.launch {
@@ -86,6 +90,7 @@ class SettingsManager(
                 _isDohEnabled.value = settingsDao.getValue(KEY_DOH)?.toBoolean() ?: false
                 _cookieMode.value = settingsDao.getValue(KEY_COOKIE_MODE) ?: "all"
                 _wallpaper.value = settingsDao.getValue(KEY_WALLPAPER) ?: WALLPAPER_NONE
+                _textZoom.value = settingsDao.getValue(KEY_TEXT_ZOOM)?.toIntOrNull() ?: 100
                 Log.d(TAG, "Settings loaded from DB")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load settings", e)
@@ -152,6 +157,17 @@ class SettingsManager(
                 Log.d(TAG, "Wallpaper set to: $wallpaper")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to set wallpaper", e)
+            }
+        }
+    }
+
+    fun setTextZoom(zoom: Int) {
+        _textZoom.value = zoom
+        scope.launch {
+            try {
+                settingsDao.setValue(SettingsEntity(KEY_TEXT_ZOOM, zoom.toString()))
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to set text zoom", e)
             }
         }
     }

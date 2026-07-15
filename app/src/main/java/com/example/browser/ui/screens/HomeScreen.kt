@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -63,6 +64,7 @@ fun HomeScreen(
     val wallpaperKey by viewModel.wallpaper.collectAsState()
     val wallpaperResId = getWallpaperResId(wallpaperKey)
     val hasWallpaper = wallpaperResId != null
+    val topSites by viewModel.topSites.collectAsState()
 
     val textColor = if (hasWallpaper) Color.White else MaterialTheme.colorScheme.onBackground
 
@@ -182,8 +184,72 @@ fun HomeScreen(
                         viewModel.navigateTo(link.url)
                     }
                 }
+
+                // Frequently visited sites
+                if (topSites.isNotEmpty()) {
+                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(4) }) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(4) }) {
+                        Text(
+                            text = "Frequently Visited",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = textColor.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                    }
+                    items(topSites.take(8)) { site ->
+                        TopSiteItem(
+                            title = site.title.take(12),
+                            url = site.url,
+                            hasWallpaper = hasWallpaper
+                        ) {
+                            viewModel.navigateTo(site.url)
+                        }
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+fun TopSiteItem(
+    title: String,
+    url: String,
+    hasWallpaper: Boolean = false,
+    onClick: () -> Unit
+) {
+    val initial = title.firstOrNull()?.uppercase() ?: "?"
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(
+                    if (hasWallpaper) Color.White.copy(alpha = 0.2f)
+                    else MaterialTheme.colorScheme.primaryContainer
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = initial,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (hasWallpaper) Color.White
+                        else MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (hasWallpaper) Color.White else MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
+            maxLines = 1
+        )
     }
 }
 

@@ -131,6 +131,15 @@ class BookmarkManager(
         }
     }
 
+    suspend fun getTopSites(limit: Int = 10): List<TopSite> {
+        return try {
+            historyDao.getTopSites(limit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get top sites", e)
+            emptyList()
+        }
+    }
+
     // --- History search ---
 
     fun searchHistory(query: String): Flow<List<HistoryItem>> {
