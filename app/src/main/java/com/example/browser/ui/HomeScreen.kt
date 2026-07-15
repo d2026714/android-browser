@@ -47,6 +47,7 @@ val defaultQuickLinks = listOf(
     QuickLink("Google", "https://www.google.com", Color(0xFF4285F4), "G"),
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: BrowserViewModel,
