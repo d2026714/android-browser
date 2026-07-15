@@ -35,6 +35,7 @@ data class ReaderSettings(
     val fontFamily: FontFamily = FontFamily.Serif,
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReaderScreen(
     title: String,
