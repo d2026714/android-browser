@@ -12,6 +12,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.example.browser.ui.TabState
 import com.example.browser.ui.BrowserViewModel
 import com.example.browser.web.BrowserWebViewClient
+import com.example.browser.web.DownloadHandler
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -21,6 +22,7 @@ fun WebViewContent(
     viewModel: BrowserViewModel,
     adBlockEnabled: Boolean,
     fontSize: Int,
+    downloadHandler: DownloadHandler,
     onError: (Int, String) -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -32,6 +34,7 @@ fun WebViewContent(
                     viewModel = viewModel,
                     adBlockEnabled = adBlockEnabled,
                     fontSize = fontSize,
+                    downloadHandler = downloadHandler,
                     onError = { desc -> onError(index, desc) },
                 )
             }
@@ -47,6 +50,7 @@ private fun WebViewContainer(
     viewModel: BrowserViewModel,
     adBlockEnabled: Boolean,
     fontSize: Int,
+    downloadHandler: DownloadHandler,
     onError: (String) -> Unit,
 ) {
     AndroidView(
@@ -61,9 +65,11 @@ private fun WebViewContainer(
                     useWideViewPort = true
                     mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
                     textZoom = fontSize
-                    // Performance
                     cacheMode = WebSettings.LOAD_DEFAULT
                     databaseEnabled = true
+                    // Support file uploads
+                    allowFileAccess = true
+                    allowContentAccess = true
                 }
 
                 val client = BrowserWebViewClient(
@@ -88,6 +94,9 @@ private fun WebViewContainer(
                         viewModel.updateTabState(index, progress = newProgress)
                     }
                 }
+
+                // Register download handler
+                downloadHandler.registerDownloadListener(this)
 
                 viewModel.setWebView(index, this)
 

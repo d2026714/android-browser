@@ -3,18 +3,16 @@ package com.example.browser.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,8 +39,8 @@ val defaultQuickLinks = listOf(
     QuickLink("微博", "https://weibo.com", Color(0xFFE6162D), "微"),
     QuickLink("知乎", "https://www.zhihu.com", Color(0xFF0066FF), "知"),
     QuickLink("B站", "https://www.bilibili.com", Color(0xFFFB7299), "B"),
-    QuickLink("淘宝", "https://www.taobao.com", Color(0xFFFF5000), "淘"),
-    QuickLink("抖音", "https://www.douyin.com", Color(0xFF000000), "抖"),
+    QuickLink("起点", "https://www.qidian.com", Color(0xFFE4393C), "起"),
+    QuickLink("番茄", "https://fanqienovel.com", Color(0xFFFF6B6B), "番"),
     QuickLink("GitHub", "https://github.com", Color(0xFF24292E), "G"),
     QuickLink("Google", "https://www.google.com", Color(0xFF4285F4), "G"),
 )
@@ -54,9 +52,12 @@ fun HomeScreen(
     onNavigateToBookmarks: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToBookshelf: () -> Unit,
 ) {
     val searchEngine by viewModel.searchEngine.collectAsState()
+    val suggestions by viewModel.suggestions.collectAsState()
     var searchText by remember { mutableStateOf("") }
+    var showSuggestions by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -78,36 +79,93 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Search bar
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            tonalElevation = 2.dp,
-            shadowElevation = 4.dp,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("搜索或输入网址") },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                },
-                singleLine = true,
+        // Search bar with suggestions
+        Column {
+            Surface(
                 shape = RoundedCornerShape(28.dp),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-                keyboardActions = KeyboardActions(
-                    onGo = {
-                        if (searchText.isNotBlank()) {
-                            viewModel.loadUrl(searchText.toSearchUrl(searchEngine.baseUrl))
+                tonalElevation = 2.dp,
+                shadowElevation = 4.dp,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                OutlinedTextField(
+                    value = searchText,
+                    onValueChange = {
+                        searchText = it
+                        if (it.isNotBlank()) {
+                            viewModel.updateSuggestions(it)
+                            showSuggestions = true
+                        } else {
+                            showSuggestions = false
                         }
                     },
-                ),
-            )
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("搜索或输入网址") },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchText.isNotEmpty()) {
+                            IconButton(onClick = {
+                                searchText = ""
+                                showSuggestions = false
+                                viewModel.clearSuggestions()
+                            }) {
+                                Icon(Icons.Default.Close, contentDescription = "清除")
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(28.dp),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                    keyboardActions = KeyboardActions(
+                        onGo = {
+                            if (searchText.isNotBlank()) {
+                                viewModel.loadUrl(searchText.toSearchUrl(searchEngine.baseUrl))
+                                showSuggestions = false
+                            }
+                        },
+                    ),
+                )
+            }
+
+            // Suggestions dropdown
+            if (showSuggestions && suggestions.isNotEmpty()) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    tonalElevation = 4.dp,
+                    shadowElevation = 8.dp,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 200.dp),
+                    ) {
+                        items(suggestions.take(6)) { suggestion ->
+                            ListItem(
+                                headlineContent = {
+                                    Text(suggestion, style = MaterialTheme.typography.bodyMedium)
+                                },
+                                leadingContent = {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                },
+                                modifier = Modifier.clickable {
+                                    searchText = suggestion
+                                    viewModel.loadUrl(suggestion.toSearchUrl(searchEngine.baseUrl))
+                                    showSuggestions = false
+                                },
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -125,9 +183,6 @@ fun HomeScreen(
                     onClick = { viewModel.setSearchEngine(engine) },
                     label = { Text(engine.displayName, fontSize = 11.sp) },
                     modifier = Modifier.padding(horizontal = 3.dp),
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    ),
                 )
             }
         }
@@ -180,6 +235,11 @@ fun HomeScreen(
                     icon = Icons.Default.History,
                     label = "历史",
                     onClick = onNavigateToHistory,
+                )
+                BottomShortcut(
+                    icon = Icons.Default.MenuBook,
+                    label = "书架",
+                    onClick = onNavigateToBookshelf,
                 )
                 BottomShortcut(
                     icon = Icons.Default.Settings,
@@ -238,7 +298,7 @@ private fun BottomShortcut(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
         Icon(
             icon,

@@ -2,6 +2,8 @@ package com.example.browser.ui
 
 import android.content.Intent
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -11,6 +13,7 @@ import com.example.browser.ui.components.ErrorPage
 import com.example.browser.ui.components.FindInPageBar
 import com.example.browser.ui.components.TopNavBar
 import com.example.browser.ui.components.WebViewContent
+import com.example.browser.web.DownloadHandler
 
 @Composable
 fun BrowserScreen(
@@ -18,6 +21,8 @@ fun BrowserScreen(
     onNavigateToBookmarks: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToBookshelf: () -> Unit,
+    onNavigateToReader: () -> Unit,
 ) {
     val tabs by viewModel.tabs.collectAsState()
     val activeTabIndex by viewModel.activeTabIndex.collectAsState()
@@ -25,7 +30,11 @@ fun BrowserScreen(
     val showFindBar by viewModel.showFindBar.collectAsState()
     val adBlockEnabled by viewModel.adBlockEnabled.collectAsState()
     val fontSize by viewModel.fontSize.collectAsState()
+    val isExtracting by viewModel.isExtracting.collectAsState()
     val context = LocalContext.current
+
+    // Download handler
+    val downloadHandler = remember { DownloadHandler(context) }
 
     if (showHome) {
         HomeScreen(
@@ -33,6 +42,7 @@ fun BrowserScreen(
             onNavigateToBookmarks = onNavigateToBookmarks,
             onNavigateToHistory = onNavigateToHistory,
             onNavigateToSettings = onNavigateToSettings,
+            onNavigateToBookshelf = onNavigateToBookshelf,
         )
     } else {
         val activeTab = tabs.getOrNull(activeTabIndex)
@@ -76,6 +86,7 @@ fun BrowserScreen(
                         viewModel = viewModel,
                         adBlockEnabled = adBlockEnabled,
                         fontSize = fontSize,
+                        downloadHandler = downloadHandler,
                         onError = { _, _ -> },
                     )
                 }
@@ -92,6 +103,37 @@ fun BrowserScreen(
                     viewModel.hideFind()
                 },
             )
+
+            // Bottom bar with reader mode button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                // Reader mode FAB
+                if (!showHome && activeTab?.url?.isNotEmpty() == true) {
+                    SmallFloatingActionButton(
+                        onClick = {
+                            viewModel.extractReaderContent()
+                            onNavigateToReader()
+                        },
+                        modifier = Modifier.padding(8.dp),
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    ) {
+                        if (isExtracting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.AutoStories,
+                                contentDescription = "阅读模式",
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    }
+                }
+            }
 
             // Bottom tab bar
             BottomTabBar(

@@ -8,6 +8,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.browser.data.AppDatabase
 import com.example.browser.data.entity.BookmarkEntity
 import com.example.browser.data.entity.HistoryEntity
+import com.example.browser.data.entity.TabEntity
+import com.example.browser.data.repository.TabRepository
+import com.example.browser.reader.TextExtractor
 import com.example.browser.util.SearchEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -32,6 +35,7 @@ data class TabState(
 class BrowserViewModel(application: Application) : AndroidViewModel(application) {
     private val db = AppDatabase.getInstance(application)
     private val prefs = application.getSharedPreferences("browser_prefs", Context.MODE_PRIVATE)
+    private val tabRepo = TabRepository(db.tabDao())
 
     // ── Tabs ──
     private val _tabs = MutableStateFlow<List<TabState>>(emptyList())
@@ -46,6 +50,21 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
 
     private val _showFindBar = MutableStateFlow(false)
     val showFindBar: StateFlow<Boolean> = _showFindBar.asStateFlow()
+
+    // ── Search Suggestions ──
+    private val _suggestions = MutableStateFlow<List<String>>(emptyList())
+    val suggestions: StateFlow<List<String>> = _suggestions.asStateFlow()
+
+    // ── Reader ──
+    private val _readerContent = MutableStateFlow<TextExtractor.ExtractedContent?>(null)
+    val readerContent: StateFlow<TextExtractor.ExtractedContent?> = _readerContent.asStateFlow()
+
+    private val _isExtracting = MutableStateFlow(false)
+    val isExtracting: StateFlow<Boolean> = _isExtracting.asStateFlow()
+
+    // ── Bookshelf ──
+    private val _bookshelf = MutableStateFlow<List<com.example.browser.reader.BookItem>>(emptyList())
+    val bookshelf: StateFlow<List<com.example.browser.reader.BookItem>> = _bookshelf.asStateFlow()
 
     // ── Settings ──
     private val _adBlockEnabled = MutableStateFlow(prefs.getBoolean("ad_block", true))
@@ -71,6 +90,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         addTab()
+        loadBookshelf()
     }
 
     // ═══════════════════════════════════════
@@ -86,6 +106,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         _tabs.value = _tabs.value + newTab
         _activeTabIndex.value = _tabs.value.size - 1
         _showHome.value = url.isEmpty()
+        saveTabs()
     }
 
     fun closeTab(index: Int) {
@@ -94,6 +115,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
             _showHome.value = true
             currentTabs[0] = currentTabs[0].copy(title = "新标签页", url = "", hasError = false)
             _tabs.value = currentTabs
+            saveTabs()
             return
         }
         currentTabs.removeAt(index)
@@ -101,6 +123,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         if (_activeTabIndex.value >= currentTabs.size) {
             _activeTabIndex.value = currentTabs.size - 1
         }
+        saveTabs()
     }
 
     fun switchTab(index: Int) {
@@ -146,6 +169,21 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         return _tabs.value.getOrNull(_activeTabIndex.value)?.webView
     }
 
+    private fun saveTabs() {
+        viewModelScope.launch {
+            val entities = _tabs.value.mapIndexed { index, tab ->
+                TabEntity(
+                    id = tab.id,
+                    title = tab.title,
+                    url = tab.url,
+                    position = index,
+                    isActive = index == _activeTabIndex.value,
+                )
+            }
+            tabRepo.saveTabs(entities)
+        }
+    }
+
     // ═══════════════════════════════════════
     //  Navigation
     // ═══════════════════════════════════════
@@ -179,6 +217,89 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun findNext() { getActiveWebView()?.findNext(true) }
     fun findPrevious() { getActiveWebView()?.findNext(false) }
     fun clearFindMatches() { getActiveWebView()?.clearMatches() }
+
+    // ═══════════════════════════════════════
+    //  Search Suggestions
+    // ═══════════════════════════════════════
+
+    fun updateSuggestions(query: String) {
+        viewModelScope.launch {
+            _suggestions.value = com.example.browser.web.SearchSuggestions.fetch(query)
+        }
+    }
+
+    fun clearSuggestions() {
+        _suggestions.value = emptyList()
+    }
+
+    // ═══════════════════════════════════════
+    //  Reader Mode
+    // ═══════════════════════════════════════
+
+    fun extractReaderContent() {
+        val webView = getActiveWebView() ?: return
+        _isExtracting.value = true
+        viewModelScope.launch {
+            try {
+                val content = TextExtractor.extract(webView)
+                _readerContent.value = content
+                // Auto-add to bookshelf
+                if (content.text.length > 100) {
+                    addToBookshelf(
+                        com.example.browser.reader.BookItem(
+                            title = content.title,
+                            url = webView.url ?: "",
+                            lastReadChapter = content.chapters.firstOrNull()?.title ?: "",
+                        )
+                    )
+                }
+            } catch (_: Exception) {
+                _readerContent.value = TextExtractor.ExtractedContent("", "提取失败", emptyList())
+            } finally {
+                _isExtracting.value = false
+            }
+        }
+    }
+
+    fun clearReaderContent() {
+        _readerContent.value = null
+    }
+
+    // ═══════════════════════════════════════
+    //  Bookshelf
+    // ═══════════════════════════════════════
+
+    private fun loadBookshelf() {
+        val saved = prefs.getStringSet("bookshelf", emptySet()) ?: emptySet()
+        _bookshelf.value = saved.mapNotNull { str ->
+            val parts = str.split("|||")
+            if (parts.size >= 2) {
+                com.example.browser.reader.BookItem(
+                    title = parts[0],
+                    url = parts[1],
+                    lastReadChapter = parts.getOrElse(2) { "" },
+                )
+            } else null
+        }
+    }
+
+    private fun saveBookshelf() {
+        val set = _bookshelf.value.map { "${it.title}|||${it.url}|||${it.lastReadChapter}" }.toSet()
+        prefs.edit().putStringSet("bookshelf", set).apply()
+    }
+
+    fun addToBookshelf(book: com.example.browser.reader.BookItem) {
+        val current = _bookshelf.value.toMutableList()
+        current.removeAll { it.url == book.url }
+        current.add(0, book)
+        _bookshelf.value = current
+        saveBookshelf()
+    }
+
+    fun removeFromBookshelf(book: com.example.browser.reader.BookItem) {
+        _bookshelf.value = _bookshelf.value.filter { it.url != book.url }
+        saveBookshelf()
+    }
 
     // ═══════════════════════════════════════
     //  Bookmarks
