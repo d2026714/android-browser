@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.example.browser.ui.components.*
 import com.example.browser.gecko.GeckoBrowserView
+import com.example.browser.ui.components.BrowserWebView
 import com.example.browser.novel.ui.NovelBookshelfScreen
 import com.example.browser.novel.ui.NovelCatalogScreen
 import com.example.browser.novel.ui.NovelDetectionPrompt
@@ -98,7 +99,11 @@ fun MainScreen(viewModel: BrowserViewModel) {
                     onNovelBookshelfClick = { viewModel.openNovelBookshelf() }
                 )
                 } else {
-                    GeckoBrowserView(viewModel = viewModel, modifier = Modifier.fillMaxSize())
+                    if (viewModel.isUsingGeckoView()) {
+                        GeckoBrowserView(viewModel = viewModel, modifier = Modifier.fillMaxSize())
+                    } else {
+                        BrowserWebView(viewModel = viewModel, modifier = Modifier.fillMaxSize())
+                    }
                     if (pageError != null) {
                         ErrorPage(viewModel = viewModel)
                     }

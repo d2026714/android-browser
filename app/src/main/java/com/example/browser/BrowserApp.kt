@@ -11,7 +11,7 @@ class BrowserApp : Application() {
         // Initialize GeckoView engine early
         try {
             GeckoBrowserEngine.getInstance(this).initialize()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             // GeckoView initialization failed; app can fall back to WebView
             android.util.Log.e("BrowserApp", "GeckoView init failed", e)
         }

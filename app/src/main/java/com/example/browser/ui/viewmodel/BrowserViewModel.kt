@@ -232,7 +232,12 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     init {
         // Initialize GeckoView engine
         if (useGeckoView) {
-            geckoEngine.initialize()
+            try {
+                geckoEngine.initialize()
+            } catch (e: Throwable) {
+                Log.e(TAG, "GeckoView init failed, falling back to WebView", e)
+                useGeckoView = false
+            }
         }
 
         // Collect notes
