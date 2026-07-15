@@ -234,7 +234,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun setFontSize(size: Int) {
         _fontSize.value = size
         prefs.edit().putInt("font_size", size).apply()
-        getActiveWebView()?.settings?.textSize = size
+        getActiveWebView()?.settings?.textZoom = size
     }
 
     fun clearAllData() {

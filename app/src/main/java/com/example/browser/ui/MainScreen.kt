@@ -15,8 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -150,10 +150,10 @@ private fun TopNavBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack, enabled = canGoBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "后退")
+                Icon(Icons.Default.ArrowBack, contentDescription = "后退")
             }
             IconButton(onClick = onForward, enabled = canGoForward) {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "前进")
+                Icon(Icons.Default.ArrowForward, contentDescription = "前进")
             }
             IconButton(onClick = if (isLoading) onReload else onReload) {
                 Icon(
@@ -191,7 +191,7 @@ private fun TopNavBar(
         // Progress bar
         if (isLoading) {
             LinearProgressIndicator(
-                progress = { progress / 100f },
+                progress = progress / 100f,
                 modifier = Modifier.fillMaxWidth().height(2.dp),
             )
         }
@@ -243,7 +243,7 @@ private fun WebViewContainer(
                     loadWithOverviewMode = true
                     useWideViewPort = true
                     mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-                    textSize = fontSize
+                    textZoom = fontSize
                 }
 
                 val client = BrowserWebViewClient(
