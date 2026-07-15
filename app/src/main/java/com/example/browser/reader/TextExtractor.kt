@@ -47,14 +47,26 @@ object TextExtractor {
         parse(json, wv.title ?: "")
     }
 
+    private val noisePatterns = listOf(
+        "本章说", "同人创作", "评论区", "书友圈", "上起点App", "上起点", "查看全部",
+        "推荐阅读", "猜你喜欢", "相关推荐", "热门推荐", "最新章节",
+        "广告", "加入书架", "投推荐票", "月票", "打赏", "催更",
+    )
+
     private fun parse(json: String, fallback: String): ExtractedContent = try {
         val clean = json.removeSurrounding("\"").replace("\\\"", "\"").replace("\\n", "\n")
         val obj = JSONObject(clean)
         val title = obj.optString("title", fallback)
         val text = obj.optString("text", "")
         val arr = obj.optJSONArray("chapters")
-        val ch = if (arr != null) (0 until arr.length()).map {
-            val o = arr.getJSONObject(it); Chapter(o.getString("title"), o.getString("content"))
+        val ch = if (arr != null) {
+            (0 until arr.length()).map {
+                val o = arr.getJSONObject(it); Chapter(o.getString("title"), o.getString("content"))
+            }.filter { c ->
+                // Filter out noise content
+                val lower = c.content.lowercase()
+                noisePatterns.none { noise -> lower.contains(noise.lowercase()) }
+            }.distinctBy { it.title } // Dedup by title
         } else emptyList()
         ExtractedContent(title, text, ch)
     } catch (_: Exception) { ExtractedContent(fallback, "", emptyList()) }

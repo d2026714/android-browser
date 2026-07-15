@@ -23,9 +23,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/** Process text for comfortable reading:首行缩进 + 段落间距 */
+private fun String.processForReading(): String {
+    return lines().joinToString("\n") { line ->
+        val trimmed = line.trim()
+        if (trimmed.isEmpty()) ""
+        else "\u00A0\u00A0\u00A0\u00A0$trimmed" // 4 non-breaking spaces for indent
+    }.replace("\n\n\n+".toRegex(), "\n\n") // Normalize multiple blank lines
+}
+
 data class ReaderSettings(
-    val fontSize: Int = 18,
-    val lineSpacing: Float = 1.8f,
+    val fontSize: Int = 20,
+    val lineSpacing: Float = 2.0f,
     val bgColor: Color = Color(0xFFF5F0E8),
     val textColor: Color = Color(0xFF2C2C2C),
 )
@@ -44,7 +53,8 @@ fun ReaderScreen(
     var showChapters by remember { mutableStateOf(false) }
     var chapterIdx by remember { mutableIntStateOf(0) }
 
-    val text = if (chapters.isNotEmpty()) chapters.getOrNull(chapterIdx)?.content ?: fullText else fullText
+    val rawText = if (chapters.isNotEmpty()) chapters.getOrNull(chapterIdx)?.content ?: fullText else fullText
+    val text = rawText.processForReading()
     val chTitle = if (chapters.isNotEmpty()) chapters.getOrNull(chapterIdx)?.title ?: title else title
 
     Box(Modifier.fillMaxSize().background(settings.bgColor)) {
@@ -78,7 +88,8 @@ fun ReaderScreen(
                     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp)) {
                         Text(text, fontSize = settings.fontSize.sp,
                             lineHeight = (settings.fontSize * settings.lineSpacing).sp,
-                            color = settings.textColor, fontFamily = FontFamily.Serif)
+                            color = settings.textColor, fontFamily = FontFamily.Serif,
+                            letterSpacing = 0.5.sp)
                     }
                 }
                 if (chapters.isNotEmpty()) {
@@ -137,9 +148,19 @@ private fun SettingsPanel(s: ReaderSettings, onChange: (ReaderSettings) -> Unit,
 private fun ChapterDialog(chs: List<TextExtractor.Chapter>, cur: Int, onSelect: (Int) -> Unit, onDismiss: () -> Unit) {
     AlertDialog(onDismissRequest = onDismiss, title = { Text("目录 (${chs.size}章)") },
         text = { LazyColumn(Modifier.heightIn(max = 400.dp)) {
-            items(chs.size) { i -> ListItem(headlineContent = {
-                Text(chs[i].title, color = if (i == cur) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                    fontWeight = if (i == cur) FontWeight.Bold else FontWeight.Normal)
-            }, modifier = Modifier.clickable { onSelect(i); onDismiss() }) }
+            items(chs.size) { i ->
+                val active = i == cur
+                Surface(
+                    color = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp)
+                ) {
+                    ListItem(headlineContent = {
+                        Text(chs[i].title,
+                            color = if (active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
+                    }, modifier = Modifier.clickable { onSelect(i); onDismiss() })
+                }
+            }
         } }, confirmButton = { TextButton(onClick = onDismiss) { Text("关闭") } })
 }
