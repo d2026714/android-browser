@@ -60,7 +60,7 @@ fun HomeScreen(
 
         // Search bar
         Column {
-            Surface(RoundedCornerShape(28.dp), tonalElevation = 2.dp, shadowElevation = 4.dp, modifier = Modifier.fillMaxWidth()) {
+            Surface(shape = RoundedCornerShape(28.dp), tonalElevation = 2.dp, shadowElevation = 4.dp, modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(text, {
                     text = it
                     if (it.isNotBlank()) { vm.updateSuggestions(it); showSugg = true } else showSugg = false
@@ -72,7 +72,7 @@ fun HomeScreen(
                     keyboardActions = KeyboardActions(onGo = { if (text.isNotBlank()) { vm.loadUrl(text.toSearchUrl(engine.baseUrl)); showSugg = false } }))
             }
             if (showSugg && suggs.isNotEmpty()) {
-                Surface(RoundedCornerShape(12.dp), tonalElevation = 4.dp, shadowElevation = 8.dp, modifier = Modifier.fillMaxWidth()) {
+                Surface(shape = RoundedCornerShape(12.dp), tonalElevation = 4.dp, shadowElevation = 8.dp, modifier = Modifier.fillMaxWidth()) {
                     LazyColumn(Modifier.heightIn(max = 200.dp)) {
                         items(suggs.take(6)) { s ->
                             ListItem(headlineContent = { Text(s) }, leadingContent = {
