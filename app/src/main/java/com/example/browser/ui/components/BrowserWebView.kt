@@ -203,6 +203,25 @@ private fun configureWebView(
                 view?.canGoBack() ?: false,
                 view?.canGoForward() ?: false
             )
+            // Novel detection
+            view?.evaluateJavascript(
+                com.example.browser.novel.ChapterParser.EXTRACT_CHAPTERS_JS
+            ) { json ->
+                if (!json.isNullOrBlank() && json != "null" && json != "\"\"") {
+                    val cleaned = json.removeSurrounding("\"").replace("\\\"", "\"").replace("\\n", "\n")
+                    val parsed = com.example.browser.novel.ChapterParser.parseChapterList(cleaned)
+                    if (parsed.chapters.size >= 5) {
+                        val detection = com.example.browser.novel.NovelDetector.DetectionResult(
+                            isNovelSite = true,
+                            confidence = 0.8f,
+                            title = parsed.title,
+                            author = parsed.author,
+                            chapterCount = parsed.chapters.size
+                        )
+                        viewModel.onNovelDetected(detection, parsed)
+                    }
+                }
+            }
         }
 
         override fun onReceivedError(

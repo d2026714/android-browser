@@ -58,6 +58,7 @@ private fun getWallpaperResId(key: String): Int? = when (key) {
 @Composable
 fun HomeScreen(
     viewModel: BrowserViewModel,
+    onNovelBookshelfClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var searchText by remember { mutableStateOf("") }
@@ -176,6 +177,41 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Novel Bookshelf shortcut
+                item {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.clickable(onClick = onNovelBookshelfClick)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (hasWallpaper) Color.White.copy(alpha = 0.2f)
+                                    else MaterialTheme.colorScheme.primaryContainer
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LibraryBooks,
+                                contentDescription = stringResource(R.string.novel_bookshelf),
+                                tint = if (hasWallpaper) Color.White
+                                       else MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.bookshelf),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (hasWallpaper) Color.White else MaterialTheme.colorScheme.onBackground,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1
+                        )
+                    }
+                }
+
                 items(defaultQuickLinks) { link ->
                     QuickLinkItem(
                         link = link,

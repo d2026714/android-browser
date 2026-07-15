@@ -369,4 +369,30 @@
     <string name="pause_playback">Pause</string>
     <string name="play_playback">Play</string>
     <string name="volume">Volume</string>
+
+    <!-- NovelBookshelf -->
+    <string name="novel_bookshelf">Novel Bookshelf</string>
+    <string name="novel_catalog">Catalog</string>
+    <string name="no_novels_yet">No novels yet</string>
+    <string name="no_novels_hint">Visit a novel site and tap "Add to Bookshelf" to get started</string>
+    <string name="add_to_bookshelf">Add to Bookshelf</string>
+    <string name="added_to_bookshelf">Added to bookshelf!</string>
+    <string name="already_on_bookshelf">Already on bookshelf</string>
+    <string name="remove_novel">Remove Novel</string>
+    <string name="remove_novel_confirm">Remove "%s" from bookshelf?</string>
+    <string name="chapters_count">%d chapters</string>
+    <string name="catalog_subtitle">%1$d chapters · %2$d cached</string>
+    <string name="download_all_chapters">Download All Chapters</string>
+    <string name="no_chapters_loaded">No chapters loaded</string>
+    <string name="cached">Cached</string>
+    <string name="not_cached">Not cached</string>
+    <string name="chapter_not_found">Chapter not found</string>
+    <string name="chapter_content_empty">Chapter content is empty. Try downloading the chapter first.</string>
+    <string name="prev_chapter">Previous</string>
+    <string name="next_chapter">Next</string>
+    <string name="novel_detected">Novel site detected</string>
+    <string name="novel_detected_hint">This page appears to be a novel. Add to bookshelf?</string>
+    <string name="bookshelf">Bookshelf</string>
+    <string name="caching_chapters">Caching chapters…</string>
+    <string name="cache_complete">Cache complete</string>
 </resources>

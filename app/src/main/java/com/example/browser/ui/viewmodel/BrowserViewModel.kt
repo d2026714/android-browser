@@ -31,6 +31,13 @@ import com.example.browser.offline.OfflinePageManager
 import com.example.browser.download.BrowserDownloadManager
 import com.example.browser.player.MediaPlaybackManager
 import com.example.browser.translator.TranslationManager
+import com.example.browser.novel.NovelBookshelf
+import com.example.browser.novel.ChapterCache
+import com.example.browser.novel.ChapterParser
+import com.example.browser.novel.NovelDetector
+import com.example.browser.data.local.entity.ChapterEntity
+import com.example.browser.data.local.entity.NovelEntity
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -82,6 +89,14 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private var activeGeckoSessionId: String? = null
     private var useGeckoView = true  // Toggle between GeckoView and WebView
 
+    // --- Novel state ---
+    val novelList = novelBookshelf.novelsByLastRead
+    private val _currentNovel = MutableStateFlow<NovelEntity?>(null)
+    val currentNovel: StateFlow<NovelEntity?> = _currentNovel.asStateFlow()
+    private val _novelDetectionResult = MutableStateFlow<NovelDetector.DetectionResult?>(null)
+    val novelDetectionResult: StateFlow<NovelDetector.DetectionResult?> = _novelDetectionResult.asStateFlow()
+    private var currentNovelId: Long = -1
+
     private val _allNotes = MutableStateFlow<List<NoteEntity>>(emptyList())
     val allNotes: StateFlow<List<NoteEntity>> = _allNotes.asStateFlow()
     private val _notesForCurrentUrl = MutableStateFlow<List<NoteEntity>>(emptyList())
@@ -89,6 +104,17 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
 
     // --- Download Manager ---
     val downloadManager = BrowserDownloadManager.getInstance(application)
+
+    // --- Novel Bookshelf ---
+    val novelBookshelf = NovelBookshelf(
+        novelDao = db.novelDao(),
+        chapterDao = db.chapterDao(),
+        scope = viewModelScope
+    )
+    val chapterCache = ChapterCache(
+        chapterDao = db.chapterDao(),
+        scope = viewModelScope
+    )
 
     // --- Delegated flows ---
     val tabs = tabManager.tabs
@@ -197,6 +223,9 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val _showOfflinePages = MutableStateFlow(false); val showOfflinePages: StateFlow<Boolean> = _showOfflinePages.asStateFlow()
     private val _showNoteEditor = MutableStateFlow(false); val showNoteEditor: StateFlow<Boolean> = _showNoteEditor.asStateFlow()
     private val _showNotesList = MutableStateFlow(false); val showNotesList: StateFlow<Boolean> = _showNotesList.asStateFlow()
+    private val _showNovelBookshelf = MutableStateFlow(false); val showNovelBookshelf: StateFlow<Boolean> = _showNovelBookshelf.asStateFlow()
+    private val _showNovelReader = MutableStateFlow(false); val showNovelReader: StateFlow<Boolean> = _showNovelReader.asStateFlow()
+    private val _showNovelCatalog = MutableStateFlow(false); val showNovelCatalog: StateFlow<Boolean> = _showNovelCatalog.asStateFlow()
 
     private var activeWebView: WebView? = null
 
@@ -847,6 +876,9 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun toggleOfflinePages() { _showOfflinePages.value = !_showOfflinePages.value }
     fun toggleNoteEditor() { _showNoteEditor.value = !_showNoteEditor.value }
     fun toggleNotesList() { _showNotesList.value = !_showNotesList.value }
+    fun toggleNovelBookshelf() { _showNovelBookshelf.value = !_showNovelBookshelf.value }
+    fun toggleNovelReader() { _showNovelReader.value = !_showNovelReader.value }
+    fun toggleNovelCatalog() { _showNovelCatalog.value = !_showNovelCatalog.value }
     fun toggleTranslateScreen() { _showTranslateScreen.value = !_showTranslateScreen.value }
     fun toggleTranslationSettings() { _showTranslationSettings.value = !_showTranslationSettings.value }
 
@@ -923,6 +955,173 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         _showWallpaperPicker.value = false; _showOfflinePages.value = false
         _showNoteEditor.value = false; _showNotesList.value = false
         _showTranslateScreen.value = false; _showTranslationSettings.value = false
+        _showNovelBookshelf.value = false; _showNovelReader.value = false; _showNovelCatalog.value = false
+    }
+
+    // --- Novel Bookshelf ---
+
+    /** Detect if current page is a novel site */
+    fun detectNovelSite(html: String) {
+        val url = _currentUrl.value
+        if (url.isBlank() || url == "about:blank") return
+        val result = NovelDetector.analyze(html, url)
+        if (result.isNovelSite) {
+            _novelDetectionResult.value = result
+            Log.d(TAG, "Novel detected: ${result.title} (confidence=${result.confidence})")
+        }
+    }
+
+    /** Dismiss the novel detection prompt */
+    fun dismissNovelDetection() {
+        _novelDetectionResult.value = null
+    }
+
+    /** Called when novel detection finds a novel site */
+    fun onNovelDetected(detection: NovelDetector.DetectionResult, parsed: ChapterParser.ParsedNovel) {
+        // Don't show if already on bookshelf
+        viewModelScope.launch {
+            if (!novelBookshelf.isOnBookshelf(_currentUrl.value)) {
+                _novelDetectionResult.value = detection
+                // Store parsed chapters for later use
+                pendingParsedNovel = parsed
+                Log.d(TAG, "Novel detected: ${detection.title} (${detection.chapterCount} chapters)")
+            }
+        }
+    }
+
+    private var pendingParsedNovel: ChapterParser.ParsedNovel? = null
+
+    /** Add current page as a novel to the bookshelf */
+    fun addCurrentNovelToBookshelf() {
+        val detection = _novelDetectionResult.value ?: return
+        val url = _currentUrl.value
+        val parsed = pendingParsedNovel
+
+        novelBookshelf.addNovel(
+            title = detection.title.ifBlank { _currentTitle.value },
+            author = detection.author,
+            url = url,
+            coverUrl = parsed?.coverUrl ?: "",
+            chapters = parsed?.chapters ?: emptyList(),
+            onAdded = { novelId ->
+                currentNovelId = novelId
+                viewModelScope.launch {
+                    _currentNovel.value = novelBookshelf.getNovel(novelId)
+                }
+            }
+        )
+        _novelDetectionResult.value = null
+        pendingParsedNovel = null
+
+        // Open bookshelf
+        _showNovelBookshelf.value = true
+    }
+
+    /** Extract chapter list from the current page using JS injection */
+    fun extractChaptersFromCurrentPage() {
+        if (useGeckoView) {
+            activeGeckoSessionId?.let { tabId ->
+                geckoEngine.evaluateJavaScript(tabId, ChapterParser.EXTRACT_CHAPTERS_JS) { json ->
+                    if (json.isNullOrBlank() || json == "null") return@evaluateJavaScript
+                    val cleaned = json.removeSurrounding("\"").replace("\\\"", "\"").replace("\\n", "\n")
+                    handleChapterListResult(cleaned)
+                }
+            }
+        } else {
+            activeWebView?.evaluateJavascript(ChapterParser.EXTRACT_CHAPTERS_JS) { json ->
+                if (json.isNullOrBlank() || json == "null") return@evaluateJavascript
+                val cleaned = json.removeSurrounding("\"").replace("\\\"", "\"").replace("\\n", "\n")
+                handleChapterListResult(cleaned)
+            }
+        }
+    }
+
+    private fun handleChapterListResult(json: String) {
+        val parsed = ChapterParser.parseChapterList(json)
+        if (parsed.chapters.isEmpty()) return
+
+        // Find the novel for current URL and update chapters
+        viewModelScope.launch {
+            val novel = novelBookshelf.getNovel(currentNovelId)
+                ?: return@launch
+            novelBookshelf.updateChapterList(novel.id, parsed.chapters)
+        }
+    }
+
+    /** Open novel bookshelf */
+    fun openNovelBookshelf() {
+        _showNovelBookshelf.value = true
+    }
+
+    /** Open a novel's catalog */
+    fun openNovelCatalog(novelId: Long) {
+        currentNovelId = novelId
+        viewModelScope.launch {
+            _currentNovel.value = novelBookshelf.getNovel(novelId)
+            _showNovelCatalog.value = true
+        }
+    }
+
+    /** Open novel reader at a specific chapter */
+    fun openNovelReader(novelId: Long, chapterIndex: Int = 0) {
+        currentNovelId = novelId
+        viewModelScope.launch {
+            _currentNovel.value = novelBookshelf.getNovel(novelId)
+            _showNovelReader.value = true
+        }
+    }
+
+    /** Get chapters for a novel (as Flow) */
+    fun getChapters(novelId: Long): Flow<List<ChapterEntity>> {
+        return novelBookshelf.getChapters(novelId)
+    }
+
+    /** Get a chapter for reading, with auto-cache */
+    suspend fun getChapterForReading(novelId: Long, chapterIndex: Int): ChapterEntity? {
+        // Try cached first
+        var chapter = novelBookshelf.getCachedChapter(novelId, chapterIndex)
+        if (chapter != null) return chapter
+
+        // Get metadata
+        chapter = novelBookshelf.getChapter(novelId, chapterIndex)
+        if (chapter == null) return null
+
+        // If has URL but not cached, try to download
+        if (chapter.url.isNotBlank() && !chapter.isCached) {
+            chapterCache.cacheChapter(chapter) { success ->
+                if (success) {
+                    Log.d(TAG, "Auto-cached chapter: ${chapter.title}")
+                }
+            }
+        }
+        return chapter
+    }
+
+    /** Update novel reading progress */
+    fun updateNovelReadProgress(novelId: Long, chapterIndex: Int) {
+        novelBookshelf.updateReadProgress(novelId, chapterIndex)
+    }
+
+    /** Pre-cache next chapter for smooth reading */
+    fun preCacheNextChapter(novelId: Long, currentIndex: Int) {
+        chapterCache.preCacheNext(novelId, currentIndex, count = 2)
+    }
+
+    /** Cache all chapters for a novel */
+    fun cacheAllChapters(novelId: Long, onComplete: (Int, Int) -> Unit) {
+        chapterCache.cacheAllChapters(novelId, onComplete = onComplete)
+    }
+
+    /** Remove a novel from bookshelf */
+    fun removeNovel(novelId: Long) {
+        novelBookshelf.removeNovel(novelId)
+    }
+
+    /** Navigate to a chapter URL in the browser */
+    fun navigateToChapter(chapterUrl: String) {
+        if (chapterUrl.isNotBlank()) {
+            navigateTo(chapterUrl)
+        }
     }
 
     override fun onCleared() {

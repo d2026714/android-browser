@@ -13,6 +13,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.example.browser.ui.components.*
 import com.example.browser.gecko.GeckoBrowserView
+import com.example.browser.novel.ui.NovelBookshelfScreen
+import com.example.browser.novel.ui.NovelCatalogScreen
+import com.example.browser.novel.ui.NovelReaderScreen
 import com.example.browser.player.PlayerScreen
 import com.example.browser.ui.viewmodel.BrowserViewModel
 
@@ -58,6 +61,10 @@ fun MainScreen(viewModel: BrowserViewModel) {
     val showNoteEditor by viewModel.showNoteEditor.collectAsState()
     val showNotesList by viewModel.showNotesList.collectAsState()
     val showPlayer by viewModel.showPlayer.collectAsState()
+    val showNovelBookshelf by viewModel.showNovelBookshelf.collectAsState()
+    val showNovelReader by viewModel.showNovelReader.collectAsState()
+    val showNovelCatalog by viewModel.showNovelCatalog.collectAsState()
+    val novelDetectionResult by viewModel.novelDetectionResult.collectAsState()
 
     // Full-screen player takes over the entire screen
     if (showPlayer) {
@@ -85,7 +92,10 @@ fun MainScreen(viewModel: BrowserViewModel) {
 
             Box(modifier = Modifier.weight(1f)) {
                 if (currentUrl.isBlank() || currentUrl == "about:blank") {
-                    HomeScreen(viewModel = viewModel)
+                    HomeScreen(
+                    viewModel = viewModel,
+                    onNovelBookshelfClick = { viewModel.openNovelBookshelf() }
+                )
                 } else {
                     GeckoBrowserView(viewModel = viewModel, modifier = Modifier.fillMaxSize())
                     if (pageError != null) {
@@ -96,6 +106,15 @@ fun MainScreen(viewModel: BrowserViewModel) {
 
             // Media prompt bar (shows when media URL detected)
             MediaPromptBar(viewModel = viewModel)
+
+            // Novel detection prompt
+            novelDetectionResult?.let { result ->
+                NovelDetectionPrompt(
+                    result = result,
+                    onAdd = { viewModel.addCurrentNovelToBookshelf() },
+                    onDismiss = { viewModel.dismissNovelDetection() }
+                )
+            }
 
             NavigationBar(
                 viewModel = viewModel,
@@ -140,4 +159,36 @@ fun MainScreen(viewModel: BrowserViewModel) {
     if (showTranslationSettings) TranslationSettingsScreen(viewModel = viewModel, onDismiss = { viewModel.toggleTranslationSettings() })
     if (showNoteEditor) NoteEditorSheet(viewModel = viewModel, onDismiss = { viewModel.toggleNoteEditor() })
     if (showNotesList) NotesListSheet(viewModel = viewModel, onDismiss = { viewModel.toggleNotesList() })
+
+    // Novel screens
+    if (showNovelBookshelf) {
+        NovelBookshelfScreen(
+            viewModel = viewModel,
+            onDismiss = { viewModel.toggleNovelBookshelf() },
+            onNovelClick = { novelId ->
+                viewModel.toggleNovelBookshelf()
+                viewModel.openNovelCatalog(novelId)
+            }
+        )
+    }
+    val currentNovelState = viewModel.currentNovel.collectAsState().value
+    if (showNovelCatalog && currentNovelState != null) {
+        NovelCatalogScreen(
+            viewModel = viewModel,
+            novelId = currentNovelState.id,
+            onDismiss = { viewModel.toggleNovelCatalog() },
+            onChapterClick = { index ->
+                viewModel.toggleNovelCatalog()
+                viewModel.openNovelReader(currentNovelState.id, index)
+            }
+        )
+    }
+    if (showNovelReader && currentNovelState != null) {
+        NovelReaderScreen(
+            viewModel = viewModel,
+            novelId = currentNovelState.id,
+            initialChapterIndex = currentNovelState.lastReadChapterIndex,
+            onDismiss = { viewModel.toggleNovelReader() }
+        )
+    }
 }

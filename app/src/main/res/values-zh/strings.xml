@@ -369,4 +369,30 @@
     <string name="pause_playback">暂停</string>
     <string name="play_playback">播放</string>
     <string name="volume">音量</string>
+
+    <!-- NovelBookshelf -->
+    <string name="novel_bookshelf">小说书架</string>
+    <string name="novel_catalog">目录</string>
+    <string name="no_novels_yet">暂无小说</string>
+    <string name="no_novels_hint">访问小说网站，点击"加入书架"即可开始</string>
+    <string name="add_to_bookshelf">加入书架</string>
+    <string name="added_to_bookshelf">已加入书架！</string>
+    <string name="already_on_bookshelf">已在书架中</string>
+    <string name="remove_novel">移除小说</string>
+    <string name="remove_novel_confirm">确定将"%s"从书架中移除？</string>
+    <string name="chapters_count">%d 章</string>
+    <string name="catalog_subtitle">共 %1$d 章 · 已缓存 %2$d 章</string>
+    <string name="download_all_chapters">下载全部章节</string>
+    <string name="no_chapters_loaded">暂无章节</string>
+    <string name="cached">已缓存</string>
+    <string name="not_cached">未缓存</string>
+    <string name="chapter_not_found">章节未找到</string>
+    <string name="chapter_content_empty">章节内容为空，请先尝试下载该章节。</string>
+    <string name="prev_chapter">上一章</string>
+    <string name="next_chapter">下一章</string>
+    <string name="novel_detected">检测到小说网站</string>
+    <string name="novel_detected_hint">该页面似乎是小说，是否加入书架？</string>
+    <string name="bookshelf">书架</string>
+    <string name="caching_chapters">正在缓存章节…</string>
+    <string name="cache_complete">缓存完成</string>
 </resources>
