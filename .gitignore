@@ -16,3 +16,5 @@ local.properties
 app-debug.zip
 app-release-unsigned.zip
 jdk/
+debug-apk.zip
+*.apk
