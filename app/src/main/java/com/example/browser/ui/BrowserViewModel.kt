@@ -26,36 +26,28 @@ data class TabState(
     val canGoForward: Boolean = false,
     val isLoading: Boolean = false,
     val progress: Int = 0,
+    val hasError: Boolean = false,
 )
 
 class BrowserViewModel(application: Application) : AndroidViewModel(application) {
     private val db = AppDatabase.getInstance(application)
     private val prefs = application.getSharedPreferences("browser_prefs", Context.MODE_PRIVATE)
 
-    // Tabs
+    // ── Tabs ──
     private val _tabs = MutableStateFlow<List<TabState>>(emptyList())
     val tabs: StateFlow<List<TabState>> = _tabs.asStateFlow()
 
     private val _activeTabIndex = MutableStateFlow(0)
     val activeTabIndex: StateFlow<Int> = _activeTabIndex.asStateFlow()
 
-    // UI State
+    // ── UI State ──
     private val _showHome = MutableStateFlow(true)
     val showHome: StateFlow<Boolean> = _showHome.asStateFlow()
-
-    private val _showBookmarks = MutableStateFlow(false)
-    val showBookmarks: StateFlow<Boolean> = _showBookmarks.asStateFlow()
-
-    private val _showHistory = MutableStateFlow(false)
-    val showHistory: StateFlow<Boolean> = _showHistory.asStateFlow()
-
-    private val _showSettings = MutableStateFlow(false)
-    val showSettings: StateFlow<Boolean> = _showSettings.asStateFlow()
 
     private val _showFindBar = MutableStateFlow(false)
     val showFindBar: StateFlow<Boolean> = _showFindBar.asStateFlow()
 
-    // Settings
+    // ── Settings ──
     private val _adBlockEnabled = MutableStateFlow(prefs.getBoolean("ad_block", true))
     val adBlockEnabled: StateFlow<Boolean> = _adBlockEnabled.asStateFlow()
 
@@ -70,7 +62,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private val _fontSize = MutableStateFlow(prefs.getInt("font_size", 100))
     val fontSize: StateFlow<Int> = _fontSize.asStateFlow()
 
-    // Data
+    // ── Data ──
     val bookmarks = db.bookmarkDao().getAll()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -81,7 +73,10 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         addTab()
     }
 
-    // Tab Management
+    // ═══════════════════════════════════════
+    //  Tab Management
+    // ═══════════════════════════════════════
+
     fun addTab(url: String = "") {
         val newTab = TabState(
             id = System.currentTimeMillis(),
@@ -96,9 +91,8 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun closeTab(index: Int) {
         val currentTabs = _tabs.value.toMutableList()
         if (currentTabs.size <= 1) {
-            // Don't close last tab, just go home
             _showHome.value = true
-            currentTabs[0] = currentTabs[0].copy(title = "新标签页", url = "")
+            currentTabs[0] = currentTabs[0].copy(title = "新标签页", url = "", hasError = false)
             _tabs.value = currentTabs
             return
         }
@@ -116,9 +110,16 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun updateTabState(index: Int, title: String? = null, url: String? = null,
-                       canGoBack: Boolean? = null, canGoForward: Boolean? = null,
-                       isLoading: Boolean? = null, progress: Int? = null) {
+    fun updateTabState(
+        index: Int,
+        title: String? = null,
+        url: String? = null,
+        canGoBack: Boolean? = null,
+        canGoForward: Boolean? = null,
+        isLoading: Boolean? = null,
+        progress: Int? = null,
+        hasError: Boolean? = null,
+    ) {
         val currentTabs = _tabs.value.toMutableList()
         if (index !in currentTabs.indices) return
         val tab = currentTabs[index]
@@ -129,6 +130,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
             canGoForward = canGoForward ?: tab.canGoForward,
             isLoading = isLoading ?: tab.isLoading,
             progress = progress ?: tab.progress,
+            hasError = hasError ?: tab.hasError,
         )
         _tabs.value = currentTabs
     }
@@ -144,34 +146,33 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         return _tabs.value.getOrNull(_activeTabIndex.value)?.webView
     }
 
-    // Navigation
+    // ═══════════════════════════════════════
+    //  Navigation
+    // ═══════════════════════════════════════
+
     fun loadUrl(url: String) {
         val activeIndex = _activeTabIndex.value
         if (url.isNotEmpty()) {
             _showHome.value = false
             getActiveWebView()?.loadUrl(url)
-            updateTabState(activeIndex, url = url)
+            updateTabState(activeIndex, url = url, hasError = false)
             addHistory(_tabs.value.getOrNull(activeIndex)?.title ?: "", url)
         }
     }
 
-    fun goBack() {
-        getActiveWebView()?.goBack()
-    }
-
-    fun goForward() {
-        getActiveWebView()?.goForward()
-    }
-
-    fun reload() {
-        getActiveWebView()?.reload()
-    }
+    fun goBack() = getActiveWebView()?.goBack()
+    fun goForward() = getActiveWebView()?.goForward()
+    fun reload() = getActiveWebView()?.reload()
+    fun stopLoading() = getActiveWebView()?.stopLoading()
 
     fun goHome() {
         _showHome.value = true
     }
 
-    // Find in page
+    // ═══════════════════════════════════════
+    //  Find in Page
+    // ═══════════════════════════════════════
+
     fun showFind() { _showFindBar.value = true }
     fun hideFind() { _showFindBar.value = false }
     fun findAll(query: String) { getActiveWebView()?.findAllAsync(query) }
@@ -179,7 +180,10 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     fun findPrevious() { getActiveWebView()?.findNext(false) }
     fun clearFindMatches() { getActiveWebView()?.clearMatches() }
 
-    // Bookmarks
+    // ═══════════════════════════════════════
+    //  Bookmarks
+    // ═══════════════════════════════════════
+
     fun toggleBookmark() {
         val tab = _tabs.value.getOrNull(_activeTabIndex.value) ?: return
         viewModelScope.launch {
@@ -187,9 +191,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
             if (isBookmarked) {
                 db.bookmarkDao().deleteByUrl(tab.url)
             } else {
-                db.bookmarkDao().insert(
-                    BookmarkEntity(title = tab.title, url = tab.url)
-                )
+                db.bookmarkDao().insert(BookmarkEntity(title = tab.title, url = tab.url))
             }
         }
     }
@@ -200,7 +202,10 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch { db.bookmarkDao().delete(bookmark) }
     }
 
-    // History
+    // ═══════════════════════════════════════
+    //  History
+    // ═══════════════════════════════════════
+
     private fun addHistory(title: String, url: String) {
         viewModelScope.launch {
             db.historyDao().insert(HistoryEntity(title = title, url = url))
@@ -215,7 +220,10 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch { db.historyDao().deleteAll() }
     }
 
-    // Settings
+    // ═══════════════════════════════════════
+    //  Settings
+    // ═══════════════════════════════════════
+
     fun setAdBlockEnabled(enabled: Boolean) {
         _adBlockEnabled.value = enabled
         prefs.edit().putBoolean("ad_block", enabled).apply()
@@ -242,17 +250,5 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
             db.bookmarkDao().deleteAll()
             db.historyDao().deleteAll()
         }
-    }
-
-    // Screen navigation
-    fun showBookmarksScreen() { _showBookmarks.value = true }
-    fun hideBookmarksScreen() { _showBookmarks.value = false }
-    fun showHistoryScreen() { _showHistory.value = true }
-    fun hideHistoryScreen() { _showHistory.value = false }
-    fun showSettingsScreen() { _showSettings.value = true }
-    fun hideSettingsScreen() { _showSettings.value = false }
-
-    fun shareCurrentPage() {
-        // Handled in UI via Intent
     }
 }

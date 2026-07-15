@@ -1,114 +1,87 @@
 # 🌐 Android Browser
 
-[![Build APK](https://github.com/d2026714/android-browser/actions/workflows/build.yml/badge.svg)](https://github.com/d2026714/android-browser/actions/workflows/build.yml)
+[![Build APK](https://github.com/d2026714/android-browser/actions/workflows/build.yml/badge.svg)](https://github.com/d2026714/android-browser/actions)
 
-A lightweight, modern Android browser built with **Kotlin**, **Jetpack Compose**, and **WebView**. **50+ features**, zero dependencies on third-party services.
+A lightweight Android browser built with Kotlin, Jetpack Compose, and WebView.
 
-## ✨ Features (v2.0.0)
+## Features
 
 ### Core
-- 🌐 Browsing (back/forward/reload) | 📑 Multi-tab + badge | 🥷 Incognito | 🔍 Smart search bar with suggestions
+- 🌐 Browsing (back/forward/reload/stop)
+- 📑 Multi-tab management with bottom tab bar
+- 🔍 Smart search bar with multiple search engines
+- 🔖 Bookmarks with Room database persistence
+- 📜 History with timestamps
+- 🚫 Ad blocker (domain + path based)
+- 🌙 Dark mode support
+- 🔍 Find in page
+- 📤 Share page
+- ⚙️ Configurable settings (search engine, font size, ad blocker)
+- 📊 Page loading progress bar
+- ❌ Error page with retry
+- 🔗 Quick links on home screen
 
-### Content
-- 🔖 Bookmarks + Folders | 📜 History with search | 📚 Reading List | 📑 Tab Groups | ⚡ Custom Quick Links
+### Search Engines
+- Google
+- Bing
+- 百度
+- DuckDuckGo
 
-### Privacy & Security
-- 🚫 Ad blocker (bundled EasyList) | 🔒 HTTPS + SSL error handling | 🍪 Cookie control (all/1st-party/none) | ⚡ JavaScript toggle | 🛡️ Zero tracking | 🌐 DNS-over-HTTPS | 🔐 Password Manager (AES-256 encrypted) | 🌐 Proxy Support (HTTP/SOCKS5) | 🛡️ Privacy Report (grade system)
-
-### Display
-- 📖 Reading mode | 🌙 Dark + AMOLED | 🖥️ Desktop mode | 🌙 Blue light filter | 🎭 Custom User Agent | 🎨 Custom CSS | 🔍 Zoom control
-
-### Tools
-- 🔎 Find in page | 📄 View source | 📸 Screenshot | 📤 Share | 📥 Downloads | 🌐 Translate (100+ languages) | 📱 QR code | 📊 Page info | 📋 Copy link | 🖨️ Print | 💾 Backup/restore | 🛠️ Developer Tools (console, DOM tree, page source) | 📊 Traffic Statistics | 🧩 User Scripts (Tampermonkey-style) | 📦 Offline Pages | 📄 PDF Viewer
-
-### Power
-- 🔃 Swipe gestures + Pull to refresh | 📉 Data saver | 🎬 Full-screen video | ⌨️ Keyboard shortcuts | ♿ Accessibility | 🕸️ WebView pool (tabs persist state) | 💾 Tab state persistence
-
-## 🏗️ Architecture
+## Architecture
 
 ```
-manager/
-  TabManager.kt       — Tab lifecycle + WebView pool + tab state persistence
-  BookmarkManager.kt   — Bookmarks/History/Reading list/Tab groups/SP migration
-  SettingsManager.kt   — Settings persistence + Quick links + Cookie/DOH/SP migration
+ui/
+  MainScreen.kt          — NavHost-based navigation
+  BrowserScreen.kt       — Main browser view (WebView + nav bars)
+  HomeScreen.kt          — Home page with search + quick links
+  BookmarksScreen.kt     — Bookmarks list
+  HistoryScreen.kt       — History list
+  SettingsScreen.kt      — Settings page
+  BrowserViewModel.kt    — MVVM state management
+  components/
+    TopNavBar.kt         — Navigation bar with URL display
+    BottomTabBar.kt      — Tab switcher
+    FindInPageBar.kt     — Find in page UI
+    ErrorPage.kt         — Error state UI
+    WebViewContent.kt    — WebView composable wrapper
+  navigation/
+    Screen.kt            — Navigation routes
+  theme/
+    Theme.kt             — Material 3 theming
 
-data/local/
-  BrowserDatabase.kt   — Room database (8 tables)
-  entity/              — Room Entity
-  dao/                 — Room DAO
+web/
+  BrowserWebViewClient.kt — WebView client with ad blocking
+  AdBlocker.kt            — Ad domain/path blocking
 
-ui/viewmodel/
-  BrowserViewModel.kt  — Thin orchestrator, delegates to managers
-
-ui/components/
-  BrowserWebView.kt    — WebView pool integration, pull-to-refresh, progress bar
-  ErrorPage.kt         — Custom error page
-  SslErrorDialog.kt    — SSL certificate error dialog
-  LongPressMenu.kt     — Long-press link context menu
-  NavigationBar.kt     — Search suggestions, accessibility
+data/
+  AppDatabase.kt          — Room database (bookmarks, history, tabs)
+  entity/                 — Room entities
+  dao/                    — Room DAOs
 ```
 
-## 📦 Download
+## Download
 
-**[Actions → Latest ✅ → debug-apk](https://github.com/d2026714/android-browser/actions)**
+[Actions → Latest ✅ → debug-apk](https://github.com/d2026714/android-browser/actions)
+
+## Build
 
 ```bash
-git clone https://github.com/d2026714/android-browser.git && cd android-browser && ./gradlew assembleDebug
+git clone https://github.com/d2026714/android-browser.git
+cd android-browser
+./gradlew assembleDebug
 ```
 
-## 🛠️ Tech
+## Tech Stack
 
-Kotlin · Jetpack Compose · Material 3 · MVVM · Room · WebView · KSP · API 26-34
+- Kotlin
+- Jetpack Compose
+- Material 3
+- MVVM
+- Room
+- WebView
+- KSP
+- API 26-34
 
-## 📋 Changelog
+## License
 
-### v2.0.0
-**Architecture:**
-- 🗄️ Room database replaces SharedPreferences (8 tables, 8 DAOs)
-- 🧩 ViewModel split into TabManager / BookmarkManager / SettingsManager
-- 🕸️ WebView pool: each tab holds its own WebView, switch without rebuild
-- 📝 All silent catches replaced with proper logging
-
-**New Features:**
-- 🔍 Search suggestions (Google Suggest API)
-- 📁 Bookmark folders (create/delete)
-- 🔎 History search (filter by title/URL)
-- 🌐 Intent handling (open links from other apps)
-- 💾 Tab state persistence (restore tabs on restart)
-- 📊 Page loading progress bar
-- 🛡️ SSL certificate error handling
-- 🚫 Custom error page
-- 🍪 Cookie control (all / first-party / none)
-- 🌐 DNS-over-HTTPS toggle
-- ⌨️ Keyboard shortcuts (R=reload, T=new tab, W=close, L=URL bar, D=bookmark, F=find, H=back, N=reader, +/-/0=zoom)
-- 🔗 Long-press link context menu (new tab, incognito, copy, share)
-- ⬇️ Pull-to-refresh gesture
-- ♿ Accessibility content descriptions on all interactive elements
-- 🔄 SP→Room data migration (seamless upgrade from v1.x)
-- 🛠️ Developer Tools (console, DOM tree, page source)
-- 🔐 Password Manager (AES-256 encrypted)
-- 🌐 Proxy Support (HTTP/SOCKS5)
-- 🛡️ Privacy Report (grade system)
-- 📊 Traffic Statistics
-- 🧩 User Scripts (Tampermonkey-style)
-- 📦 Offline Pages
-- 📄 PDF Viewer
-- 🌐 Translator (100+ languages)
-- 🚫 Advanced Ad Block (bundled EasyList)
-
-### v1.4.0
-- Blue light filter, data saver, JavaScript toggle, custom UA/CSS, zoom, print, backup/restore
-
-### v1.3.0
-- Reading List, Tab Groups, Quick Links Editor, QR Code, Translate, AMOLED
-
-### v1.2.0
-- Downloads, View Source, Screenshot, Clear Cookies, Full-screen Video
-
-### v1.1.0
-- Reading Mode, Swipe Gestures, Desktop Mode, Find in Page
-
-### v1.0.0
-- Initial release
-
-## 📄 MIT License
+MIT

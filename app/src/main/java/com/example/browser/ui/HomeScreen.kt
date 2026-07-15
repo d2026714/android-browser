@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -31,22 +33,27 @@ data class QuickLink(
     val name: String,
     val url: String,
     val color: Color,
+    val initial: String,
 )
 
-val quickLinks = listOf(
-    QuickLink("百度", "https://www.baidu.com", Color(0xFF2932E1)),
-    QuickLink("微博", "https://weibo.com", Color(0xFFE6162D)),
-    QuickLink("知乎", "https://www.zhihu.com", Color(0xFF0066FF)),
-    QuickLink("B站", "https://www.bilibili.com", Color(0xFFFB7299)),
-    QuickLink("淘宝", "https://www.taobao.com", Color(0xFFFF5000)),
-    QuickLink("抖音", "https://www.douyin.com", Color(0xFF000000)),
-    QuickLink("GitHub", "https://github.com", Color(0xFF24292E)),
-    QuickLink("Google", "https://www.google.com", Color(0xFF4285F4)),
+val defaultQuickLinks = listOf(
+    QuickLink("百度", "https://www.baidu.com", Color(0xFF2932E1), "百"),
+    QuickLink("微博", "https://weibo.com", Color(0xFFE6162D), "微"),
+    QuickLink("知乎", "https://www.zhihu.com", Color(0xFF0066FF), "知"),
+    QuickLink("B站", "https://www.bilibili.com", Color(0xFFFB7299), "B"),
+    QuickLink("淘宝", "https://www.taobao.com", Color(0xFFFF5000), "淘"),
+    QuickLink("抖音", "https://www.douyin.com", Color(0xFF000000), "抖"),
+    QuickLink("GitHub", "https://github.com", Color(0xFF24292E), "G"),
+    QuickLink("Google", "https://www.google.com", Color(0xFF4285F4), "G"),
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: BrowserViewModel) {
+fun HomeScreen(
+    viewModel: BrowserViewModel,
+    onNavigateToBookmarks: () -> Unit,
+    onNavigateToHistory: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+) {
     val searchEngine by viewModel.searchEngine.collectAsState()
     var searchText by remember { mutableStateOf("") }
 
@@ -54,75 +61,99 @@ fun HomeScreen(viewModel: BrowserViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp),
+            .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(80.dp))
 
         // App title
         Text(
             text = "浏览器",
-            style = MaterialTheme.typography.headlineLarge,
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.Light,
+            ),
             color = MaterialTheme.colorScheme.primary,
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         // Search bar
-        OutlinedTextField(
-            value = searchText,
-            onValueChange = { searchText = it },
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            tonalElevation = 2.dp,
+            shadowElevation = 4.dp,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("搜索或输入网址") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            singleLine = true,
-            shape = RoundedCornerShape(24.dp),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-            keyboardActions = KeyboardActions(
-                onGo = {
-                    if (searchText.isNotBlank()) {
-                        viewModel.loadUrl(searchText.toSearchUrl(searchEngine.baseUrl))
-                    }
-                }
-            ),
-        )
+        ) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("搜索或输入网址") },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(28.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = Color.Transparent,
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                keyboardActions = KeyboardActions(
+                    onGo = {
+                        if (searchText.isNotBlank()) {
+                            viewModel.loadUrl(searchText.toSearchUrl(searchEngine.baseUrl))
+                        }
+                    },
+                ),
+            )
+        }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Search engine selector
+        // Search engine chips
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SearchEngine.entries.forEach { engine ->
+                val isSelected = searchEngine == engine
                 FilterChip(
-                    selected = searchEngine == engine,
+                    selected = isSelected,
                     onClick = { viewModel.setSearchEngine(engine) },
                     label = { Text(engine.displayName, fontSize = 11.sp) },
-                    modifier = Modifier.padding(horizontal = 2.dp),
+                    modifier = Modifier.padding(horizontal = 3.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ),
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         // Quick links
         Text(
             text = "快捷访问",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.fillMaxWidth(),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp),
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            items(quickLinks) { link ->
+            items(defaultQuickLinks) { link ->
                 QuickLinkItem(link = link) {
                     viewModel.loadUrl(link.url)
                 }
@@ -132,20 +163,36 @@ fun HomeScreen(viewModel: BrowserViewModel) {
         Spacer(modifier = Modifier.weight(1f))
 
         // Bottom shortcuts
-        Row(
+        Surface(
+            tonalElevation = 1.dp,
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            BottomShortcut(icon = Icons.Default.Bookmark, label = "书签") {
-                viewModel.showBookmarksScreen()
-            }
-            BottomShortcut(icon = Icons.Default.History, label = "历史") {
-                viewModel.showHistoryScreen()
-            }
-            BottomShortcut(icon = Icons.Default.Settings, label = "设置") {
-                viewModel.showSettingsScreen()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                BottomShortcut(
+                    icon = Icons.Default.Bookmark,
+                    label = "书签",
+                    onClick = onNavigateToBookmarks,
+                )
+                BottomShortcut(
+                    icon = Icons.Default.History,
+                    label = "历史",
+                    onClick = onNavigateToHistory,
+                )
+                BottomShortcut(
+                    icon = Icons.Default.Settings,
+                    label = "设置",
+                    onClick = onNavigateToSettings,
+                )
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -154,29 +201,31 @@ private fun QuickLinkItem(link: QuickLink, onClick: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(8.dp),
+            .padding(4.dp),
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .size(48.dp)
+                .clip(RoundedCornerShape(12.dp))
                 .background(link.color),
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = link.name.first().toString(),
+                text = link.initial,
                 color = Color.White,
-                fontSize = 18.sp,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = link.name,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
             maxLines = 1,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -190,11 +239,21 @@ private fun BottomShortcut(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(12.dp),
+            .padding(horizontal = 20.dp, vertical = 10.dp),
     ) {
-        Icon(icon, contentDescription = label, modifier = Modifier.size(24.dp))
-        Text(label, style = MaterialTheme.typography.labelSmall)
+        Icon(
+            icon,
+            contentDescription = label,
+            modifier = Modifier.size(22.dp),
+            tint = MaterialTheme.colorScheme.onSurface,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }

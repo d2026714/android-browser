@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material3.*
@@ -18,7 +18,10 @@ import com.example.browser.util.toFormattedDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryScreen(viewModel: BrowserViewModel) {
+fun HistoryScreen(
+    viewModel: BrowserViewModel,
+    onBack: () -> Unit,
+) {
     val history by viewModel.history.collectAsState()
     var showClearDialog by remember { mutableStateOf(false) }
 
@@ -26,8 +29,8 @@ fun HistoryScreen(viewModel: BrowserViewModel) {
         TopAppBar(
             title = { Text("历史记录") },
             navigationIcon = {
-                IconButton(onClick = { viewModel.hideHistoryScreen() }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                 }
             },
             actions = {
@@ -44,7 +47,11 @@ fun HistoryScreen(viewModel: BrowserViewModel) {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("暂无历史记录", style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    "暂无历史记录",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -53,7 +60,7 @@ fun HistoryScreen(viewModel: BrowserViewModel) {
                         item = item,
                         onClick = {
                             viewModel.loadUrl(item.url)
-                            viewModel.hideHistoryScreen()
+                            onBack()
                         },
                         onDelete = { viewModel.deleteHistory(item.id) },
                     )
@@ -72,7 +79,7 @@ fun HistoryScreen(viewModel: BrowserViewModel) {
                     viewModel.clearHistory()
                     showClearDialog = false
                 }) {
-                    Text("清空")
+                    Text("清空", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -91,22 +98,29 @@ private fun HistoryItem(
     onDelete: () -> Unit,
 ) {
     ListItem(
-        headlineContent = {
-            Text(item.title, maxLines = 1)
-        },
+        headlineContent = { Text(item.title, maxLines = 1) },
         supportingContent = {
             Column {
-                Text(item.url, maxLines = 1, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    item.url,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 Text(
                     item.visitedAt.toFormattedDate(),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.outline,
                 )
             }
         },
         trailingContent = {
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "删除")
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "删除",
+                    tint = MaterialTheme.colorScheme.error,
+                )
             }
         },
         modifier = Modifier.clickable(onClick = onClick),

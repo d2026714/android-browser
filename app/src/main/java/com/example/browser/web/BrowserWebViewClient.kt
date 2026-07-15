@@ -11,7 +11,7 @@ import android.webkit.WebViewClient
 class BrowserWebViewClient(
     private val onPageStarted: ((String?) -> Unit)? = null,
     private val onPageFinished: ((String?) -> Unit)? = null,
-    private val onReceivedError: ((String?) -> Unit)? = null,
+    private val onReceivedError: ((String) -> Unit)? = null,
     private var adBlockEnabled: Boolean = true,
 ) : WebViewClient() {
 
@@ -21,7 +21,7 @@ class BrowserWebViewClient(
 
     override fun shouldInterceptRequest(
         view: WebView?,
-        request: WebResourceRequest?
+        request: WebResourceRequest?,
     ): WebResourceResponse? {
         val url = request?.url?.toString() ?: return null
         if (adBlockEnabled && AdBlocker.isAd(url)) {
@@ -40,15 +40,20 @@ class BrowserWebViewClient(
         onPageFinished?.invoke(url)
     }
 
-    override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
+    override fun onReceivedError(
+        view: WebView?,
+        request: WebResourceRequest?,
+        error: android.webkit.WebResourceError?,
+    ) {
         super.onReceivedError(view, request, error)
         if (request?.isForMainFrame == true) {
-            onReceivedError?.invoke(error?.description?.toString())
+            val description = error?.description?.toString() ?: "未知错误"
+            onReceivedError?.invoke(description)
         }
     }
 
     override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: SslError?) {
-        // For safety, cancel SSL errors by default
+        // Cancel SSL errors by default for safety
         handler?.cancel()
     }
 }
