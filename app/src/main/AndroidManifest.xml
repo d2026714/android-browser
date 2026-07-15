@@ -4,11 +4,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:name=".BrowserApp"
@@ -19,23 +14,15 @@
         android:theme="@style/Theme.AndroidBrowser"
         android:usesCleartextTraffic="true">
 
-        <!-- Splash Activity (launcher) -->
-        <activity
-            android:name=".SplashActivity"
-            android:exported="true"
-            android:theme="@style/Theme.AndroidBrowser.Splash">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -44,32 +31,5 @@
                 <data android:scheme="https" />
             </intent-filter>
         </activity>
-
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
-        </provider>
-
-        <!-- Download Foreground Service -->
-        <service
-            android:name=".download.DownloadService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
-
-        <!-- Download Action Receiver (notification buttons) -->
-        <receiver
-            android:name=".download.DownloadActionReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.example.browser.download.CANCEL_DOWNLOAD" />
-                <action android:name="com.example.browser.download.PAUSE_DOWNLOAD" />
-                <action android:name="com.example.browser.download.RETRY_DOWNLOAD" />
-            </intent-filter>
-        </receiver>
     </application>
 </manifest>

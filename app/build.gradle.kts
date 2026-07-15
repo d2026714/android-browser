@@ -13,11 +13,11 @@ android {
         applicationId = "com.example.browser"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "2.1.0"
+        versionCode = 4
+        versionName = "3.0.0"
 
         ndk {
-            abiFilters += listOf("armeabi-v7a")
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
         }
     }
 
@@ -53,7 +53,6 @@ android {
 dependencies {
     // Core
     implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.activity:activity-compose:1.8.1")
 
@@ -83,19 +82,6 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    // Media3 / ExoPlayer
-    implementation("androidx.media3:media3-exoplayer:1.3.1")
-    implementation("androidx.media3:media3-ui:1.3.1")
-    implementation("androidx.media3:media3-session:1.3.1")
-
-    // ML Kit Translation (offline)
-    implementation("com.google.mlkit:translate:17.0.2")
-
-    // OkHttp (download manager)
+    // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-
-    // GeckoView (Mozilla browser engine)
-    val geckoviewChannel = "nightly"  // or "beta" or "release"
-    val geckoviewVersion = "131.0.20240902095218"
-    implementation("org.mozilla.geckoview:geckoview-$geckoviewChannel:$geckoviewVersion")
 }
