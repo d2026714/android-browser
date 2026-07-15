@@ -222,7 +222,7 @@ fun ReadingModeScreen(
             // Progress indicator bar at top
             if (!isLoading && scrollProgress.value > 0f) {
                 LinearProgressIndicator(
-                    progress = { scrollProgress.value },
+                    progress = scrollProgress.value,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(2.dp)

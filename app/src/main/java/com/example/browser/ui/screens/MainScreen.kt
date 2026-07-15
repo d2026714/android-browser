@@ -15,6 +15,7 @@ import com.example.browser.ui.components.*
 import com.example.browser.gecko.GeckoBrowserView
 import com.example.browser.novel.ui.NovelBookshelfScreen
 import com.example.browser.novel.ui.NovelCatalogScreen
+import com.example.browser.novel.ui.NovelDetectionPrompt
 import com.example.browser.novel.ui.NovelReaderScreen
 import com.example.browser.player.PlayerScreen
 import com.example.browser.ui.viewmodel.BrowserViewModel

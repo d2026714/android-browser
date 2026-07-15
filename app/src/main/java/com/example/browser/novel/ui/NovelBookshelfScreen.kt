@@ -183,7 +183,7 @@ fun NovelGridItem(
             if (novel.totalChapters > 0 && novel.lastReadChapterIndex > 0) {
                 val progress = novel.lastReadChapterIndex.toFloat() / novel.totalChapters
                 LinearProgressIndicator(
-                    progress = { progress },
+                    progress = progress,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(3.dp)
@@ -197,15 +197,20 @@ fun NovelGridItem(
             if (novel.totalChapters > novel.lastReadChapterIndex + 1) {
                 val newCount = novel.totalChapters - novel.lastReadChapterIndex - 1
                 if (newCount > 0) {
-                    Badge(
+                    Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(4.dp),
-                        containerColor = MaterialTheme.colorScheme.error
+                            .padding(4.dp)
+                            .background(
+                                MaterialTheme.colorScheme.error,
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = if (newCount > 99) "99+" else "$newCount",
-                            fontSize = 10.sp
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onError
                         )
                     }
                 }

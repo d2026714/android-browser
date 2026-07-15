@@ -90,7 +90,6 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     private var useGeckoView = true  // Toggle between GeckoView and WebView
 
     // --- Novel state ---
-    val novelList = novelBookshelf.novelsByLastRead
     private val _currentNovel = MutableStateFlow<NovelEntity?>(null)
     val currentNovel: StateFlow<NovelEntity?> = _currentNovel.asStateFlow()
     private val _novelDetectionResult = MutableStateFlow<NovelDetector.DetectionResult?>(null)
@@ -111,6 +110,7 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
         chapterDao = db.chapterDao(),
         scope = viewModelScope
     )
+    val novelList = novelBookshelf.novelsByLastRead
     val chapterCache = ChapterCache(
         chapterDao = db.chapterDao(),
         scope = viewModelScope
