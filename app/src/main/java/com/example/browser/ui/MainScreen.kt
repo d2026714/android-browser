@@ -5,7 +5,6 @@ import android.content.Intent
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -24,7 +23,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,8 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.browser.util.SearchEngine
-import com.example.browser.util.toSearchUrl
 import com.example.browser.web.BrowserWebViewClient
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,7 +42,6 @@ fun MainScreen(viewModel: BrowserViewModel = viewModel()) {
     val showHistory by viewModel.showHistory.collectAsState()
     val showSettings by viewModel.showSettings.collectAsState()
     val showFindBar by viewModel.showFindBar.collectAsState()
-    val searchEngine by viewModel.searchEngine.collectAsState()
     val adBlockEnabled by viewModel.adBlockEnabled.collectAsState()
     val fontSize by viewModel.fontSize.collectAsState()
 
@@ -104,8 +99,9 @@ fun MainScreen(viewModel: BrowserViewModel = viewModel()) {
                     exit = slideOutVertically(targetOffsetY = { -it }),
                 ) {
                     FindInPageBar(
-                        onFind = { query -> viewModel.findNext(query) },
-                        onFindPrevious = { query -> viewModel.findPrevious(query) },
+                        onSearch = { query -> viewModel.findAll(query) },
+                        onNext = { viewModel.findNext() },
+                        onPrevious = { viewModel.findPrevious() },
                         onClose = {
                             viewModel.clearFindMatches()
                             viewModel.hideFind()
@@ -284,8 +280,9 @@ private fun WebViewContainer(
 
 @Composable
 private fun FindInPageBar(
-    onFind: (String) -> Unit,
-    onFindPrevious: (String) -> Unit,
+    onSearch: (String) -> Unit,
+    onNext: () -> Unit,
+    onPrevious: () -> Unit,
     onClose: () -> Unit,
 ) {
     var query by remember { mutableStateOf("") }
@@ -304,12 +301,12 @@ private fun FindInPageBar(
             placeholder = { Text("在页面中查找") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = { onFind(query) }),
+            keyboardActions = KeyboardActions(onSearch = { onSearch(query) }),
         )
-        IconButton(onClick = { onFindPrevious(query) }) {
+        IconButton(onClick = onPrevious) {
             Icon(Icons.Default.KeyboardArrowUp, contentDescription = "上一个")
         }
-        IconButton(onClick = { onFind(query) }) {
+        IconButton(onClick = onNext) {
             Icon(Icons.Default.KeyboardArrowDown, contentDescription = "下一个")
         }
         IconButton(onClick = onClose) {

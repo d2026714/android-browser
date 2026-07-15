@@ -8,12 +8,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.browser.data.AppDatabase
 import com.example.browser.data.entity.BookmarkEntity
 import com.example.browser.data.entity.HistoryEntity
-import com.example.browser.data.entity.TabEntity
 import com.example.browser.util.SearchEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -174,18 +174,17 @@ class BrowserViewModel(application: Application) : AndroidViewModel(application)
     // Find in page
     fun showFind() { _showFindBar.value = true }
     fun hideFind() { _showFindBar.value = false }
-    fun findNext(query: String) { getActiveWebView()?.findNext(true) }
-    fun findPrevious(query: String) { getActiveWebView?.findNext(false) }
+    fun findAll(query: String) { getActiveWebView()?.findAllAsync(query) }
+    fun findNext() { getActiveWebView()?.findNext(true) }
+    fun findPrevious() { getActiveWebView()?.findNext(false) }
     fun clearFindMatches() { getActiveWebView()?.clearMatches() }
 
     // Bookmarks
     fun toggleBookmark() {
         val tab = _tabs.value.getOrNull(_activeTabIndex.value) ?: return
         viewModelScope.launch {
-            val isBookmarked = db.bookmarkDao().isBookmarked(tab.url)
-            // We need to check current value once
-            val current = isBookmarked.value
-            if (current) {
+            val isBookmarked = db.bookmarkDao().isBookmarked(tab.url).first()
+            if (isBookmarked) {
                 db.bookmarkDao().deleteByUrl(tab.url)
             } else {
                 db.bookmarkDao().insert(

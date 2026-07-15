@@ -1,7 +1,6 @@
 package com.example.browser
 
 import android.os.Bundle
-import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -28,8 +27,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        // Volume keys scroll WebView
-        return super.onKeyDown(keyCode, event)
-    }
 }
