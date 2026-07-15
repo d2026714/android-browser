@@ -87,7 +87,7 @@ fun HomeScreen(
         Spacer(Modifier.height(12.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             SearchEngine.entries.forEach { e ->
-                FilterChip(engine == e, { vm.setEngine(e) }, label = { Text(e.displayName, fontSize = 11.sp) },
+                FilterChip(selected = engine == e, onClick = { vm.setEngine(e) }, label = { Text(e.displayName, fontSize = 11.sp) },
                     modifier = Modifier.padding(horizontal = 3.dp))
             }
         }
